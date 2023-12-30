@@ -1,0 +1,47 @@
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+import LoginInex from '../views/home/login.vue'
+import { CONSTANT } from '../constant'
+
+const router = createRouter({
+  // history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(),
+  routes: [
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginInex
+    },
+    {
+      path: '/sendways',
+      name: 'sendWays',
+      component: () => import('../views/tabsTools/sendWays/sendWays.vue')
+    },
+    {
+      path: '/sendtasks',
+      name: 'sendtasks',
+      component: () => import('../views/tabsTools/sendTasks/sendTasks.vue')
+    },
+    {
+      path: '/sendlogs',
+      name: 'sendlogs',
+      component: () => import('../views/tabsTools/sendLogs/sendLogs.vue')
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('../views/tabsTools/settings/settings.vue')
+    },
+  ]
+})
+
+// 登录失效重定向到登录页面
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = Boolean(localStorage.getItem(CONSTANT.STORE_TOKEN_NAME));
+  if (!isAuthenticated && to.path !== '/login') {
+    next('/login');
+  } else {
+    next();
+  }
+});
+
+export default router
