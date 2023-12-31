@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"message-nest/pkg/table"
+	"message-nest/service/cron_service"
+	"message-nest/service/env_service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +23,8 @@ func init() {
 	logging.Setup()
 	util.Setup()
 	table.Setup()
+	env_service.Setup()
+	cron_service.Setup()
 }
 
 // @title Golang Gin API

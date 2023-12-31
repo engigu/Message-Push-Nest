@@ -44,13 +44,13 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps int
 	query := db.
 		Table(logt).
 		Select(fmt.Sprintf("%s.*, %s.name as task_name", logt, taskt)).
-		Joins(fmt.Sprintf("JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
+		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
 
 	if name != "" {
 		query = query.Where(fmt.Sprintf("%s.name like ?", taskt), fmt.Sprintf("%%%s%%", name))
 	}
 	if taskId != "" {
-		query = query.Where(fmt.Sprintf("%s.id = ?", taskt), taskId)
+		query = query.Where(fmt.Sprintf("%s.task_id = ?", logt), taskId)
 	}
 	query = query.Order("created_on DESC")
 	if pageSize > 0 || pageNum > 0 {
@@ -68,13 +68,33 @@ func GetSendLogsTotal(name string, taskId string, maps interface{}) (int, error)
 	taskt := table.TasksTableName
 	query := db.
 		Table(logt).
-		Joins(fmt.Sprintf("JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
+		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
 	if name != "" {
 		query = query.Where(fmt.Sprintf("%s.name like ?", taskt), fmt.Sprintf("%%%s%%", name))
 	}
 	if taskId != "" {
-		query = query.Where(fmt.Sprintf("%s.id = ?", taskt), taskId)
+		query = query.Where(fmt.Sprintf("%s.task_id = ?", logt), taskId)
 	}
 	query.Count(&total)
 	return total, nil
+}
+
+// GetSendLogsTotal 获取所有日志总数
+func DeleteOutDateLogs(keepNum int) error {
+	logt := table.LogsTableName
+	sql := fmt.Sprintf(`DELETE FROM %s
+WHERE id NOT IN (
+    SELECT id FROM (
+        SELECT id
+        FROM %s
+        ORDER BY created_on DESC
+        LIMIT %d
+    ) tmp
+);`, logt, logt, keepNum)
+
+	result := db.Exec(sql)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }

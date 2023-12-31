@@ -13,11 +13,14 @@ import (
 
 var db *gorm.DB
 
-//type Model struct {
-//	ID         int       `gorm:"primary_key" json:"id"`
-//	CreatedOn  util.Time `json:"created_on"`
-//	ModifiedOn util.Time `json:"modified_on"`
-//}
+type IDModel struct {
+	ID int `gorm:"primary_key" json:"id"`
+
+	CreatedBy  string    `json:"created_by"`
+	ModifiedBy string    `json:"modified_by"`
+	CreatedOn  util.Time `json:"created_on"`
+	ModifiedOn util.Time `json:"modified_on"`
+}
 
 type UUIDModel struct {
 	ID uuid.UUID `gorm:"primary_key" json:"id"`

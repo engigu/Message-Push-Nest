@@ -1,14 +1,12 @@
 <template>
     <div class="setting-container">
-        <el-text size="small">当前版本：v1.0.0</el-text>
+        <el-text size="small">当前版本：{{ version }}</el-text>
         <div class="buttom">
             <div class="tips">
                 <el-text size="small">版本功能说明</el-text>
                 <el-tooltip placement="top">
                     <template #content>
-                        logo请输入svg文本，替换后登录页面、ico、导航栏logo将全部一起更换
-                        <br />
-                        *将在下一次登录的时候生效
+                      <div v-html="desc"></div>
                     </template>
                     <el-icon>
                         <QuestionFilled />
@@ -20,7 +18,7 @@
 </template>
   
 <script>
-import { defineComponent, reactive, toRefs } from 'vue';
+import { defineComponent, reactive, toRefs, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
 import { request } from '@/api/api'
 import { QuestionFilled } from '@element-plus/icons-vue'
@@ -35,8 +33,8 @@ export default defineComponent({
     },
     setup() {
         const state = reactive({
-            oldPasswd: '',
-            newPasswd: '',
+            version: '',
+            desc: '',
         });
 
         const handleChange = async () => {
@@ -47,6 +45,21 @@ export default defineComponent({
                 ElMessage({ message: msg, type: 'success' })
             }
         }
+
+        const getAbout = async () => {
+            let params = { params: { section: "about" } };
+            const rsp = await request.get('/settings/getsetting', params);
+            if (await rsp.data.code == 200) {
+                let data = await rsp.data.data;
+                state.version = data.version;
+                state.desc = data.desc.replace(/\n/g, '<br />');
+            }
+        }
+
+        onMounted(() => {
+            getAbout();
+        })
+
         return {
             ...toRefs(state), handleChange
         }

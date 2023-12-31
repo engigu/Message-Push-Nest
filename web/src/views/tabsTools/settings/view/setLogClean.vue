@@ -4,7 +4,7 @@
             <el-input v-model="cron" size="small" placeholder="请输入定时日志清除的Cron表达式">
                 <template size="small" #prepend>cron://</template>
             </el-input>
-            <el-input v-model.number="keepNum" size="small" placeholder="请输入要保留的最近的日志条数" style="margin-top: 15px;">
+            <el-input v-model="keepNum" size="small" placeholder="请输入要保留的最近的日志条数" style="margin-top: 15px;">
                 <template size="small" #prepend>保留数</template>
             </el-input>
         </div>
@@ -29,7 +29,7 @@
 </template>
   
 <script>
-import { defineComponent, reactive, toRefs } from 'vue';
+import { defineComponent, reactive, toRefs, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router';
@@ -47,13 +47,20 @@ export default defineComponent({
     setup() {
         const router = useRouter();
         const state = reactive({
+            section: 'log_config',
             cron: '',
-            keepNum: 1000,
+            keepNum: '1000',
         });
 
         const handleSubmit = async () => {
-            let postData = { old_passwd: state.oldPasswd, new_passwd: state.newPasswd };
-            const rsp = await request.post('/settings/setpasswd', postData);
+            let postData = {
+                section: state.section,
+                data: {
+                    cron: state.cron.trim(),
+                    keep_num: state.keepNum.trim(),
+                },
+            };
+            const rsp = await request.post('/settings/set', postData);
             if (await rsp.data.code == 200) {
                 let msg = await rsp.data.msg;
                 ElMessage({ message: msg, type: 'success' })
@@ -62,6 +69,21 @@ export default defineComponent({
         const handleView = async () => {
             router.push('/sendlogs?taskid=' + CONSTANT.LOG_TASK_ID, { replace: true });
         }
+
+        const getSiteConfig = async () => {
+            let params = { params: { section: "log_config" } };
+            const rsp = await request.get('/settings/getsetting', params);
+            if (await rsp.data.code == 200) {
+                let data = await rsp.data.data;
+                state.cron = data.cron;
+                state.keepNum = data.keep_num;
+            }
+        }
+
+        onMounted(() => {
+            getSiteConfig();
+        })
+
         return {
             ...toRefs(state), handleSubmit, handleView
         }

@@ -17,7 +17,7 @@
                 <el-tooltip placement="top">
                     <template #content>
                         1. logo请输入svg文本，替换后登录页面，ico，导航栏logo将全部一起更换
-                        <br />               
+                        <br />
                         2. slogan将在登录页面展示
                         <br />
                         *将在下一次登录的时候生效
@@ -27,14 +27,14 @@
                     </el-icon>
                 </el-tooltip>
             </div>
-            <el-button @click="handleView" size="small">查看日志</el-button>
+            <el-button @click="handleView" size="small">恢复默认</el-button>
             <el-button @click="handleSubmit" size="small" type="primary">确定</el-button>
         </div>
     </div>
 </template>
   
 <script>
-import { defineComponent, reactive, toRefs } from 'vue';
+import { defineComponent, reactive, toRefs, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router';
@@ -55,11 +55,19 @@ export default defineComponent({
             title: '',
             slogan: '',
             logo: '',
+            section: 'site_config',
         });
 
         const handleSubmit = async () => {
-            let postData = { old_passwd: state.oldPasswd, new_passwd: state.newPasswd };
-            const rsp = await request.post('/settings/setpasswd', postData);
+            let postData = {
+                section: state.section,
+                data: {
+                    title: state.title.trim(),
+                    slogan: state.slogan.trim(),
+                    logo: state.logo.trim(),
+                },
+            };
+            const rsp = await request.post('/settings/set', postData);
             if (await rsp.data.code == 200) {
                 let msg = await rsp.data.msg;
                 ElMessage({ message: msg, type: 'success' })
@@ -68,6 +76,22 @@ export default defineComponent({
         const handleView = async () => {
             router.push('/sendlogs?taskid=' + CONSTANT.LOG_TASK_ID, { replace: true });
         }
+
+        const getSiteConfig = async () => {
+            let params = { params: { section: "site_config" } };
+            const rsp = await request.get('/settings/getsetting', params);
+            if (await rsp.data.code == 200) {
+                let data = await rsp.data.data;
+                state.title = data.title;
+                state.logo = data.logo;
+                state.slogan = data.slogan;
+            }
+        }
+
+        onMounted(() => {
+            getSiteConfig();
+        })
+
         return {
             ...toRefs(state), handleSubmit, handleView
         }

@@ -12,6 +12,7 @@ require (
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/google/uuid v1.5.0
 	github.com/jinzhu/gorm v0.0.0-20180213101209-6e1387b44c64
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/unknwon/com v1.0.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df

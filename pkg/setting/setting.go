@@ -27,8 +27,8 @@ type App struct {
 	LogFileExt  string
 	TimeFormat  string
 
-	LogKeepNum     int
-	CleanTaskLogID string
+	//LogKeepNum     int
+	//CleanTaskLogID string
 }
 
 var AppSetting = &App{}
@@ -83,9 +83,9 @@ func Setup() {
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
 	RedisSetting.IdleTimeout = RedisSetting.IdleTimeout * time.Second
 
-	// 默认值
-	AppSetting.LogKeepNum = 1000
-	AppSetting.CleanTaskLogID = "00000000-0000-0000-0000-000000000001"
+	//// 默认值
+	//AppSetting.LogKeepNum = 1000
+	//AppSetting.CleanTaskLogID = "00000000-0000-0000-0000-000000000001"
 }
 
 // mapTo map section

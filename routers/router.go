@@ -46,6 +46,8 @@ func InitRouter() *gin.Engine {
 
 		// settings
 		apiv1.POST("/settings/setpasswd", v1.EditPasswd)
+		apiv1.POST("/settings/set", v1.EditSettings)
+		apiv1.GET("/settings/getsetting", v1.GetUserSetting)
 
 	}
 
