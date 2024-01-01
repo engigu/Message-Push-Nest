@@ -27,7 +27,7 @@ func GetAuth(c *gin.Context) {
 		appG = app.Gin{C: c}
 		req  ReqAuth
 	)
-	add
+
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errMsg, nil)

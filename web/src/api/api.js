@@ -9,7 +9,7 @@ const ERR_NETWORK = "ERR_NETWORK";
 const request = axios.create({
     baseURL: 'http://127.0.0.1:8000',
     timeout: 50000,
-    withCredentials: true, // 允许发送跨域凭证（例如，用于保持登录状态）
+    withCredentials: true, 
 });
 
 
@@ -17,13 +17,10 @@ const request = axios.create({
 request.interceptors.request.use(
     (config) => {
         const pageState = usePageState();
-        // console.log('config', config);
         if (!CONSTANT.NO_AUTH_URL.includes(config.url)) {
             config.url = '/api/v1' + config.url;
         }
-
         if (pageState.Token && !CONSTANT.NO_AUTH_URL.includes(config.url)) {
-            // 添加 token 参数到 URL 中
             config.headers = {
                 ...config.headers,
                 'm-token': pageState.Token,
@@ -33,16 +30,13 @@ request.interceptors.request.use(
         return config;
     },
     (error) => {
-        // 处理请求错误
         handleException(error);
-        // return Promise.reject(error);
     }
 );
 
 // 响应拦截器
 request.interceptors.response.use(
     (response) => {
-        // console.log('request.interceptors.response', response);
         if (response && response.data.code != 200) {
             ElMessage({ message: response.data.msg, type: 'error' })
             // Promise.reject();
@@ -51,7 +45,6 @@ request.interceptors.response.use(
     },
     (error) => {
         if (error.response && error.response.status === 401) {
-            // 未授权，可能是登录状态过期，执行登出操作
             logout();
         } else if (20000 <= error.response.status <= 29999) {
             logout();
