@@ -1,31 +1,22 @@
-# message-nest
+# Message Nest Web
 
-This template should help get you started developing with Vue 3 in Vite.
+ Message Nest 前端页面
+ 使用vue3+vite开发
 
-## Customize configuration
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
+## 初始化
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
-
+### 开发测试运行
 ```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+### 构建
 
 ```sh
 npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
 ```
