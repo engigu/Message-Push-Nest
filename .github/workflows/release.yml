@@ -24,10 +24,10 @@ jobs:
         run: npm i
 
       - name: Run npm build
-        run: cd /web && npm run build
+        run: cd web/ && npm run build
 
       - name: Check build static
-        run: cd /web && ls -la
+        run: cd web/ && ls -la
 
   goreleaser:
     runs-on: ubuntu-latest
