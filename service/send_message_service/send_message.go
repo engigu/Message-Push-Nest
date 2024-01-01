@@ -5,6 +5,7 @@ import (
 	"message-nest/models"
 	"message-nest/pkg/logging"
 	"message-nest/pkg/message"
+	"message-nest/service/send_ins_service"
 	"message-nest/service/send_task_service"
 	"message-nest/service/send_way_service"
 	"strings"
@@ -56,7 +57,7 @@ func (sm *SendMessageService) Send() string {
 		// 邮箱类型的实例
 		emailAuth, ok := msgObj.(send_way_service.WayDetailEmail)
 		if ok {
-			errMsg := sm.SendTaskEmail(emailAuth)
+			errMsg := sm.SendTaskEmail(emailAuth, ins.SendTasksIns)
 			sm.MarkStatus(errMsg, &status)
 			logOutput = append(logOutput, sm.TransError(errMsg))
 			continue
@@ -119,11 +120,39 @@ func (sm *SendMessageService) TransError(err string) string {
 	}
 }
 
+// GetSendMsg
+func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) string {
+	data := map[string]string{}
+	data["text"] = sm.Text
+	data["html"] = sm.HTML
+	data["markdown"] = sm.MarkDown
+	content, ok := data[ins.ContentType]
+	if !ok || len(content) == 0 {
+		content, ok := data["text"]
+		if !ok {
+			logging.Logger.Error("text节点数据为空！")
+			return ""
+		} else {
+			return content
+		}
+	} else {
+		return content
+	}
+}
+
 // SendTaskEmail 执行发送邮件
-func (sm *SendMessageService) SendTaskEmail(auth send_way_service.WayDetailEmail) string {
+func (sm *SendMessageService) SendTaskEmail(auth send_way_service.WayDetailEmail, ins models.SendTasksIns) string {
+	insService := send_ins_service.SendTaskInsService{}
+	errStr, c := insService.ValidateDiffIns(ins)
+	if errStr != "" {
+		return errStr
+	}
+	config, ok := c.(models.InsEmailConfig)
+	if !ok {
+		return "邮箱config校验失败"
+	}
 	var emailer message.EmailMessage
 	emailer.Init(auth.Server, auth.Port, auth.Account, auth.Passwd)
-	//errMsg := emailer.SendTextMessage("sayheya@qq.com", "test", "This is a test email from message-nest.")
-	//return errMsg
-	return ""
+	errMsg := emailer.SendTextMessage(config.ToAccount, config.Title, sm.GetSendMsg(ins))
+	return errMsg
 }

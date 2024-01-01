@@ -1,24 +1,16 @@
 <template>
   <el-dialog v-model="isShow" width="58%" :close-on-press-escape="false" :before-close="() => { }" :show-close="false">
     <template #header="">
-      <el-text class="mx-1">添加发信任务(绑定关联实例)</el-text>
+      <el-text class="mx-1">编辑发信任务</el-text>
       <el-tooltip placement="top">
-        <template #content>
-          一个任务可以关联创建多个实例
-          <br />
-          选择不同的渠道，填写的实例信息也不一样
-          <br />
-          一个任务可以绑定一个实例，也可以绑定多个实例，多个实例意味着一个消息可以推送给多个消息渠道
-        </template>
-        <el-icon>
-          <QuestionFilled />
-        </el-icon>
       </el-tooltip>
     </template>
 
     <div class="add-top">
       <el-input v-model="currTaskInput.taskName" placeholder="请输入任务名" size="small" class="taskNameInput"></el-input>
+      <el-button @click="handleEditTask()" size="small" type="primary" style="margin-left: 20px;">修改</el-button>
     </div>
+
 
     <div class="dashed" />
 
@@ -41,13 +33,14 @@
             <el-radio label="text" size="small">text</el-radio>
             <el-radio label="html" size="small">html</el-radio>
           </el-radio-group>
-
           <div>
             <el-input v-model="currInsInput.toAccount" placeholder="目的邮箱账号（发给谁）" size="small"
               style="width: 200px; margin: 10px 40px 5px 0;" class="searchInput"></el-input>
             <el-input v-model="currInsInput.title" placeholder="邮箱标题" size="small"
               style="width: 200px; margin: 0px 40px 5px 0;" class="searchInput"></el-input>
-            <el-button @click="clickStore()" size="small" style="width: 200px">暂存</el-button>
+          </div>
+          <div>
+            <el-button @click="handleAddSubmit()" size="small" style="width: 200px">添加</el-button>
           </div>
 
         </div>
@@ -69,9 +62,7 @@
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="60px">
             <template #default="scope">
-              <el-button link type="primary" size="small" @click.prevent="insTableData.splice(scope.$index, 1)">
-                删除
-              </el-button>
+              <tableDeleteButton @customHandleDelete="handleDelete(scope.$index, scope.row)" />
             </template>
           </el-table-column>
         </el-table>
@@ -81,9 +72,6 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="handleCancer()" size="small">取消</el-button>
-        <el-button type="primary" size="small" @click="handleSubmit()">
-          确定添加
-        </el-button>
       </span>
     </template>
 
@@ -95,13 +83,16 @@ import { defineComponent, onMounted, watch, reactive, toRefs } from 'vue';
 import { _ } from 'lodash';
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { v4 as uuidv4 } from 'uuid';
-import { usePageState } from '../../../store/page_sate.js';
-import { request } from '../../../api/api'
+import { usePageState } from '@/store/page_sate.js';
+import { request } from '@/api/api'
+import tableDeleteButton from '@/views/common/tableDeleteButton.vue'
+import { ElMessage } from 'element-plus'
 
 
 export default defineComponent({
   components: {
     QuestionFilled,
+    tableDeleteButton,
   },
   props: {
     componentName: String
@@ -114,12 +105,10 @@ export default defineComponent({
       isShowAddBox: false,
       searchWayID: '',
       currWayTmp: {},
-      currInsInput: {
-        content_type: 'text'
-      },
+      currInsInput: {},
       currTaskInput: {
         taskName: '',
-        taskId: uuidv4(),
+        taskId: '',
       },
     });
 
@@ -127,8 +116,18 @@ export default defineComponent({
       if (newValue[props.componentName]) {
         state.isShow = pageState.ShowDialogData[props.componentName].isShow;
         resetPageInitData();
+        state.currTaskInput.taskId = pageState.ShowDialogData[props.componentName].rowData.id;
+        queryListData();
       }
     });
+
+    const queryListData = async () => {
+      let params = { id: state.currTaskInput.taskId };
+      const rsp = await request.get('/sendtasks/ins/gettask', { params: params });
+      state.insTableData = await rsp.data.data.ins_data;
+      // state.total = await rsp.data.data.total;
+      state.currTaskInput.taskName = await rsp.data.data.name;
+    }
 
     const handleCancer = () => {
       if (pageState.ShowDialogData[props.componentName]) {
@@ -139,13 +138,13 @@ export default defineComponent({
     // 页面每次弹出，重置数据
     const resetPageInitData = () => {
       state.insTableData = [];
-      state.currInsInput = { content_type: 'text' };
+      state.currInsInput = {};
       state.currWayTmp = {};
       state.searchWayID = '';
       state.isShowAddBox = false;
       state.currTaskInput = {
         taskName: '',
-        taskId: uuidv4(),
+        // taskId: uuidv4(),
       }
     }
 
@@ -155,43 +154,10 @@ export default defineComponent({
       }
     }
 
-    // 点击暂存实例
-    const clickStore = () => {
-      let insData = {
-        id: uuidv4(),
-        task_id: state.currTaskInput.taskId,
-        way_id: state.currWayTmp.id,
-        way_type: state.currWayTmp.type,
-        way_name: state.currWayTmp.name,
-        content_type: state.currInsInput.content_type,
-        config: JSON.stringify({ to_account: state.currInsInput.toAccount, title: state.currInsInput.title })
-      };
-      state.insTableData.push(insData);
-    }
-
-    const searchID = async () => {
-      const rsp = await request.get('/sendways/get', { params: { id: state.searchWayID } });
-      let data = await rsp.data;
-      state.isShowAddBox = Boolean(data.data);
-      if (data.data) {
-        state.currWayTmp = data.data;
-      }
-    }
-
-    const getFinalData = () => {
-      let postData = { id: state.currTaskInput.taskId, name: state.currTaskInput.taskName }
-      postData.ins_data = state.insTableData
-      return postData
-    }
-
-
-
-    const handleSubmit = async () => {
-      let postData = getFinalData();
-      const rsp = await request.post('/sendtasks/ins/addmany', postData);
-      if (await rsp.data.code == 200) {
-        handleCancer();
-        window.location.reload();
+    const handleDelete = async (index, row) => {
+      const rsp = await request.post('/sendtasks/ins/delete', { id: row.id });
+      if (rsp.status == 200) {
+        state.insTableData.splice(index, 1);
       }
     }
 
@@ -204,10 +170,48 @@ export default defineComponent({
       return info
     }
 
+    const searchID = async () => {
+      const rsp = await request.get('/sendways/get', { params: { id: state.searchWayID } });
+      let data = await rsp.data;
+      state.isShowAddBox = Boolean(data.data);
+      if (data.data) {
+        state.currWayTmp = data.data;
+      }
+    }
+
+    const getFinalData = () => {
+      let postData = {
+        id: uuidv4(),
+        task_id: state.currTaskInput.taskId,
+        way_id: state.currWayTmp.id,
+        way_type: state.currWayTmp.type,
+        way_name: state.currWayTmp.name,
+        content_type: state.currInsInput.content_type,
+        config: JSON.stringify({ to_account: state.currInsInput.toAccount, title: state.currInsInput.title })
+      }
+      return postData
+    }
+
+
+    const handleAddSubmit = async () => {
+      let postData = getFinalData();
+      const rsp = await request.post('/sendtasks/ins/addone', postData);
+      if (await rsp.data.code == 200) {
+        state.insTableData.push(postData);
+      }
+    }
+
+    const handleEditTask = async () => {
+      let postData = { id: state.currTaskInput.taskId, name: state.currTaskInput.taskName };
+      const rsp = await request.post('/sendtasks/edit', postData);
+      if (await rsp.data.code == 200) {
+        ElMessage({ message: await rsp.data.msg, type: 'success' })
+      }
+    }
+
     return {
-      ...toRefs(state), handleCancer, handleSubmit,
-      searchID, formatExtraInfo,
-      clickStore, insRowStyle
+      ...toRefs(state), handleCancer, handleAddSubmit, handleEditTask,
+      searchID, handleDelete, insRowStyle, formatExtraInfo
     };
   },
 });

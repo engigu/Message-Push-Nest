@@ -30,7 +30,7 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		_, Msg := app.CommonPlaygroundValid(emailConfig)
 		return Msg, emailConfig
 	}
-	return "", empty
+	return "未知的渠道的config校验", empty
 }
 
 func (st *SendTaskInsService) ManyAdd(taskIns []models.SendTasksIns) string {

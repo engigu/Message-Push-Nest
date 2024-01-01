@@ -162,3 +162,11 @@ func DeleteMsgTask(id string) error {
 	tx.Commit()
 	return nil
 }
+
+func EditSendTask(id string, data interface{}) error {
+	if err := db.Model(&SendTasks{}).Where("id = ? ", id).Updates(data).Error; err != nil {
+		return err
+	}
+
+	return nil
+}

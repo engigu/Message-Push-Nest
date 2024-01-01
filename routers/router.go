@@ -3,7 +3,6 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 	"message-nest/middleware"
-
 	"message-nest/routers/api"
 	"message-nest/routers/api/v1"
 )
@@ -11,7 +10,9 @@ import (
 // InitRouter initialize routing information
 func InitRouter() *gin.Engine {
 	r := gin.New()
-	r.Use(gin.Logger())
+	r.Use(middleware.LogMiddleware())
+	//gin.DefaultWriter = logging.Logger.Out
+	//gin.DefaultErrorWriter = logging.Logger.Out
 	r.Use(gin.Recovery())
 	r.Use(middleware.Cors())
 
@@ -32,6 +33,7 @@ func InitRouter() *gin.Engine {
 		apiv1.GET("/sendtasks/list", v1.GetMsgSendTaskList)
 		apiv1.POST("/sendtasks/add", v1.AddMsgSendTask)
 		apiv1.POST("/sendtasks/delete", v1.DeleteMsgSendTask)
+		apiv1.POST("/sendtasks/edit", v1.EditMsgSendTask)
 
 		// sendtasks/ins
 		apiv1.POST("/sendtasks/ins/addmany", v1.AddManyTasksIns)

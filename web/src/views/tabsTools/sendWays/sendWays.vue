@@ -56,12 +56,12 @@
 
 <script >
 import { reactive, toRefs, onMounted } from 'vue'
-import addWayComponent from './addWayPopUp.vue'
-import editWayComponent from './editWayPopUp.vue'
-import { usePageState } from '../../../store/page_sate.js';
-import { request } from '../../../api/api'
+import addWayComponent from './view/addWayPopUp.vue'
+import editWayComponent from './view/editWayPopUp.vue'
+import { usePageState } from '@/store/page_sate.js';
+import { request } from '@/api/api'
 import { CopyDocument } from '@element-plus/icons-vue'
-import { copyToClipboard } from '../../../util/clipboard.js';
+import { copyToClipboard } from '@/util/clipboard.js';
 import tableDeleteButton from '@/views/common/tableDeleteButton.vue'
 import { CONSTANT } from '@/constant'
 

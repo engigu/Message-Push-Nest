@@ -16,9 +16,9 @@ class ApiStrGenerate {
         if (options.markdown) {
             data.html = '** Hello World! **';
         }
-        let dataStr = JSON.stringify(data, null, 4)
+        let dataStr = JSON.stringify(data, null, 4);
         let example = `curl -X POST --location '${gethttpOrigin()}/api/v1/message/send' \\
-        --header 'Accept: application/json'  \\
+        --header 'Content-Type: application/json' \\
         --data '${dataStr}'`;
         return example;
     }

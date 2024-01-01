@@ -44,11 +44,11 @@
 <script >
 import { computed, ref, reactive, toRefs, onMounted } from 'vue'
 // import { InfoFilled } from '@element-plus/icons-vue'
-import { usePageState } from '../../../store/page_sate';
-import { request } from '../../../api/api'
-import addTaskPopUpComponent from './addTaskPopUp.vue'
-import editTaskPopUpComponent from './editTaskPopUp.vue'
-import viewTaskAPIPopUpComponent from './viewTaskAPIPopUp.vue'
+import { usePageState } from '@/store/page_sate';
+import { request } from '@/api/api'
+import addTaskPopUpComponent from './view/addTaskPopUp.vue'
+import editTaskPopUpComponent from './view/editTaskPopUp.vue'
+import viewTaskAPIPopUpComponent from './view/viewTaskAPIPopUp.vue'
 import tableDeleteButton from '@/views/common/tableDeleteButton.vue'
 import { useRouter } from 'vue-router';
 import { CONSTANT } from '@/constant'

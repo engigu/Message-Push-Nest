@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"message-nest/pkg/table"
 	"message-nest/service/cron_service"
 	"message-nest/service/env_service"
@@ -27,12 +26,6 @@ func init() {
 	cron_service.Setup()
 }
 
-// @title Golang Gin API
-// @version 1.0
-// @description An example of gin
-// @termsOfService https://github.com/EDDYCJY/go-gin-example
-// @license.name MIT
-// @license.url https://message-nest/blob/master/LICENSE
 func main() {
 	gin.SetMode(setting.ServerSetting.RunMode)
 
@@ -50,10 +43,10 @@ func main() {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
-	log.Printf("[info] start http server listening http://0.0.0.0%s", endPoint)
+	logging.Logger.Info("start http server listening http://0.0.0.0", endPoint)
 
 	err := server.ListenAndServe()
 	if err != nil {
-		log.Printf("Server err: %v", err)
+		logging.Logger.Error("Server err: ", err)
 	}
 }

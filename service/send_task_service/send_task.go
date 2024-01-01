@@ -27,6 +27,10 @@ func (st *SendTaskService) Delete() error {
 	return models.DeleteMsgTask(st.ID)
 }
 
+func (st *SendTaskService) Edit(data map[string]string) error {
+	return models.EditSendTask(st.ID, data)
+}
+
 func (st *SendTaskService) GetTaskWithIns() (models.TaskIns, error) {
 	return models.GetTasksIns(st.ID)
 }
