@@ -30,3 +30,4 @@ go.work
 /test
 /conf
 /runtime
+.idea/
