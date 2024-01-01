@@ -53,7 +53,10 @@ request.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             // 未授权，可能是登录状态过期，执行登出操作
             logout();
+        } else if (20000 <= error.response.status <= 29999) {
+            logout();
         }
+
         handleException(error);
         // return Promise.reject(error);
     }
@@ -82,8 +85,9 @@ const handleException = (error) => {
 
 // 登出系统
 const logout = () => {
-    // 执行登出逻辑，清除本地存储的用户信息等
-    console.log('User logged out');
+    const pageState = usePageState();
+    pageState.setIsLogin(true);
+    localStorage.setItem(CONSTANT.STORE_TOKEN_NAME, "");
 };
 
 export { request, handleException, logout };

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"message-nest/pkg/table"
+	"message-nest/pkg/util"
 	"message-nest/service/cron_service"
 	"message-nest/service/env_service"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"message-nest/models"
 	"message-nest/pkg/logging"
 	"message-nest/pkg/setting"
-	"message-nest/pkg/util"
 	"message-nest/routers"
 )
 

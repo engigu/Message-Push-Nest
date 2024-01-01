@@ -42,8 +42,8 @@ export default {
 
         const pageState = usePageState();
         const state = reactive({
-            account: 'admin',
-            passwd: '123456',
+            account: '',
+            passwd: '',
         });
 
         onMounted(() => {

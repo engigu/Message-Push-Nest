@@ -1,11 +1,11 @@
 package constant
 
-var CleanLogsTaskId = "00000000-0000-0000-0000-000000000001"
-var SiteSettingSectionName = "site_config"
+const CleanLogsTaskId = "00000000-0000-0000-0000-000000000001"
+const SiteSettingSectionName = "site_config"
 
-//var SiteSettingTitleKeyName = "title"
-//var SiteSettingSloganKeyName = "slogan"
-//var SiteSettingLogoKeyName = "logo"
+//const SiteSettingTitleKeyName = "title"
+//const SiteSettingSloganKeyName = "slogan"
+//const SiteSettingLogoKeyName = "logo"
 
 // 站点信息默认值
 var SiteSiteDefaultValueMap = map[string]string{
@@ -15,9 +15,9 @@ var SiteSiteDefaultValueMap = map[string]string{
 }
 
 // 日志清理自定义
-var LogsCleanSectionName = "log_config"
-var LogsCleanCronKeyName = "cron"
-var LogsCleanKeepKeyName = "keep_num"
+const LogsCleanSectionName = "log_config"
+const LogsCleanCronKeyName = "cron"
+const LogsCleanKeepKeyName = "keep_num"
 
 // 日志清理默认值
 var LogsCleanDefaultValueMap = map[string]string{
@@ -25,4 +25,4 @@ var LogsCleanDefaultValueMap = map[string]string{
 	"keep_num": "1000",
 }
 
-var AboutSectionName = "about"
+const AboutSectionName = "about"

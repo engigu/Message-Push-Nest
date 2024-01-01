@@ -9,26 +9,9 @@ import (
 
 type App struct {
 	JwtSecret string
-	PageSize  int
 	PrefixUrl string
 
 	RuntimeRootPath string
-
-	ImageSavePath  string
-	ImageMaxSize   int
-	ImageAllowExts []string
-
-	ExportSavePath string
-	QrCodeSavePath string
-	FontSavePath   string
-
-	LogSavePath string
-	LogSaveName string
-	LogFileExt  string
-	TimeFormat  string
-
-	//LogKeepNum     int
-	//CleanTaskLogID string
 }
 
 var AppSetting = &App{}
@@ -53,16 +36,6 @@ type Database struct {
 
 var DatabaseSetting = &Database{}
 
-type Redis struct {
-	Host        string
-	Password    string
-	MaxIdle     int
-	MaxActive   int
-	IdleTimeout time.Duration
-}
-
-var RedisSetting = &Redis{}
-
 var cfg *ini.File
 
 // Setup initialize the configuration instance
@@ -76,16 +49,9 @@ func Setup() {
 	mapTo("app", AppSetting)
 	mapTo("server", ServerSetting)
 	mapTo("database", DatabaseSetting)
-	mapTo("redis", RedisSetting)
 
-	AppSetting.ImageMaxSize = AppSetting.ImageMaxSize * 1024 * 1024
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
-	RedisSetting.IdleTimeout = RedisSetting.IdleTimeout * time.Second
-
-	//// 默认值
-	//AppSetting.LogKeepNum = 1000
-	//AppSetting.CleanTaskLogID = "00000000-0000-0000-0000-000000000001"
 }
 
 // mapTo map section

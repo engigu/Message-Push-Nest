@@ -2,34 +2,12 @@ package app
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"message-nest/pkg/e"
 	"message-nest/pkg/util"
 	"net/http"
 	"strings"
 )
-
-// BindAndValid binds and validates data
-func BindAndValid(c *gin.Context, form interface{}) (int, int) {
-	err := c.Bind(form)
-	if err != nil {
-		return http.StatusBadRequest, e.INVALID_PARAMS
-	}
-
-	valid := validation.Validation{}
-	check, err := valid.Valid(form)
-	if err != nil {
-		return http.StatusInternalServerError, e.ERROR
-	}
-	if !check {
-		MarkErrors(valid.Errors)
-		return http.StatusBadRequest, e.INVALID_PARAMS
-	}
-
-	return http.StatusOK, e.SUCCESS
-}
 
 func CommonPlaygroundValid(obj interface{}) (int, string) {
 	if err := util.CustomerValidate.Struct(obj); err != nil {
