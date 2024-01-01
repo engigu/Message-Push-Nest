@@ -1,10 +1,6 @@
 name: goreleaser
 
 on:
-#  push:
-#    # run only against tags
-#    tags:
-#      - '*'
   workflow_dispatch:  #
 
 permissions:
