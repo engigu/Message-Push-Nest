@@ -36,7 +36,7 @@ func AddTask(task ScheduledTask) cron.EntryID {
 		logging.Logger.Error(fmt.Sprintf("添加定时任务失败，原因：%s", err))
 	} else {
 		TaskList[taskId] = &task
-		logging.Logger.Error(fmt.Sprintf("添加日志清除任务成功，entryID： %d", taskId))
+		logging.Logger.Error(fmt.Sprintf("添加日志清除任务成功，entryID: %d, cron: %s", taskId, task.Schedule))
 	}
 	return taskId
 }
