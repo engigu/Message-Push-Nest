@@ -29,7 +29,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 该项目也是学习[go-gin-example](https://github.com/eddycjy/go-gin-example)的一次实践。
 
-# 效果图 ✨
+## 效果图 📺
 ![image](https://github.com/EngiGu/Message-Nest/assets/24751376/51bfae66-2671-418d-8af6-fdab53b3a763)
 ![image](https://github.com/EngiGu/Message-Nest/assets/24751376/f71a2e65-4fbb-4937-aaf7-7841a5b6b2a8)
 ![image](https://github.com/EngiGu/Message-Nest/assets/24751376/18558e0f-8fcd-40e9-aace-e642260fe229)
