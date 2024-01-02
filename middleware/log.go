@@ -12,8 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//var timeFormat = "02/Jan/2006:15:04:05 -0700"
-
 // LogMiddleware  Logger is the logrus logger handler
 func LogMiddleware(notLogged ...string) gin.HandlerFunc {
 	//hostname, err := os.Hostname()
@@ -58,7 +56,7 @@ func LogMiddleware(notLogged ...string) gin.HandlerFunc {
 		entry := logging.Logger.WithFields(logrus.Fields{
 			//"hostname":   hostname,
 			"statusCode": statusCode,
-			"latency":    latency, // time to process
+			"latency":    latency,
 			"clientIP":   clientIP,
 			"method":     c.Request.Method,
 			"path":       path,
