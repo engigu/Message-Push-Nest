@@ -9,7 +9,6 @@ import (
 
 type App struct {
 	JwtSecret string
-	PrefixUrl string
 
 	RuntimeRootPath string
 }

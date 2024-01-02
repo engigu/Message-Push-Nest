@@ -28,6 +28,6 @@ go.work
 
 # Project ignore
 /test
-/conf
+/conf/app.ini
 /runtime
 .idea/
