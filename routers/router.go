@@ -18,7 +18,7 @@ func AppendCors(app *gin.Engine) {
 	}
 }
 
-// ServerStaticHtml 启用返回打包的静态文件
+// AppendServerStaticHtml 启用返回打包的静态文件
 func AppendServerStaticHtml(app *gin.Engine, f embed.FS) {
 	if setting.ServerSetting.EmbedHtml == "disable" {
 		return

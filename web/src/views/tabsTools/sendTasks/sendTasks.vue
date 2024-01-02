@@ -90,7 +90,6 @@ export default {
     });
 
     const handleEdit = (index, row) => {
-      console.log(index, row)
       let name = state.editTaskPopUpComponentName;
       pageState.ShowDialogData[name] = {};
       pageState.ShowDialogData[name].isShow = true;
@@ -105,7 +104,6 @@ export default {
     }
 
     const handleViewAPI = (index, row) => {
-      console.log(index, row)
       let name = state.viewTaskAPIPopUpComponentName;
       pageState.ShowDialogData[name] = {};
       pageState.ShowDialogData[name].isShow = true;

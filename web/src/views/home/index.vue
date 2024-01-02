@@ -55,7 +55,6 @@ export default {
 
     const clickLogout = () => {
       localStorage.removeItem(CONSTANT.STORE_TOKEN_NAME);
-      console.log('clickLogout')
       router.push('/login', { replace: true }).then(() => { router.go() });
     };
 

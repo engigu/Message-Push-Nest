@@ -136,7 +136,7 @@ export default defineComponent({
       let postData = getFinalData();
       const rsp = await request.post('/sendways/test', postData);
       if (await rsp.data.code == 200) {
-        ElMessage({ message: response.data.msg, type: 'success' })
+        ElMessage({ message: await rsp.data.msg, type: 'success' })
       }
     }
 

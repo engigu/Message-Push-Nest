@@ -71,7 +71,6 @@ export default defineComponent({
     }
 
     const renderApiString = () => {
-      console.log('renderApiString', state.activeName)
       let task_id = pageState.ShowDialogData[props.componentName].rowData.id;
       if (state.activeName == 'curl') {
         state.currCode = ApiStrGenerate.getCurlString(task_id, {});

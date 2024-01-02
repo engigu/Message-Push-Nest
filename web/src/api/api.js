@@ -58,10 +58,6 @@ request.interceptors.response.use(
 
 // 异常处理
 const handleException = (error) => {
-    console.log('99999999',  config    )
-    console.log('99999999',  config.apiUrl    )
-
-    console.log('handleException', error);
     if (error.code == ERR_NETWORK) {
         ElMessage({ message: `网络错误！`, type: 'error' })
     } else if (error.response && error.response.data.code != 200) {

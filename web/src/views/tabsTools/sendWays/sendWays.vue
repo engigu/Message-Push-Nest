@@ -98,7 +98,6 @@ export default {
     });
 
     const handleEdit = (index, row) => {
-      console.log(index, row)
       let name = state.editWayComponentName;
       pageState.ShowDialogData[name] = {};
       pageState.ShowDialogData[name].isShow = true;
@@ -114,7 +113,6 @@ export default {
     }
 
     const handPageChange = async (pageNum) => {
-      console.log('pageNum', pageNum)
       state.currPage = pageNum;
       await queryListData(pageNum, state.pageSize);
 
@@ -125,14 +123,14 @@ export default {
       }
     }
     const filterFunc = async () => {
-      console.log('state.optionValue', state.optionValue);
+      // console.log('state.optionValue', state.optionValue);
       await queryListData(state.currPage, state.pageSize, state.search, state.optionValue);
 
     }
     const clickAdd = () => {
       pageState.ShowDialogData[state.addWayComponentName] = {};
       pageState.ShowDialogData[state.addWayComponentName].isShow = true;
-      console.log('clickAdd', pageState.ShowDialogData[state.addWayComponentName].isShow)
+      // console.log('clickAdd', pageState.ShowDialogData[state.addWayComponentName].isShow)
     }
 
     const queryListData = async (page, size, name = '', type = '') => {
