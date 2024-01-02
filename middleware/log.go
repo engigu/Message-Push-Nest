@@ -25,7 +25,6 @@ func LogMiddleware(notLogged ...string) gin.HandlerFunc {
 
 	if length := len(notLogged); length > 0 {
 		skip = make(map[string]struct{}, length)
-
 		for _, p := range notLogged {
 			skip[p] = struct{}{}
 		}
