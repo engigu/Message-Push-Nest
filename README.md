@@ -41,7 +41,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 
 ## 贡献 🤝
-欢迎通过提交问题和提出改进建议来贡献。
+欢迎通过提交问题和提出改进建议。
 
 ## 致谢 🙏
 该项目汲取了[go-gin-example](https://github.com/eddycjy/go-gin-example)项目的灵感，展示了 Go 和 Gin 在实际应用中的强大和多才多艺。
