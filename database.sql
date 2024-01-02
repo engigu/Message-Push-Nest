@@ -19,7 +19,7 @@ CREATE TABLE `message_auth`  (
 ) ENGINE = InnoDB  CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 
-INSERT INTO `blog`.`message_auth` (`id`, `username`, `password`) VALUES (1, 'admin', '123456');
+INSERT INTO `message_auth` (`id`, `username`, `password`) VALUES (1, 'admin', '123456');
 
 
 -- ----------------------------
