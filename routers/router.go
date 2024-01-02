@@ -11,11 +11,19 @@ import (
 	"net/http"
 )
 
-// 打包集成静态资源
-func ServerStaticHtml(r *gin.Engine, f embed.FS) {
+// AppendCors 添加是否跨域（debug模式开启）
+func AppendCors(r *gin.Engine) {
+	if setting.ServerSetting.RunMode == "debug" {
+		r.Use(middleware.Cors())
+	}
+}
+
+// ServerStaticHtml 启用返回打包的静态文件
+func AppendServerStaticHtml(r *gin.Engine, f embed.FS) {
 	if setting.ServerSetting.EmbedHtml == "disable" {
 		return
 	}
+
 	assets, _ := fs.Sub(f, "web/dist/assets")
 	dist, _ := fs.Sub(f, "web/dist")
 
@@ -31,10 +39,9 @@ func InitRouter(f embed.FS) *gin.Engine {
 	r := gin.New()
 	r.Use(middleware.LogMiddleware())
 	r.Use(gin.Recovery())
-	r.Use(middleware.Cors())
 
-	// 打包
-	ServerStaticHtml(r, f)
+	AppendCors(r)
+	AppendServerStaticHtml(r, f)
 
 	r.POST("/auth", api.GetAuth)
 	apiv1 := r.Group("/api/v1")
