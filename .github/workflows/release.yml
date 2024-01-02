@@ -14,14 +14,22 @@ permissions:
 
 jobs:
 
-  build-and-release:
+  build-and-release-message-nest:
     runs-on: ubuntu-latest
+
     env:
       NODE_ENV: prod
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: git fetch --force --tags
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.20.2'
+          cache: true
 
       - name: Install npm dependencies
         run: npm i
@@ -38,14 +46,14 @@ jobs:
 #  goreleaser:
 #    runs-on: ubuntu-latest
 #    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: git fetch --force --tags
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '>=1.20.2'
-          cache: true
+#      - uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+#      - run: git fetch --force --tags
+#      - uses: actions/setup-go@v3
+#        with:
+#          go-version: '>=1.20.2'
+#          cache: true
       # More assembly might be required: Docker logins, GPG, etc. It all depends
       # on your needs.
       - uses: goreleaser/goreleaser-action@v4
