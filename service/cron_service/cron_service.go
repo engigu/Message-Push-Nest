@@ -68,7 +68,7 @@ func (cs *CronService) UpdateLogsCronRun(cron string) {
 		Job:      ClearLogs,
 	})
 	logging.Logger.Error(fmt.Sprintf("更新日志的cron成功，%s", cron))
-	logging.Logger.Info(fmt.Sprintf("所有的定时任务： %s", TaskList))
+	logging.Logger.Error(fmt.Sprintf("所有的定时任务： %s", TaskList))
 
 }
 

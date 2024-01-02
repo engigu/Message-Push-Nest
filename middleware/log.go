@@ -2,79 +2,83 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"math"
 	"message-nest/pkg/logging"
+	"net/http"
+	"net/url"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
-const (
-	status200 = 42
-	status404 = 43
-	status500 = 41
+//var timeFormat = "02/Jan/2006:15:04:05 -0700"
 
-	methodGET = 44
-)
+// LogMiddleware  Logger is the logrus logger handler
+func LogMiddleware(notLogged ...string) gin.HandlerFunc {
+	//hostname, err := os.Hostname()
+	//if err != nil {
+	//	hostname = "unknown"
+	//}
 
-func formatDuration(duration time.Duration) string {
-	seconds := duration.Seconds()
-	switch {
-	case seconds >= 1:
-		return fmt.Sprintf("%.2fs", seconds)
-	default:
-		return fmt.Sprintf("%.3fms", float64(duration.Milliseconds()))
-		//default:
-		//	return fmt.Sprintf("%dns", duration.Nanoseconds())
-		//case duration.Milliseconds() >= 1:
-		//	return fmt.Sprintf("%.2fms", float64(duration.Milliseconds()))
-		//default:
-		//	return fmt.Sprintf("%dns", duration.Nanoseconds())
+	var skip map[string]struct{}
+
+	if length := len(notLogged); length > 0 {
+		skip = make(map[string]struct{}, length)
+
+		for _, p := range notLogged {
+			skip[p] = struct{}{}
+		}
 	}
-}
 
-func LogMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		start := time.Now()
 		path := c.Request.URL.Path
 		raw := c.Request.URL.RawQuery
+		start := time.Now()
 
-		// Process request
 		c.Next()
 
-		// Log only when path is not being skipped
-
-		// Stop timer
-		end := time.Now()
-		timeSub := end.Sub(start)
-		dr := formatDuration(timeSub)
-		clientIP := c.ClientIP()
-		method := c.Request.Method
+		stop := time.Since(start)
+		latency := int(math.Ceil(float64(stop.Nanoseconds()) / 1000000.0))
 		statusCode := c.Writer.Status()
-		//bodySize := c.Writer.Size()
+		clientIP := c.ClientIP()
+		//clientUserAgent := c.Request.UserAgent()
+		//referer := c.Request.Referer()
+		dataLength := c.Writer.Size()
+		if dataLength < 0 {
+			dataLength = 0
+		}
 		if raw != "" {
+			raw, _ := url.QueryUnescape(raw)
 			path = path + "?" + raw
 		}
-
-		var statusColor string
-		switch statusCode {
-		case 200:
-			statusColor = fmt.Sprintf("\033[%dm %d \033[0m", status200, statusCode)
-		case 500:
-			statusColor = fmt.Sprintf("\033[%dm %d \033[0m", status500, statusCode)
-		default:
-			statusColor = fmt.Sprintf("\033[%dm %d \033[0m", status404, statusCode)
+		if _, ok := skip[path]; ok {
+			return
 		}
 
-		var methodColor string
-		methodColor = fmt.Sprintf("\033[%dm %s \033[0m", methodGET, method)
+		entry := logging.Logger.WithFields(logrus.Fields{
+			//"hostname":   hostname,
+			"statusCode": statusCode,
+			"latency":    latency, // time to process
+			"clientIP":   clientIP,
+			"method":     c.Request.Method,
+			"path":       path,
+			//"referer":    referer,
+			"dataLength": dataLength,
+			//"userAgent":  clientUserAgent,
+		})
 
-		logging.Logger.Infof("[GIN]|%s|%s|%s|%s| %s",
-			//start.Format("2006-01-02 15:04:06"),
-			statusColor,
-			dr,
-			clientIP,
-			methodColor,
-			path,
-		)
-
+		if len(c.Errors) > 0 {
+			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
+		} else {
+			msg := fmt.Sprintf("[Gin] %s [%s] %s %d %d (%dms)", clientIP, c.Request.Method, path, statusCode, dataLength, latency)
+			if statusCode >= http.StatusInternalServerError {
+				entry.Error(msg)
+			} else if statusCode >= http.StatusBadRequest {
+				entry.Warn(msg)
+			} else {
+				entry.Info(msg)
+			}
+		}
 	}
 }
