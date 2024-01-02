@@ -2,7 +2,7 @@
 
  Message Nest 前端页面
  
- 使用vue3+vite开发
+ 使用vue3+vite+elementPlus开发
 
 
 ## 初始化
