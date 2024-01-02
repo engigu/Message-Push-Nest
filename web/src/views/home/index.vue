@@ -3,7 +3,7 @@
     <el-menu :collapse="isCollapse" breakpoint="768px" mode="horizontal" @select="handleSelect()"
       :default-active="currActivate()" :ellipsis="false" :menu-width="'auto'">
       <el-menu-item index="0" :disabled="false">
-        <img style="width: 60px" src="../../../public/titlelogo.svg" alt="Element logo" />
+        <img style="width: 60px" class="title-logo" :src="titleLogo" alt="Message logo" />
       </el-menu-item>
 
       <div class="flex-grow" style="flex-grow: 1" />
@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, toRefs } from 'vue';
 import { usePageState } from '../../store/page_sate.js';
 import { CONSTANT } from '../../constant'
 import { useRouter, useRoute } from 'vue-router';
@@ -29,6 +29,9 @@ export default {
     const pageState = usePageState();
     const router = useRouter();
     const isCollapse = ref(false);
+    const state = reactive({
+      titleLogo: 'data:image/svg+xml;utf8,' + CONSTANT.LOGO,
+    });
     const menuData = reactive([
       {
         id: '1',
@@ -74,14 +77,25 @@ export default {
     }
 
     onMounted(() => {
+      changeFavicon();
       checkIsLogin();
       loadLocalToken();
     });
 
+    const changeFavicon = () => {
+      const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+      if (link) {
+        link.type = 'image/svg+xml';
+        link.rel = 'icon';
+        link.href = 'data:image/svg+xml;utf8,' + CONSTANT.LOGO;
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+    }
+
     const handleSelect = () => { };
 
     return {
-      isCollapse, handleSelect, menuData, pageState, clickLogout, currActivate
+      isCollapse, handleSelect, menuData, pageState, clickLogout, currActivate, ...toRefs(state)
     };
   },
 };

@@ -3,7 +3,7 @@
 
         <div class="main-center-body">
             <div class="container">
-                <img class="login-logo" src="../../../public/logo.svg" alt="login logo">
+                <img class="login-logo" :src="logo" alt="login logo">
                 <p class="desc">A Message Way Hosted Site</p>
 
                 <div class="login-block">
@@ -32,7 +32,7 @@ import { ElMessage } from 'element-plus'
 import { request } from '../../api/api'
 import { CONSTANT } from '../../constant'
 import { usePageState } from '../../store/page_sate';
-import {  useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 
 
 export default {
@@ -44,10 +44,10 @@ export default {
         const state = reactive({
             account: '',
             passwd: '',
+            logo: 'data:image/svg+xml;utf8,' + CONSTANT.LOGO,
         });
 
         onMounted(() => {
-
         });
 
         // 登录
