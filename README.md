@@ -28,13 +28,17 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 自己常常写一些脚本需要消息推送，经常需要接入不同的消息发送，很不方便，于是就有了这个项目。
 
 ## 效果图 📺
-![image](https://github.com/EngiGu/Message-Nest/assets/24751376/51bfae66-2671-418d-8af6-fdab53b3a763)
-![image](https://github.com/EngiGu/Message-Nest/assets/24751376/f71a2e65-4fbb-4937-aaf7-7841a5b6b2a8)
-![image](https://github.com/EngiGu/Message-Nest/assets/24751376/18558e0f-8fcd-40e9-aace-e642260fe229)
-![image](https://github.com/EngiGu/Message-Nest/assets/24751376/aef58d51-7806-43a8-b98c-1f89cd075a38)
-
+![image](https://raw.githubusercontent.com/engigu/resources/images/2024/01/02/7cf863b1903b3ba4cfb59e37cf8dce0f.gif)
 
 ## 使用方法 🚀
+
+1. 下载最新的系统版本对应的release， 解压
+2. 重命名conf/app.example.ini为conf/app.ini
+3. 新建一个数据库
+4. 将database.sql在数据库中执行，进行表数据初始化
+5. 修改app.ini对应的配置
+6. 启动项目，访问8000端口
+
 
 ## 贡献 🤝
 欢迎通过提交问题和提出改进建议来贡献。
