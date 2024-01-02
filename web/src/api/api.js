@@ -3,11 +3,12 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus'
 import { usePageState } from '../store/page_sate';
 import { CONSTANT } from '../constant';
+import config  from '../../config.js';
 
 const ERR_NETWORK = "ERR_NETWORK";
 
 const request = axios.create({
-    baseURL: 'http://127.0.0.1:8000',
+    baseURL: config.apiUrl,
     timeout: 50000,
     withCredentials: true, 
 });
@@ -57,6 +58,9 @@ request.interceptors.response.use(
 
 // 异常处理
 const handleException = (error) => {
+    console.log('99999999',  config    )
+    console.log('99999999',  config.apiUrl    )
+
     console.log('handleException', error);
     if (error.code == ERR_NETWORK) {
         ElMessage({ message: `网络错误！`, type: 'error' })

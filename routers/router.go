@@ -1,23 +1,42 @@
 package routers
 
 import (
+	"embed"
 	"github.com/gin-gonic/gin"
+	"io/fs"
 	"message-nest/middleware"
+	"message-nest/pkg/setting"
 	"message-nest/routers/api"
 	"message-nest/routers/api/v1"
+	"net/http"
 )
 
+// 打包集成静态资源
+func ServerStaticHtml(r *gin.Engine, f embed.FS) {
+	if setting.ServerSetting.EmbedHtml == "disable" {
+		return
+	}
+	assets, _ := fs.Sub(f, "web/dist/assets")
+	dist, _ := fs.Sub(f, "web/dist")
+
+	r.StaticFS("assets/", http.FS(assets))
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.FileFromFS("/", http.FS(dist))
+	})
+
+}
+
 // InitRouter initialize routing information
-func InitRouter() *gin.Engine {
+func InitRouter(f embed.FS) *gin.Engine {
 	r := gin.New()
 	r.Use(middleware.LogMiddleware())
-	//gin.DefaultWriter = logging.Logger.Out
-	//gin.DefaultErrorWriter = logging.Logger.Out
 	r.Use(gin.Recovery())
 	r.Use(middleware.Cors())
 
-	r.POST("/auth", api.GetAuth)
+	// 打包
+	ServerStaticHtml(r, f)
 
+	r.POST("/auth", api.GetAuth)
 	apiv1 := r.Group("/api/v1")
 	apiv1.Use(middleware.JWT())
 	{

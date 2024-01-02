@@ -21,6 +21,8 @@ type Server struct {
 	HttpPort     int
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+
+	EmbedHtml string
 }
 
 var ServerSetting = &Server{}

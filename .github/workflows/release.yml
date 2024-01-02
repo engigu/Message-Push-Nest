@@ -14,8 +14,10 @@ permissions:
 
 jobs:
 
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: prod
 
     steps:
       - name: Checkout repository
@@ -26,7 +28,7 @@ jobs:
         working-directory: web/
 
       - name: Run npm build
-        run:  npm run build
+        run: export NODE_ENV=prod && npm run build
         working-directory: web/
 
       - name: Check build static

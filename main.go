@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"message-nest/pkg/table"
 	"message-nest/pkg/util"
@@ -16,6 +17,11 @@ import (
 	"message-nest/routers"
 )
 
+var (
+	//go:embed web/dist/*
+	f embed.FS
+)
+
 func init() {
 	setting.Setup()
 	models.Setup()
@@ -29,7 +35,7 @@ func init() {
 func main() {
 	gin.SetMode(setting.ServerSetting.RunMode)
 
-	routersInit := routers.InitRouter()
+	routersInit := routers.InitRouter(f)
 	readTimeout := setting.ServerSetting.ReadTimeout
 	writeTimeout := setting.ServerSetting.WriteTimeout
 	endPoint := fmt.Sprintf(":%d", setting.ServerSetting.HttpPort)
