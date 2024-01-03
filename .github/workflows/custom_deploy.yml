@@ -1,0 +1,56 @@
+name: custom-deploy-your-server
+
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+          go-version: '>=1.20.2'
+          cache: true
+
+      - name: Install npm dependencies
+        run: npm i
+        working-directory: web/
+
+      - name: Run npm build
+        run: export NODE_ENV=prod && npm run build
+        working-directory: web/
+
+      - name: Check build static
+        run: ls dist/ -la
+        working-directory: web/
+
+      - name: Install GO modules
+        run: go mod tidy
+
+      - name: Build Go
+        run:  go build -o Message-Nest
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWD }}
+          source: "Message-Nest"
+          target: ${{ secrets.REMOTE_TARGER }}
+
+      - name: SSH into server and restart service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWD }}
+          script: |
+            ${{ secrets.REMOTE_SCRIPT }}
