@@ -23,6 +23,7 @@ const router = createRouter({
     },
     {
       path: '/sendlogs',
+      alias: '/',
       name: 'sendlogs',
       component: () => import('../views/tabsTools/sendLogs/sendLogs.vue')
     },
@@ -30,6 +31,11 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: () => import('../views/tabsTools/settings/settings.vue')
+    },
+    {
+      path: '/:catchAll(.*)',
+      name: '404',
+      component: () => import('../views/404.vue')
     },
   ]
 })
