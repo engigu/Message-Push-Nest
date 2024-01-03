@@ -13,6 +13,7 @@ type SendMessageReq struct {
 	Text     string `json:"text" validate:"required" label:"文本内容"`
 	HTML     string `json:"html"  label:"html内容"`
 	MarkDown string `json:"markdown" label:"markdown内容"`
+	Mode     string `json:"mode" label:"是否异步发送"`
 }
 
 // DoSendMassage 外部调用发信接口
@@ -34,11 +35,17 @@ func DoSendMassage(c *gin.Context) {
 		HTML:     req.HTML,
 		MarkDown: req.MarkDown,
 	}
-	err := msgService.Send()
-	if err != "" {
-		appG.CResponse(http.StatusBadRequest, "发送失败！", nil)
-		return
+	if req.Mode != "async" {
+		// 同步发送
+		err := msgService.Send()
+		if err != "" {
+			appG.CResponse(http.StatusBadRequest, "发送失败！", nil)
+			return
+		}
+		appG.CResponse(http.StatusOK, "发送成功！", nil)
+	} else {
+		// 异步发送
+		send_message_service.Buffer <- msgService
+		appG.CResponse(http.StatusOK, "提交成功！", nil)
 	}
-
-	appG.CResponse(http.StatusOK, "发送成功！", nil)
 }

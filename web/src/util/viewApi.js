@@ -8,7 +8,7 @@ class ApiStrGenerate {
 
 
     static getCurlString(task_id, options) {
-        let data = { task_id: task_id };
+        let data = { task_id: task_id, mode: "async" };
         data.text = 'Hello World!';
         if (options.html) {
             data.html = '<h1> Hello World! </h1>';

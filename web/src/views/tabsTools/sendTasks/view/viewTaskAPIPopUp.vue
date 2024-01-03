@@ -10,7 +10,7 @@
           <br />
           发送的消息会优先现在相应的类型消息进行发送，如果没有，将使用传的text消息进行发送          
           <br />
-          *text节点必传
+          ** text节点必传，指定mode=async将异步发送，否则同步发送
         </template>
         <el-icon>
           <QuestionFilled />
