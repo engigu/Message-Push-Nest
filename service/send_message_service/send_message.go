@@ -37,7 +37,7 @@ func (sm *SendMessageService) LogsAndStatusMark(errStr string, status int) {
 	if status == SendFail {
 		sm.Status = SendFail
 	}
-	logging.Logger.Info(fmt.Sprintf("%s, 状态：%d", errStr, status))
+	logging.Logger.Error(fmt.Sprintf("%s, 状态：%d", errStr, status))
 }
 
 // Send 发送一个消息任务的所有实例
@@ -112,7 +112,7 @@ func (sm *SendMessageService) Send() string {
 	return strings.Join(sm.LogOutput, "\n")
 }
 
-// FormatSendContent 格式化输出的发送内容
+// AppendSendContent 添加发送内容
 func (sm *SendMessageService) AppendSendContent() {
 	sm.LogOutput = append(sm.LogOutput, fmt.Sprintf(">> 发送的内容:"))
 	if sm.Text != "" {
