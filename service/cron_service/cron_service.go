@@ -21,13 +21,11 @@ func ClearLogs() {
 	sm := send_message_service.SendMessageService{TaskID: constant.CleanLogsTaskId}
 	sm.Status = send_message_service.SendSuccess
 
-	logging.Logger.Error("开始清除日志")
 	sm.LogsAndStatusMark("开始清除日志", sm.Status)
 
 	setting, err := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanKeepKeyName)
 	if err != nil {
 		errStr = fmt.Sprintf("获取日志的保留数失败，原因：%s", err)
-		logging.Logger.Error(errStr)
 		sm.LogsAndStatusMark(errStr, send_message_service.SendFail)
 	}
 
@@ -35,11 +33,9 @@ func ClearLogs() {
 	affectedRows, err := models.DeleteOutDateLogs(keepNum)
 	if err != nil {
 		errStr = fmt.Sprintf("删除日志失败，原因：%s", err)
-		logging.Logger.Error(errStr)
 		sm.LogsAndStatusMark(errStr, send_message_service.SendFail)
 	} else {
 		errStr = fmt.Sprintf("删除日志成功，删除条数：%d，保留数目：%d", affectedRows, keepNum)
-		logging.Logger.Error(errStr)
 		sm.LogsAndStatusMark(errStr, sm.Status)
 	}
 
