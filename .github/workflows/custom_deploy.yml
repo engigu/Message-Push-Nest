@@ -4,7 +4,7 @@ name: custom-deploy-your-server
 on:
   workflow_dispatch:
   push:
-    branches: [ "dev" ]
+    branches: [ "main" ]
 
 jobs:
   build:
