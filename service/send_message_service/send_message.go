@@ -4,36 +4,64 @@ import (
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/logging"
-	"message-nest/pkg/message"
-	"message-nest/service/send_ins_service"
 	"message-nest/service/send_task_service"
 	"message-nest/service/send_way_service"
 	"strings"
 )
+
+const (
+	SendSuccess = 1
+	SendFail    = 0
+)
+
+func errStrIsSuccess(errStr string) int {
+	if errStr == "" {
+		return SendSuccess
+	}
+	return SendFail
+}
 
 type SendMessageService struct {
 	TaskID   string
 	Text     string
 	HTML     string
 	MarkDown string
+
+	Status    int
+	LogOutput []string
 }
 
+// LogsAndStatusMark 记录执行的日志和状态标记
+func (sm *SendMessageService) LogsAndStatusMark(errStr string, status int) {
+	sm.LogOutput = append(sm.LogOutput, errStr)
+	if status == SendFail {
+		sm.Status = SendFail
+	}
+}
+
+// Send 发送一个消息任务的所有实例
 func (sm *SendMessageService) Send() string {
-	var logOutput []string
-	status := 1
+	sm.Status = SendSuccess
+	errStr := ""
+
+	sm.LogsAndStatusMark(fmt.Sprintf("开始任务[%s]的发送", sm.TaskID), sm.Status)
 
 	sendTaskService := send_task_service.SendTaskService{
 		ID: sm.TaskID,
 	}
 	task, err := sendTaskService.GetTaskWithIns()
 	if err != nil {
-		return fmt.Sprintf("任务不存在！任务id: %s", sm.TaskID)
+		errStr = fmt.Sprintf("任务[%s]不存在！退出发送！", sm.TaskID)
+		sm.LogsAndStatusMark(errStr, SendFail)
+		return errStr
 	}
 
 	for idx, ins := range task.InsData {
 		way, err := models.GetWayByID(ins.WayID)
 		if err != nil {
-			logOutput = append(logOutput, fmt.Sprintf("渠道信息不存在！渠道id：%s", ins.WayID))
+			errStr = fmt.Sprintf("渠道[%s]信息不存在！跳过这个实例的发送", ins.WayID)
+			sm.LogsAndStatusMark(errStr, SendFail)
+			continue
 		}
 		wayService := send_way_service.SendWay{
 			ID:   fmt.Sprintf("%s", way.ID),
@@ -42,68 +70,70 @@ func (sm *SendMessageService) Send() string {
 			Type: way.Type,
 		}
 
-		logOutput = append(logOutput, fmt.Sprintf(">> 实例 %d", idx+1))
-		logOutput = append(logOutput, fmt.Sprintf("开始发送，实例: %s", ins.WayID))
-		logOutput = append(logOutput, fmt.Sprintf("实例类型: %s + %s", ins.WayType, ins.ContentType))
-		logOutput = append(logOutput, fmt.Sprintf("实例配置: %s", ins.Config))
+		sm.LogsAndStatusMark(fmt.Sprintf(">> 实例 %d", idx+1), sm.Status)
+		sm.LogsAndStatusMark(fmt.Sprintf("开始发送，实例: %s", ins.WayID), sm.Status)
+		sm.LogsAndStatusMark(fmt.Sprintf("实例类型: %s + %s", ins.WayType, ins.ContentType), sm.Status)
+		sm.LogsAndStatusMark(fmt.Sprintf("实例配置: %s", ins.Config), sm.Status)
 
+		// 发送内容校验绑定
+		typeC, content := sm.GetSendMsg(ins.SendTasksIns)
+		if content == "" {
+			sm.LogsAndStatusMark(fmt.Sprintf("发送内容为空，设置的类型: %s，实际检测的类型: %s", ins.SendTasksIns.ContentType, typeC), SendFail)
+			continue
+		}
+
+		// 发送渠道的校验
 		errStr, msgObj := wayService.ValidateDiffWay()
 		if errStr != "" {
-			sm.MarkStatus(errStr, &status)
-			logOutput = append(logOutput, fmt.Sprintf("实例渠道认证校验失败: %s", errStr))
+			sm.LogsAndStatusMark(fmt.Sprintf("实例渠道认证校验失败: %s", errStr), SendFail)
 			continue
 		}
 
-		// 邮箱类型的实例
+		// 邮箱类型的实例发送
 		emailAuth, ok := msgObj.(send_way_service.WayDetailEmail)
 		if ok {
-			errMsg := sm.SendTaskEmail(emailAuth, ins.SendTasksIns)
-			sm.MarkStatus(errMsg, &status)
-			logOutput = append(logOutput, sm.TransError(errMsg))
+			es := EmailService{}
+			errMsg := es.SendTaskEmail(emailAuth, ins.SendTasksIns, typeC, content)
+			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 			continue
 		}
 
-		logOutput = append(logOutput, fmt.Sprintf("未知渠道的发信实例: %s", ins.ID))
+		sm.LogsAndStatusMark(fmt.Sprintf("未知渠道的发信实例: %s", ins.ID), sm.Status)
 
 	}
 
-	logOutput = sm.FormatSendContent(logOutput)
-	sm.RecordSendLog(logOutput, status)
+	sm.AppendSendContent()
+	sm.RecordSendLog()
 
-	return ""
+	if sm.Status == SendSuccess {
+		return ""
+	}
+	return strings.Join(sm.LogOutput, "\n")
 }
 
 // FormatSendContent 格式化输出的发送内容
-func (sm *SendMessageService) FormatSendContent(logOutput []string) []string {
-	logOutput = append(logOutput, fmt.Sprintf(">> 发送的内容:"))
+func (sm *SendMessageService) AppendSendContent() {
+	sm.LogOutput = append(sm.LogOutput, fmt.Sprintf(">> 发送的内容:"))
 	if sm.Text != "" {
-		logOutput = append(logOutput, fmt.Sprintf("Text: %s", sm.Text))
+		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("Text: %s", sm.Text))
 	}
 	if sm.HTML != "" {
-		logOutput = append(logOutput, fmt.Sprintf("HTML: %s", sm.HTML))
+		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("HTML: %s", sm.HTML))
 	}
 	if sm.MarkDown != "" {
-		logOutput = append(logOutput, fmt.Sprintf("MarkDown: %s", sm.MarkDown))
-	}
-	return logOutput
-}
-
-// MarkStatus 标记任务状态
-func (sm *SendMessageService) MarkStatus(errStr string, status *int) {
-	if errStr != "" {
-		*status = 0
+		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("MarkDown: %s", sm.MarkDown))
 	}
 }
 
 // RecordSendLog 记录发送日志
-func (sm *SendMessageService) RecordSendLog(logOutput []string, status int) {
-	if len(logOutput) <= 0 {
+func (sm *SendMessageService) RecordSendLog() {
+	if len(sm.LogOutput) <= 0 {
 		return
 	}
 	log := models.SendTasksLogs{
-		Log:    strings.Join(logOutput, "\n"),
+		Log:    strings.Join(sm.LogOutput, "\n"),
 		TaskID: sm.TaskID,
-		Status: status,
+		Status: sm.Status,
 	}
 	err := log.Add()
 	if err != nil {
@@ -116,43 +146,27 @@ func (sm *SendMessageService) TransError(err string) string {
 	if err == "" {
 		return "发送成功！\n"
 	} else {
-		return fmt.Sprintf("发送失败：%s！", err)
+		return fmt.Sprintf("发送失败：%s！\n", err)
 	}
 }
 
-// GetSendMsg
-func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) string {
+// GetSendMsg 获取对应消息内容
+// 先根据实例设置的类型取，取不到或者取到的是空，则使用text发送
+func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) (string, string) {
 	data := map[string]string{}
 	data["text"] = sm.Text
 	data["html"] = sm.HTML
 	data["markdown"] = sm.MarkDown
-	content, ok := data[ins.ContentType]
+	content, ok := data[strings.ToLower(ins.ContentType)]
 	if !ok || len(content) == 0 {
 		content, ok := data["text"]
 		if !ok {
 			logging.Logger.Error("text节点数据为空！")
-			return ""
+			return "text", ""
 		} else {
-			return content
+			return "text", content
 		}
 	} else {
-		return content
+		return strings.ToLower(ins.ContentType), content
 	}
-}
-
-// SendTaskEmail 执行发送邮件
-func (sm *SendMessageService) SendTaskEmail(auth send_way_service.WayDetailEmail, ins models.SendTasksIns) string {
-	insService := send_ins_service.SendTaskInsService{}
-	errStr, c := insService.ValidateDiffIns(ins)
-	if errStr != "" {
-		return errStr
-	}
-	config, ok := c.(models.InsEmailConfig)
-	if !ok {
-		return "邮箱config校验失败"
-	}
-	var emailer message.EmailMessage
-	emailer.Init(auth.Server, auth.Port, auth.Account, auth.Passwd)
-	errMsg := emailer.SendTextMessage(config.ToAccount, config.Title, sm.GetSendMsg(ins))
-	return errMsg
 }

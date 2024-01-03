@@ -17,20 +17,18 @@ var ClearLogsTaskId cron.EntryID
 
 // 清除日志的定时任务
 func ClearLogs() {
-	var logOutput []string
 	var errStr string
-	status := 1
-
 	sm := send_message_service.SendMessageService{TaskID: constant.CleanLogsTaskId}
+	sm.Status = send_message_service.SendSuccess
+
 	logging.Logger.Error("开始清除日志")
-	logOutput = append(logOutput, "开始清除日志")
+	sm.LogsAndStatusMark("开始清除日志", sm.Status)
 
 	setting, err := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanKeepKeyName)
 	if err != nil {
 		errStr = fmt.Sprintf("获取日志的保留数失败，原因：%s", err)
 		logging.Logger.Error(errStr)
-		sm.MarkStatus(errStr, &status)
-		logOutput = append(logOutput, errStr)
+		sm.LogsAndStatusMark(errStr, send_message_service.SendFail)
 	}
 
 	keepNum := com.StrTo(setting.Value).MustInt()
@@ -38,14 +36,14 @@ func ClearLogs() {
 	if err != nil {
 		errStr = fmt.Sprintf("删除日志失败，原因：%s", err)
 		logging.Logger.Error(errStr)
-		sm.MarkStatus(errStr, &status)
-		logOutput = append(logOutput, errStr)
+		sm.LogsAndStatusMark(errStr, send_message_service.SendFail)
 	} else {
 		errStr = fmt.Sprintf("删除日志成功，保留数目：%d", keepNum)
 		logging.Logger.Error(errStr)
-		logOutput = append(logOutput, errStr)
+		sm.LogsAndStatusMark(errStr, sm.Status)
 	}
-	sm.RecordSendLog(logOutput, status)
+
+	sm.RecordSendLog()
 }
 
 // 启动注册清除任务定时任务
