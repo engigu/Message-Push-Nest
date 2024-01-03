@@ -80,21 +80,23 @@ func GetSendLogsTotal(name string, taskId string, maps interface{}) (int, error)
 }
 
 // GetSendLogsTotal 获取所有日志总数
-func DeleteOutDateLogs(keepNum int) error {
+func DeleteOutDateLogs(keepNum int) (int, error) {
+	var affectedRows int
 	logt := table.LogsTableName
 	sql := fmt.Sprintf(`DELETE FROM %s
-WHERE id NOT IN (
-    SELECT id FROM (
-        SELECT id
-        FROM %s
-        ORDER BY created_on DESC
-        LIMIT %d
-    ) tmp
-);`, logt, logt, keepNum)
+			WHERE id NOT IN (
+				SELECT id FROM (
+					SELECT id
+					FROM %s
+					ORDER BY created_on DESC
+					LIMIT %d
+				) tmp
+			);`, logt, logt, keepNum)
 
 	result := db.Exec(sql)
 	if result.Error != nil {
-		return result.Error
+		return affectedRows, result.Error
 	}
-	return nil
+	affectedRows = int(result.RowsAffected)
+	return affectedRows, nil
 }

@@ -32,13 +32,13 @@ func ClearLogs() {
 	}
 
 	keepNum := com.StrTo(setting.Value).MustInt()
-	err = models.DeleteOutDateLogs(keepNum)
+	affectedRows, err := models.DeleteOutDateLogs(keepNum)
 	if err != nil {
 		errStr = fmt.Sprintf("删除日志失败，原因：%s", err)
 		logging.Logger.Error(errStr)
 		sm.LogsAndStatusMark(errStr, send_message_service.SendFail)
 	} else {
-		errStr = fmt.Sprintf("删除日志成功，保留数目：%d", keepNum)
+		errStr = fmt.Sprintf("删除日志成功，删除条数：%d，保留数目：%d", affectedRows, keepNum)
 		logging.Logger.Error(errStr)
 		sm.LogsAndStatusMark(errStr, sm.Status)
 	}
