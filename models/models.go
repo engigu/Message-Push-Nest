@@ -49,7 +49,9 @@ func Setup() {
 		return setting.DatabaseSetting.TablePrefix + defaultTableName
 	}
 
-	//db.LogMode(true)
+	if setting.DatabaseSetting.SqlDebug == "enable" {
+		db.LogMode(true)
+	}
 	db.SingularTable(true)
 	db.Callback().Create().Replace("gorm:update_time_stamp", updateTimeStampForCreateCallback)
 	db.Callback().Update().Replace("gorm:update_time_stamp", updateTimeStampForUpdateCallback)

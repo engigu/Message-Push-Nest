@@ -21,6 +21,10 @@ type InsEmailConfig struct {
 type InsDtalkConfig struct {
 }
 
+// InsCustomConfig 实例里面的自定义config
+type InsCustomConfig struct {
+}
+
 // ManyAddTaskIns 批量添加实例
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()

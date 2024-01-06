@@ -8,7 +8,9 @@
       <el-form label-width="100px" v-for="item in waysLabelData">
         <el-tab-pane :label="item.label" :name="item.type">
           <el-form-item :label="one.subLabel" v-for="one in item.inputs">
-            <el-input size="small" v-model="one.value" :placeholder="one.desc" />
+            <el-input v-if="one.isTextArea != true" size="small" v-model="one.value" :placeholder="one.desc" />
+            <el-input v-if="one.isTextArea == true" size="small" type="textarea" v-model="one.value"
+              :placeholder="one.desc" :autosize="{ minRows: 4, maxRows: 10 }" />
           </el-form-item>
           <textTips v-if="item.tips" :text="item.tips.text" :desc="item.tips.desc" />
         </el-tab-pane>

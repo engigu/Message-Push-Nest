@@ -34,6 +34,15 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		var Config models.InsDtalkConfig
 		return "", Config
 	}
+	if ins.WayType == "Custom" {
+		var Config models.InsCustomConfig
+		err := json.Unmarshal([]byte(ins.Config), &Config)
+		if err != nil {
+			return "自定义webhook反序列化失败！", empty
+		}
+		_, Msg := app.CommonPlaygroundValid(Config)
+		return Msg, Config
+	}
 	return "未知的渠道的config校验", empty
 }
 

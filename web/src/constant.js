@@ -34,7 +34,6 @@ const CONSTANT = {
             label: '钉钉',
             inputs: [
                 { subLabel: 'access_token', value: '', col: 'access_token', desc: "钉钉webhook中的access_token" },
-                // { subLabel: '关键字过滤', value: '', col: 'keys', desc: "使用的关键字过滤，多个使用|隔开" },
                 { subLabel: '加签', value: '', col: 'secret', desc: "加签的签名，SEC开头" },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
@@ -46,8 +45,23 @@ const CONSTANT = {
                 { subLabel: 'markdown', content: 'markdown' },
             ],
             taskInsInputs: [
-                // { value: '', col: 'to_account', desc: "目的邮箱账号（发给fsfsf谁）" },
-                // { value: '', col: 'title', desc: "邮箱标题fsfsf" },
+            ],
+        },
+        {
+            type: 'Custom',
+            label: '自定义',
+            inputs: [
+                { subLabel: 'webhook地址', value: '', col: 'webhook', desc: "自定义webhook地址" },
+                { subLabel: '请求体', value: '', col: 'body', desc: "请求体, text内容请使用 TEXT 进行占位\n例如：{\"message\": \"TEXT\", \"other_field\": \"field_data\"}", isTextArea: true},
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "自定义webhook说明", desc: "自定义webhook暂时只支持text，消息将解析TEXT占位标识进行替换，暂时只支持POST方式"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
             ],
         },
     ],

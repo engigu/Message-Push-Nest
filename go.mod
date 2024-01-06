@@ -3,7 +3,6 @@ module message-nest
 go 1.20
 
 require (
-	github.com/blinkbean/dingtalk v0.0.0-20230927120905-796332ac4ba1
 	github.com/dgrijalva/jwt-go v3.1.0+incompatible
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ini/ini v1.32.1-0.20180214101753-32e4be5f41bb

@@ -7,11 +7,11 @@
       <hr />
       <div ref="refContainer">
         <el-table :data="tableData" stripe empty-text="发信日志为空" :row-style="rowStyle()">
-          <el-table-column label="ID" prop="id" width="100px" />
+          <el-table-column label="ID" prop="id" width="50px" />
           <el-table-column label="任务名" prop="task_name" show-overflow-tooltip width="150px" />
           <el-table-column label="发信日志" prop="log">
             <template #default="scope">
-              <el-tooltip placement="top">
+              <el-tooltip enterable placement="top">
                 <template #content>
                   <div v-html="TransHtml(scope.row.log)"></div>
                 </template>
@@ -20,14 +20,19 @@
             </template>
           </el-table-column>
           <el-table-column label="创建时间" prop="created_on" width="160px" />
-          <el-table-column label="状态" prop="status" width="60px">
+          <el-table-column label="状态" prop="status" width="120px">
             <template #default="scope">
+              <el-button link size="small" style="margin-right: 10px;" type="primary" @click="drawer = true; logText = scope.row.log">日志</el-button>
               <el-tag v-if="scope.row.status == 0" type="danger">失败</el-tag>
               <el-tag v-if="scope.row.status == 1" type="success">成功</el-tag>
             </template>
           </el-table-column>
         </el-table>
       </div>
+
+      <el-drawer v-model="drawer" :with-header="false">
+        <el-text v-html="TransHtml(logText)" size="small"></el-text>
+      </el-drawer>
 
       <div class="pagination-block">
         <el-pagination layout="prev, pager, next" :total="total" :page-size="pageSize" @current-change="handPageChange" />
@@ -53,9 +58,11 @@ export default {
     const state = reactive({
       search: '',
       optionValue: '',
+      logText: '',
+      drawer: false,
       tableData: [],
       total: CONSTANT.TOTAL,
-      pageSize:  CONSTANT.PAGE_SIZE,
+      pageSize: CONSTANT.PAGE_SIZE,
       currPage: CONSTANT.PAGE,
     });
 

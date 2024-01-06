@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/blinkbean/dingtalk"
 	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/message"
@@ -37,6 +36,12 @@ type WayDetailDTalk struct {
 	AccessToken string `json:"access_token" validate:"required,max=100" label:"钉钉access_token"`
 	Keys        string `json:"keys" validate:"max=200" label:"钉钉关键字"`
 	Secret      string `json:"secret" validate:"max=100" label:"钉钉加签秘钥"`
+}
+
+// WayDetailCustom 自定义渠道
+type WayDetailCustom struct {
+	Webhook string `json:"webhook" validate:"required,max=200" label:"自定义的webhook地址"`
+	Body    string `json:"body" validate:"max=2000" label:"自定义的请求体"`
 }
 
 func (sw *SendWay) GetByID() (interface{}, error) {
@@ -103,6 +108,14 @@ func (sw *SendWay) ValidateDiffWay() (string, interface{}) {
 		}
 		_, Msg := app.CommonPlaygroundValid(dtalk)
 		return Msg, dtalk
+	} else if sw.Type == "Custom" {
+		var custom WayDetailCustom
+		err := json.Unmarshal([]byte(sw.Auth), &custom)
+		if err != nil {
+			return "自定义参数反序列化失败！", empty
+		}
+		_, Msg := app.CommonPlaygroundValid(custom)
+		return Msg, custom
 	}
 	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), empty
 }
@@ -119,8 +132,24 @@ func (sw *SendWay) TestSendWay(msgObj interface{}) string {
 	}
 	dtalkAuth, ok := msgObj.(WayDetailDTalk)
 	if ok {
-		cli := dingtalk.InitDingTalkWithSecret(dtalkAuth.AccessToken, dtalkAuth.Secret)
-		err := cli.SendTextMessage(testMsg + dtalkAuth.Keys)
+		var cli = message.Dtalk{
+			AccessToken: dtalkAuth.AccessToken,
+			Secret:      dtalkAuth.Secret,
+		}
+		_, err := cli.SendMessageText(testMsg + dtalkAuth.Keys)
+		if err != nil {
+			return fmt.Sprintf("发送失败：%s", err)
+		}
+		return ""
+	}
+	customAuth, ok := msgObj.(WayDetailCustom)
+	if ok {
+		var cli = message.CustomWebhook{}
+		data, _ := json.Marshal(testMsg)
+		dataStr := string(data)
+		dataStr = strings.Trim(dataStr, "\"")
+		bodyStr := strings.Replace(customAuth.Body, "TEXT", dataStr, -1)
+		_, err := cli.Request(customAuth.Webhook, bodyStr)
 		if err != nil {
 			return fmt.Sprintf("发送失败：%s", err)
 		}

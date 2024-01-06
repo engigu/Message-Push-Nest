@@ -34,6 +34,7 @@ type Database struct {
 	Port        int
 	Name        string
 	TablePrefix string
+	SqlDebug    string
 }
 
 var DatabaseSetting = &Database{}
