@@ -6,7 +6,7 @@
       </div>
       <hr />
       <div ref="refContainer">
-        <el-table :data="tableData" empty-text="发信日志为空" :row-style="rowStyle()">
+        <el-table :data="tableData" stripe empty-text="发信日志为空" :row-style="rowStyle()">
           <el-table-column label="ID" prop="id" width="100px" />
           <el-table-column label="任务名" prop="task_name" show-overflow-tooltip width="150px" />
           <el-table-column label="发信日志" prop="log">

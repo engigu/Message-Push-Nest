@@ -9,7 +9,7 @@
       <el-form label-width="100px" v-for="item in waysLabelData">
         <!-- <el-tab-pane :label="item.label" :name="item.type"> -->
         <el-form-item :label="one.subLabel" v-for="one in item.inputs">
-          <el-input v-model="one.value" />
+          <el-input size="small" v-model="one.value" :placeholder="one.desc" />
         </el-form-item>
         <!-- </el-tab-pane> -->
       </el-form>
@@ -18,22 +18,10 @@
 
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="testMseeageDialogVisible = true" size="small">测试发信</el-button>
         <el-button @click="handleCancer()" size="small">取消</el-button>
+        <testSendButton @customhandleSubmit="handleTest()" />
         <el-button type="primary" size="small" @click="handleSubmit()">
           确定编辑
-        </el-button>
-      </span>
-    </template>
-  </el-dialog>
-
-  <el-dialog v-model="testMseeageDialogVisible" width="50%" align-center>
-    <span>将发送一条测试信息，将注意查收</span>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button size="small" @click="testMseeageDialogVisible = false">取消</el-button>
-        <el-button size="small" type="primary" @click="(testMseeageDialogVisible = false) || handleTest()">
-          确定发送
         </el-button>
       </span>
     </template>
@@ -47,9 +35,13 @@ import { request } from '@/api/api'
 import { CONSTANT } from '@/constant'
 import { _ } from 'lodash';
 import { ElMessage } from 'element-plus'
+import testSendButton from './testSendButton.vue'
 
 
 export default defineComponent({
+  components: {
+    testSendButton,
+  },
   props: {
     componentName: String
   },
@@ -57,7 +49,6 @@ export default defineComponent({
     const pageState = usePageState();
     const state = reactive({
       isShow: false,
-      testMseeageDialogVisible: false,
       waysLabelData: [],
       editData: {},
 

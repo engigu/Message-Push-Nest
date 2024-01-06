@@ -2,8 +2,6 @@
   <el-dialog v-model="isShow" width="58%" :close-on-press-escape="false" :before-close="() => { }" :show-close="false">
     <template #header="">
       <el-text class="mx-1">编辑发信任务</el-text>
-      <el-tooltip placement="top">
-      </el-tooltip>
     </template>
 
     <div class="add-top">
@@ -29,15 +27,19 @@
             <el-text class="mx-1" size="small">渠道创建时间：{{ currWayTmp.created_on }}</el-text><br />
           </div>
 
-          <el-radio-group v-model="currInsInput.content_type" class="ml-4">
-            <el-radio label="text" size="small">text</el-radio>
-            <el-radio label="html" size="small">html</el-radio>
+          <el-radio-group v-model="currInsInputContentType">
+            <el-radio v-for="item in CONSTANT.WAYS_DATA_MAP[currWayTmp.type].taskInsRadios" :label="item.subLabel"
+              size="small">
+              {{ item.content }}
+            </el-radio>
           </el-radio-group>
+
           <div>
-            <el-input v-model="currInsInput.toAccount" placeholder="目的邮箱账号（发给谁）" size="small"
-              style="width: 200px; margin: 10px 40px 5px 0;" class="searchInput"></el-input>
-            <el-input v-model="currInsInput.title" placeholder="邮箱标题" size="small"
-              style="width: 200px; margin: 0px 40px 5px 0;" class="searchInput"></el-input>
+            <el-input v-model="currInsInput[item.col]"
+              v-for="item in CONSTANT.WAYS_DATA_MAP[currWayTmp.type].taskInsInputs" :placeholder="item.desc" size="small"
+              style="width: 200px; margin: 10px 40px 5px 0;" class="searchInput">
+            </el-input>
+
           </div>
           <div>
             <el-button @click="handleAddSubmit()" size="small" style="width: 200px">添加</el-button>
@@ -87,6 +89,8 @@ import { usePageState } from '@/store/page_sate.js';
 import { request } from '@/api/api'
 import tableDeleteButton from '@/views/common/tableDeleteButton.vue'
 import { ElMessage } from 'element-plus'
+import { CONSTANT } from '@/constant'
+import { CommonUtils } from "@/util/commonUtils.js";
 
 
 export default defineComponent({
@@ -104,6 +108,7 @@ export default defineComponent({
       isShow: false,
       isShowAddBox: false,
       searchWayID: '',
+      currInsInputContentType: '',
       currWayTmp: {},
       currInsInput: {},
       currTaskInput: {
@@ -140,7 +145,9 @@ export default defineComponent({
       state.insTableData = [];
       state.currInsInput = {};
       state.currWayTmp = {};
+      state.currInsInput = {};
       state.searchWayID = '';
+      state.currInsInputContentType = '';
       state.isShowAddBox = false;
       state.currTaskInput = {
         taskName: '',
@@ -162,12 +169,7 @@ export default defineComponent({
     }
 
     const formatExtraInfo = (scope) => {
-      if (!scope.row.config) {
-        return ""
-      }
-      let config = JSON.parse(scope.row.config)
-      let info = `发送账号：${config.to_account}\n标题：${config.title}`
-      return info
+      return CommonUtils.formatInsConfigDisplay(scope);
     }
 
     const searchID = async () => {
@@ -186,8 +188,8 @@ export default defineComponent({
         way_id: state.currWayTmp.id,
         way_type: state.currWayTmp.type,
         way_name: state.currWayTmp.name,
-        content_type: state.currInsInput.content_type,
-        config: JSON.stringify({ to_account: state.currInsInput.toAccount, title: state.currInsInput.title })
+        content_type: state.currInsInputContentType,
+        config: JSON.stringify(state.currInsInput)
       }
       return postData
     }
@@ -210,7 +212,7 @@ export default defineComponent({
     }
 
     return {
-      ...toRefs(state), handleCancer, handleAddSubmit, handleEditTask,
+      ...toRefs(state), handleCancer, handleAddSubmit, handleEditTask,CONSTANT,
       searchID, handleDelete, insRowStyle, formatExtraInfo
     };
   },

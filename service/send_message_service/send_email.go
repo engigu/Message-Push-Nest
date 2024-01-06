@@ -12,7 +12,7 @@ type EmailService struct {
 }
 
 // SendTaskEmail 执行发送邮件
-func (s *EmailService) SendTaskEmail(auth send_way_service.WayDetailEmail, ins models.SendTasksIns, typeC string, content string) string {
+func (s *EmailService) SendTaskEmail(auth send_way_service.WayDetailEmail, ins models.SendTasksIns, typeC string, title string, content string) string {
 	insService := send_ins_service.SendTaskInsService{}
 	errStr, c := insService.ValidateDiffIns(ins)
 	if errStr != "" {
@@ -27,9 +27,9 @@ func (s *EmailService) SendTaskEmail(auth send_way_service.WayDetailEmail, ins m
 	errMsg := ""
 	emailer.Init(auth.Server, auth.Port, auth.Account, auth.Passwd)
 	if typeC == "text" {
-		errMsg = emailer.SendTextMessage(config.ToAccount, config.Title, content)
+		errMsg = emailer.SendTextMessage(config.ToAccount, title, content)
 	} else if typeC == "html" {
-		errMsg = emailer.SendHtmlMessage(config.ToAccount, config.Title, content)
+		errMsg = emailer.SendHtmlMessage(config.ToAccount, title, content)
 	} else {
 		errMsg = fmt.Sprintf("未知的邮件发送内容类型：%s", ins.ContentType)
 	}

@@ -44,6 +44,7 @@ func ClearLogs() {
 
 // 启动注册清除任务定时任务
 func (cs *CronService) InitLogsCronRun() {
+	// 注册任务
 	setting, err := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanCronKeyName)
 	if err != nil {
 		logging.Logger.Error(fmt.Sprintf("获取日志的cron失败，原因：%s", err))
@@ -52,6 +53,12 @@ func (cs *CronService) InitLogsCronRun() {
 		Schedule: setting.Value,
 		Job:      ClearLogs,
 	})
+
+	// 添加任务
+	err = models.AddSendTaskWithID("日志定时清除", constant.CleanLogsTaskId, "admin")
+	if err != nil {
+		logging.Logger.Error(fmt.Sprintf("添加日志定时清除任务失败，原因：%s", err))
+	}
 }
 
 // 更新清除任务定时任务

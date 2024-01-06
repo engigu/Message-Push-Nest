@@ -4,7 +4,7 @@
         <div class="buttom">
             <div class="tips">
                 <el-text size="small">版本功能说明</el-text>
-                <el-tooltip placement="top">
+                <el-tooltip v-if="desc" placement="top">
                     <template #content>
                       <div v-html="desc"></div>
                     </template>

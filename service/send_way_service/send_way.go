@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/blinkbean/dingtalk"
 	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/message"
@@ -33,7 +34,9 @@ type WayDetailEmail struct {
 
 // WayDetailDTalk 钉钉渠道明细字段
 type WayDetailDTalk struct {
-	WebhookUrl string `validate:"required,url" label:"钉钉webhookUrl地址"`
+	AccessToken string `json:"access_token" validate:"required,max=100" label:"钉钉access_token"`
+	Keys        string `json:"keys" validate:"max=200" label:"钉钉关键字"`
+	Secret      string `json:"secret" validate:"max=100" label:"钉钉加签秘钥"`
 }
 
 func (sw *SendWay) GetByID() (interface{}, error) {
@@ -106,12 +109,22 @@ func (sw *SendWay) ValidateDiffWay() (string, interface{}) {
 
 // TestSendWay 尝试带发信测试连通性
 func (sw *SendWay) TestSendWay(msgObj interface{}) string {
+	testMsg := "This is a test message from message-nest."
 	emailAuth, ok := msgObj.(WayDetailEmail)
 	if ok {
 		var emailer message.EmailMessage
 		emailer.Init(emailAuth.Server, 465, emailAuth.Account, emailAuth.Passwd)
-		errMsg := emailer.SendTextMessage(emailAuth.Account, "test", "This is a test email from message-nest.")
+		errMsg := emailer.SendTextMessage(emailAuth.Account, "test email", testMsg)
 		return errMsg
+	}
+	dtalkAuth, ok := msgObj.(WayDetailDTalk)
+	if ok {
+		cli := dingtalk.InitDingTalkWithSecret(dtalkAuth.AccessToken, dtalkAuth.Secret)
+		err := cli.SendTextMessage(testMsg + dtalkAuth.Keys)
+		if err != nil {
+			return fmt.Sprintf("发送失败：%s", err)
+		}
+		return ""
 	}
 	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type)
 }

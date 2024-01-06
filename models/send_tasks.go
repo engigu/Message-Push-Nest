@@ -122,6 +122,7 @@ func GetTasksIns(id string) (TaskIns, error) {
 		Select(fmt.Sprintf("%s.*, %s.name as way_name", insTable, waysTable)).
 		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
 		Where(fmt.Sprintf("%s.task_id = ?", insTable), id).
+		Order(fmt.Sprintf("%s.created_on DESC", insTable)).
 		Scan(&taskIns)
 
 	taskResult.ID = task.ID

@@ -23,6 +23,7 @@ func errStrIsSuccess(errStr string) int {
 
 type SendMessageService struct {
 	TaskID   string
+	Title    string
 	Text     string
 	HTML     string
 	MarkDown string
@@ -46,6 +47,7 @@ func (sm *SendMessageService) Send() string {
 	errStr := ""
 
 	sm.LogsAndStatusMark(fmt.Sprintf("开始任务[%s]的发送", sm.TaskID), sm.Status)
+	sm.LogsAndStatusMark(fmt.Sprintf("发送标题：%s \n", sm.Title), sm.Status)
 
 	sendTaskService := send_task_service.SendTaskService{
 		ID: sm.TaskID,
@@ -93,13 +95,21 @@ func (sm *SendMessageService) Send() string {
 		// 邮箱类型的实例发送
 		emailAuth, ok := msgObj.(send_way_service.WayDetailEmail)
 		if ok {
+			//continue
 			es := EmailService{}
-			errMsg := es.SendTaskEmail(emailAuth, ins.SendTasksIns, typeC, content)
+			errMsg := es.SendTaskEmail(emailAuth, ins.SendTasksIns, typeC, sm.Title, content)
 			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 			continue
 		}
-
-		sm.LogsAndStatusMark(fmt.Sprintf("未知渠道的发信实例: %s", ins.ID), sm.Status)
+		// 钉钉类型的实例发送
+		dtalkAuth, ok := msgObj.(send_way_service.WayDetailDTalk)
+		if ok {
+			es := DtalkService{}
+			errMsg := es.SendDtalkMessage(dtalkAuth, ins.SendTasksIns, typeC, sm.Title, content)
+			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+			continue
+		}
+		sm.LogsAndStatusMark(fmt.Sprintf("发送失败：未知渠道的发信实例: %s\n", ins.ID), SendFail)
 
 	}
 
@@ -165,6 +175,7 @@ func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) (string, strin
 			logging.Logger.Error("text节点数据为空！")
 			return "text", ""
 		} else {
+			logging.Logger.Error(fmt.Sprintf("没有找到%s对应的消息，使用text消息替代！", ins.ContentType))
 			return "text", content
 		}
 	} else {

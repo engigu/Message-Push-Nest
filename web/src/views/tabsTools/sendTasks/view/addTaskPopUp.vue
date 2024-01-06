@@ -37,19 +37,21 @@
             <el-text class="mx-1" size="small">渠道创建时间：{{ currWayTmp.created_on }}</el-text><br />
           </div>
 
-          <el-radio-group v-model="currInsInput.content_type" class="ml-4">
-            <el-radio label="text" size="small">text</el-radio>
-            <el-radio label="html" size="small">html</el-radio>
+          <el-radio-group v-model="currInsInputContentType">
+            <el-radio v-for="item in CONSTANT.WAYS_DATA_MAP[currWayTmp.type].taskInsRadios" :label="item.subLabel"
+              size="small">
+              {{ item.content }}
+            </el-radio>
           </el-radio-group>
 
           <div>
-            <el-input v-model="currInsInput.toAccount" placeholder="目的邮箱账号（发给谁）" size="small"
-              style="width: 200px; margin: 10px 40px 5px 0;" class="searchInput"></el-input>
-            <el-input v-model="currInsInput.title" placeholder="邮箱标题" size="small"
-              style="width: 200px; margin: 0px 40px 5px 0;" class="searchInput"></el-input>
-            <el-button @click="clickStore()" size="small" style="width: 200px">暂存</el-button>
+            <el-input v-model="currInsInput[item.col]"
+              v-for="item in CONSTANT.WAYS_DATA_MAP[currWayTmp.type].taskInsInputs" :placeholder="item.desc" size="small"
+              style="width: 200px; margin: 10px 40px 5px 0;" class="searchInput">
+            </el-input>
           </div>
 
+          <el-button @click="clickStore()" size="small" style="width: 200px">暂存</el-button>
         </div>
       </div>
 
@@ -97,6 +99,7 @@ import { QuestionFilled } from '@element-plus/icons-vue'
 import { v4 as uuidv4 } from 'uuid';
 import { usePageState } from '@/store/page_sate.js';
 import { request } from '@/api/api'
+import { CONSTANT } from '@/constant'
 
 
 export default defineComponent({
@@ -114,9 +117,8 @@ export default defineComponent({
       isShowAddBox: false,
       searchWayID: '',
       currWayTmp: {},
-      currInsInput: {
-        content_type: 'text'
-      },
+      currInsInput: {},
+      currInsInputContentType: 'text',
       currTaskInput: {
         taskName: '',
         taskId: uuidv4(),
@@ -139,7 +141,8 @@ export default defineComponent({
     // 页面每次弹出，重置数据
     const resetPageInitData = () => {
       state.insTableData = [];
-      state.currInsInput = { content_type: 'text' };
+      state.currInsInputContentType = 'text';
+      state.currInsInput = {};
       state.currWayTmp = {};
       state.searchWayID = '';
       state.isShowAddBox = false;
@@ -163,8 +166,8 @@ export default defineComponent({
         way_id: state.currWayTmp.id,
         way_type: state.currWayTmp.type,
         way_name: state.currWayTmp.name,
-        content_type: state.currInsInput.content_type,
-        config: JSON.stringify({ to_account: state.currInsInput.toAccount, title: state.currInsInput.title })
+        content_type: state.currInsInputContentType,
+        config: JSON.stringify(state.currInsInput)
       };
       state.insTableData.push(insData);
     }
@@ -175,6 +178,10 @@ export default defineComponent({
       state.isShowAddBox = Boolean(data.data);
       if (data.data) {
         state.currWayTmp = data.data;
+        // 初始化currInsInput
+        CONSTANT.WAYS_DATA_MAP[data.data.type].taskInsInputs.forEach(element => {
+          state.currInsInput[element.col] = ""
+        });
       }
     }
 
@@ -183,8 +190,6 @@ export default defineComponent({
       postData.ins_data = state.insTableData
       return postData
     }
-
-
 
     const handleSubmit = async () => {
       let postData = getFinalData();
@@ -196,17 +201,12 @@ export default defineComponent({
     }
 
     const formatExtraInfo = (scope) => {
-      if (!scope.row.config) {
-        return ""
-      }
-      let config = JSON.parse(scope.row.config)
-      let info = `发送账号：${config.to_account}\n标题：${config.title}`
-      return info
+      return CommonUtils.formatInsConfigDisplay(scope);
     }
 
     return {
       ...toRefs(state), handleCancer, handleSubmit,
-      searchID, formatExtraInfo,
+      searchID, formatExtraInfo, CONSTANT,
       clickStore, insRowStyle
     };
   },

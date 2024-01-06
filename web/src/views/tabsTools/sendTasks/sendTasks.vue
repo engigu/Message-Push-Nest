@@ -13,16 +13,24 @@
       <hr />
 
       <div ref="refContainer">
-        <el-table :data="tableData" empty-text="发信任务为空" :row-style="rowStyle()">
+        <el-table :data="tableData" stripe empty-text="发信任务为空" :row-style="rowStyle()">
           <el-table-column label="ID" prop="id" width="320px" />
           <el-table-column label="任务名" prop="name" />
           <el-table-column label="创建时间" prop="created_on" />
           <el-table-column fixed="right" label="操作" width="190px">
             <template #default="scope">
-              <el-button link size="small" type="primary" @click="handleViewAPI(scope.$index, scope.row)">接口</el-button>
-              <el-button link size="small" type="primary" @click="handleViewLogs(scope.$index, scope.row)">日志</el-button>
-              <el-button link size="small" type="primary" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-              <tableDeleteButton @customHandleDelete="handleDelete(scope.$index, scope.row)" />
+              <div v-if="sysKeptTaskIds.includes(scope.row.id)">
+                <el-button link size="small" type="primary"
+                  @click="handleViewLogs(scope.$index, scope.row)">日志</el-button>
+                <el-text class="mx-1" type="info" size="small" style="margin-left: 15px;">系统保留任务</el-text>
+              </div>
+              <div v-if="!sysKeptTaskIds.includes(scope.row.id)">
+                <el-button link size="small" type="primary" @click="handleViewAPI(scope.$index, scope.row)">接口</el-button>
+                <el-button link size="small" type="primary"
+                  @click="handleViewLogs(scope.$index, scope.row)">日志</el-button>
+                <el-button link size="small" type="primary" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                <tableDeleteButton @customHandleDelete="handleDelete(scope.$index, scope.row)" />
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -75,7 +83,7 @@ export default {
       // confirmBtnVisible: false,
       tableData: [],
       total: CONSTANT.TOTAL,
-      pageSize:  CONSTANT.PAGE_SIZE,
+      pageSize: CONSTANT.PAGE_SIZE,
       currPage: CONSTANT.PAGE,
       displayCols: [
         { 'col': 'id', 'label': '任务ID' },
@@ -86,7 +94,9 @@ export default {
       options: [
         { label: '邮箱', value: 'Email' },
         { label: '钉钉', value: 'Dtalk' }
-      ]
+      ],
+      sysKeptTaskIds: [CONSTANT.LOG_TASK_ID],
+
     });
 
     const handleEdit = (index, row) => {
@@ -122,7 +132,7 @@ export default {
     }
 
     const handleViewLogs = (index, row) => {
-      router.push('/sendlogs?name=' + row.name, { replace: true });
+      router.push('/sendlogs?taskid=' + row.id, { replace: true });
     }
 
     const filterFunc = async () => {

@@ -14,7 +14,11 @@ type SendTasksIns struct {
 // InsEmailConfig 实例里面的邮箱config
 type InsEmailConfig struct {
 	ToAccount string `json:"to_account" validate:"required,email" label:"收件邮箱"`
-	Title     string `json:"title" validate:"required,max=150" label:"邮箱标题"`
+	//Title     string `json:"title" validate:"required,max=150" label:"邮箱标题"`
+}
+
+// InsEmailConfig 实例里面的邮箱config
+type InsDtalkConfig struct {
 }
 
 // ManyAddTaskIns 批量添加实例

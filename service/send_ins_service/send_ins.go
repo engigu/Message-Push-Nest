@@ -30,6 +30,10 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		_, Msg := app.CommonPlaygroundValid(emailConfig)
 		return Msg, emailConfig
 	}
+	if ins.WayType == "Dtalk" {
+		var Config models.InsDtalkConfig
+		return "", Config
+	}
 	return "未知的渠道的config校验", empty
 }
 

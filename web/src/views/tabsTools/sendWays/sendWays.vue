@@ -18,7 +18,7 @@
 
       <hr />
       <div ref="refContainer">
-        <el-table :data="tableData" empty-text="发信渠道为空" :row-style="rowStyle()">
+        <el-table :data="tableData" stripe empty-text="发信渠道为空" :row-style="rowStyle()">
           <el-table-column label="ID" width="320px">
             <template #default="scope">
               {{ scope.row.id }}
