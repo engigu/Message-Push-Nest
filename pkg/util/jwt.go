@@ -1,50 +1,47 @@
 package util
 
 import (
+	"fmt"
+	"github.com/golang-jwt/jwt/v5"
+	"message-nest/pkg/setting"
 	"time"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
-var jwtSecret []byte
-
-type Claims struct {
+type UserClaims struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	jwt.StandardClaims
+
+	jwt.RegisteredClaims
 }
 
-// GenerateToken generate tokens used for auth
 func GenerateToken(username, password string) (string, error) {
-	nowTime := time.Now()
-	expireTime := nowTime.Add(1 * 24 * time.Hour)
-
-	claims := Claims{
-		username,
-		EncodeMD5(password),
-		jwt.StandardClaims{
-			ExpiresAt: expireTime.Unix(),
+	expHours := 1 * 24 * time.Hour
+	SetClaims := UserClaims{
+		Username: username,
+		Password: EncodeMD5(password),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expHours)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "message-nest",
 		},
 	}
 
-	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := tokenClaims.SignedString(jwtSecret)
-
+	tokenStruct := jwt.NewWithClaims(jwt.SigningMethodHS256, SetClaims)
+	token, err := tokenStruct.SignedString([]byte(setting.AppSetting.JwtSecret))
 	return token, err
 }
 
-// ParseToken parsing token
-func ParseToken(token string) (*Claims, error) {
-	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+func ParseToken(tokenString string) (*UserClaims, error) {
+	tokenObj, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(setting.AppSetting.JwtSecret), nil
 	})
-
-	if tokenClaims != nil {
-		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid {
-			return claims, nil
-		}
+	if err != nil {
+		return nil, err
 	}
-
-	return nil, err
+	if claims, ok := tokenObj.Claims.(*UserClaims); ok && tokenObj.Valid {
+		return claims, nil
+	} else {
+		return nil, fmt.Errorf("invalid token")
+	}
 }

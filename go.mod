@@ -3,12 +3,12 @@ module message-nest
 go 1.20
 
 require (
-	github.com/dgrijalva/jwt-go v3.1.0+incompatible
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ini/ini v1.32.1-0.20180214101753-32e4be5f41bb
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.16.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/uuid v1.5.0
 	github.com/jinzhu/gorm v0.0.0-20180213101209-6e1387b44c64
 	github.com/robfig/cron/v3 v3.0.1

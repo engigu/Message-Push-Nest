@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"message-nest/pkg/table"
-	"message-nest/pkg/util"
 	"message-nest/service/cron_service"
 	"message-nest/service/env_service"
 	"message-nest/service/send_message_service"
@@ -30,7 +29,6 @@ func init() {
 	setting.Setup()
 	models.Setup()
 	logging.Setup()
-	util.Setup()
 	table.Setup()
 	env_service.Setup()
 	cron_service.Setup()

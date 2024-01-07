@@ -22,7 +22,8 @@
           <el-table-column label="创建时间" prop="created_on" width="160px" />
           <el-table-column label="状态" prop="status" width="120px">
             <template #default="scope">
-              <el-button link size="small" style="margin-right: 10px;" type="primary" @click="drawer = true; logText = scope.row.log">日志</el-button>
+              <el-button link size="small" style="margin-right: 10px;" type="primary"
+                @click="drawer = true; logText = scope.row.log">日志</el-button>
               <el-tag v-if="scope.row.status == 0" type="danger">失败</el-tag>
               <el-tag v-if="scope.row.status == 1" type="success">成功</el-tag>
             </template>
@@ -47,7 +48,7 @@
 import { reactive, toRefs, onMounted } from 'vue'
 import { request } from '../../../api/api'
 import { copyToClipboard } from '../../../util/clipboard.js';
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { CONSTANT } from '@/constant'
 
 export default {

@@ -1,7 +1,8 @@
 package middleware
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	"errors"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,8 +36,12 @@ func JWT() gin.HandlerFunc {
 		} else {
 			claims, err := util.ParseToken(token)
 			if err != nil {
-				switch err.(*jwt.ValidationError).Errors {
-				case jwt.ValidationErrorExpired:
+				switch {
+				case errors.Is(err, jwt.ErrTokenMalformed):
+					code = e.ERROR_AUTH
+				case errors.Is(err, jwt.ErrTokenSignatureInvalid):
+					code = e.ERROR_AUTH_CHECK_TOKEN_FAIL
+				case errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet):
 					code = e.ERROR_AUTH_CHECK_TOKEN_TIMEOUT
 				default:
 					code = e.ERROR_AUTH_CHECK_TOKEN_FAIL

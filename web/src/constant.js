@@ -52,7 +52,7 @@ const CONSTANT = {
             label: '自定义',
             inputs: [
                 { subLabel: 'webhook地址', value: '', col: 'webhook', desc: "自定义webhook地址" },
-                { subLabel: '请求体', value: '', col: 'body', desc: "请求体, text内容请使用 TEXT 进行占位\n例如：{\"message\": \"TEXT\", \"other_field\": \"field_data\"}", isTextArea: true},
+                { subLabel: '请求体', value: '', col: 'body', desc: "请求体, text内容请使用 TEXT 进行占位\n例如：{\"message\": \"TEXT\", \"foo\": \"bar\"}", isTextArea: true },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
@@ -74,7 +74,5 @@ CONSTANT.WAYS_DATA_MAP = {};
 CONSTANT.WAYS_DATA.forEach(element => {
     CONSTANT.WAYS_DATA_MAP[element.type] = element
 });
-
-console.log('xxxxxxxx', CONSTANT.WAYS_DATA_MAP)
 
 export { CONSTANT }
