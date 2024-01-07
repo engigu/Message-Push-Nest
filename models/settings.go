@@ -9,9 +9,9 @@ import (
 type Settings struct {
 	IDModel
 
-	Section string `json:"section"`
-	Key     string `json:"key"`
-	Value   string `json:"value"`
+	Section string `json:"section" gorm:"type:varchar(100) comment '实例类型';default:'';index:section"`
+	Key     string `json:"key" gorm:"type:varchar(100) comment '实例类型';default:'';"`
+	Value   string `json:"value" gorm:"type:varchar(4096) comment '实例类型';default:'';"`
 }
 
 // AddOneSetting 添加一条设置

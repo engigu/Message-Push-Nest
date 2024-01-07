@@ -11,7 +11,7 @@ import (
 type SendTasks struct {
 	UUIDModel
 
-	Name string `json:"name"`
+	Name string `json:"name" gorm:"type:varchar(100) comment '任务名称';default:'';"`
 }
 
 // AddSendTaskWithID 添加实例的时候添加任务

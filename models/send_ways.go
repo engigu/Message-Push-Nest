@@ -10,9 +10,9 @@ import (
 type SendWays struct {
 	UUIDModel
 
-	Name string `json:"name"`
-	Type string `json:"type"`
-	Auth string `gorm:"not null" json:"auth"`
+	Name string `json:"name" gorm:"type:varchar(100) comment '渠道名称';default:'';"`
+	Type string `json:"type" gorm:"type:varchar(100) comment '渠道类型';default:'';index:type"`
+	Auth string `json:"auth" gorm:"type:varchar(2048) comment '认证信息';default:'';"`
 }
 
 func AddSendWay(name string, auth string, wayType string, createdBy string, modifiedBy string) error {

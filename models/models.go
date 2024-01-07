@@ -14,25 +14,25 @@ import (
 var db *gorm.DB
 
 type IDModel struct {
-	ID int `gorm:"primary_key" json:"id"`
+	ID int `gorm:"type:int(11) AUTO_INCREMENT comment 'id';primary_key" json:"id"`
 
-	CreatedBy  string    `json:"created_by"`
-	ModifiedBy string    `json:"modified_by"`
-	CreatedOn  util.Time `json:"created_on"`
-	ModifiedOn util.Time `json:"modified_on"`
+	CreatedBy  string    `json:"created_by" gorm:"type:varchar(100) comment '创建人';default:'';"`
+	ModifiedBy string    `json:"modified_by" gorm:"type:varchar(100) comment '修改人';default:'';"`
+	CreatedOn  util.Time `json:"created_on" gorm:"type:timestamp comment '创建时间';default:current_timestamp;"`
+	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';default:current_timestamp on update current_timestamp;"`
 }
 
 type UUIDModel struct {
-	ID uuid.UUID `gorm:"primary_key" json:"id"`
+	ID uuid.UUID `gorm:"type:varchar(36) comment 'id';primary_key" json:"id"`
 
-	CreatedBy  string    `json:"created_by"`
-	ModifiedBy string    `json:"modified_by"`
-	CreatedOn  util.Time `json:"created_on"`
-	ModifiedOn util.Time `json:"modified_on"`
+	CreatedBy  string    `json:"created_by" gorm:"type:varchar(100) comment '创建人';default:'';"`
+	ModifiedBy string    `json:"modified_by" gorm:"type:varchar(100) comment '修改人';default:'';"`
+	CreatedOn  util.Time `json:"created_on" gorm:"type:timestamp comment '创建时间';default:current_timestamp;"`
+	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';default:current_timestamp on update current_timestamp;"`
 }
 
 // Setup initializes the database instance
-func Setup() {
+func Setup() *gorm.DB {
 	var err error
 	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		setting.DatabaseSetting.User,
@@ -58,6 +58,7 @@ func Setup() {
 	db.Callback().Delete().Replace("gorm:delete", deleteCallback)
 	db.DB().SetMaxIdleConns(10)
 	db.DB().SetMaxOpenConns(100)
+	return db
 }
 
 // CloseDB closes database connection (unnecessary)

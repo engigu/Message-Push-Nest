@@ -3,12 +3,12 @@ package models
 type SendTasksIns struct {
 	UUIDModel
 
-	TaskID      string `json:"task_id"`
-	WayID       string `json:"way_id"`
-	WayType     string `json:"way_type"`
-	ContentType string `json:"content_type"`
-	Config      string `json:"config"`
-	Extra       string `json:"extra"`
+	TaskID      string `json:"task_id"  gorm:"type:varchar(36) comment '任务id';default:'';index:task_id"`
+	WayID       string `json:"way_id" gorm:"type:varchar(36) comment '渠道id';default:'';index:way_id"`
+	WayType     string `json:"way_type" gorm:"type:varchar(100) comment '渠道类型';default:'';index:way_type"`
+	ContentType string `json:"content_type" gorm:"type:varchar(100) comment '实例类型';default:'';index:content_type"`
+	Config      string `json:"config" gorm:"type:text comment '实例配置';"`
+	Extra       string `json:"extra" gorm:"type:text comment '额外信息';"`
 }
 
 // InsEmailConfig 实例里面的邮箱config

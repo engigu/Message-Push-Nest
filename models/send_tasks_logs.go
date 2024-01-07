@@ -7,13 +7,13 @@ import (
 )
 
 type SendTasksLogs struct {
-	ID     int    `gorm:"primary_key" json:"id"`
-	TaskID string `json:"task_id"`
-	Log    string `json:"log"`
-	Status int    `json:"status"`
+	ID     int    `gorm:"primary_key" json:"id" `
+	TaskID string `json:"task_id" gorm:"type:varchar(36) comment '任务id';default:'';index:task_id"`
+	Log    string `json:"log" gorm:"type:text comment '日志';"`
+	Status int    `json:"status" gorm:"type:int comment '状态';default:0;"`
 
-	CreatedOn  util.Time `json:"created_on"`
-	ModifiedOn util.Time `json:"modified_on"`
+	CreatedOn  util.Time `json:"created_on" gorm:"type:timestamp comment '创建时间';default:current_timestamp;"`
+	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';default:current_timestamp on update current_timestamp;"`
 }
 
 // Add 添加日志记录

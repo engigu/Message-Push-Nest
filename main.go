@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"message-nest/migrate"
 	"message-nest/models"
 	"message-nest/pkg/logging"
 	"message-nest/pkg/setting"
@@ -26,9 +27,10 @@ var (
 )
 
 func init() {
+	logging.Setup()
+	migrate.Setup()
 	setting.Setup()
 	models.Setup()
-	logging.Setup()
 	table.Setup()
 	env_service.Setup()
 	cron_service.Setup()
