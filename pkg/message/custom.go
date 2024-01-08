@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"time"
 )
 
 type CustomWebhook struct {
@@ -11,8 +12,12 @@ type CustomWebhook struct {
 	Body    string
 }
 
+var Client = &http.Client{
+	Timeout: 8 * time.Second,
+}
+
 func (cw *CustomWebhook) Request(url string, msg string) ([]byte, error) {
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer([]byte(msg)))
+	resp, err := Client.Post(url, "application/json", bytes.NewBuffer([]byte(msg)))
 	if err != nil {
 		return nil, err
 	}
