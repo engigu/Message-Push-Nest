@@ -13,7 +13,7 @@ type CustomWebhook struct {
 }
 
 var Client = &http.Client{
-	Timeout: 8 * time.Second,
+	Timeout: 5 * time.Second,
 }
 
 func (cw *CustomWebhook) Request(url string, msg string) ([]byte, error) {
