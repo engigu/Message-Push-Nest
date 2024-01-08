@@ -39,10 +39,10 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 ## 使用方法 🚀
 
 1. 下载最新的系统版本对应的release， 解压
-2. 重命名conf/app.example.ini为conf/app.ini
-3. 新建一个数据库
-4. 将database.sql在数据库中执行，进行表数据初始化
-5. 修改app.ini对应的配置
+2. 新建一个数据库
+3. 重命名conf/app.example.ini为conf/app.ini
+4. 修改app.ini对应的配置
+5. 启动项目会自动创建表和账号 （也可以使用database.sql在数据库中执行，进行表数据初始化）
 6. 启动项目，访问8000端口，初始账号为admin，密码为123456
 
 
