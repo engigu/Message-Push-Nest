@@ -212,11 +212,14 @@ func TestSendWay(c *gin.Context) {
 		return
 	}
 
-	errTestMsg := sendWayService.TestSendWay(msgObj)
+	errTestMsg, resText := sendWayService.TestSendWay(msgObj)
 	if errTestMsg != "" {
 		appG.CResponse(http.StatusInternalServerError, errTestMsg, nil)
 		return
 	}
-
-	appG.CResponse(http.StatusOK, "测试渠道信息成功", nil)
+	msg := "测试渠道信息成功"
+	if resText != "" {
+		msg += ", 返回信息：" + resText
+	}
+	appG.CResponse(http.StatusOK, msg, nil)
 }

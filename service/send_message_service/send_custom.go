@@ -14,18 +14,16 @@ type CustomService struct {
 }
 
 // SendCustomMessage 执行发送钉钉
-func (s *CustomService) SendCustomMessage(auth send_way_service.WayDetailCustom, ins models.SendTasksIns, typeC string, title string, content string) string {
-
+func (s *CustomService) SendCustomMessage(auth send_way_service.WayDetailCustom, ins models.SendTasksIns, typeC string, title string, content string) (string, string) {
 	errMsg := ""
 	cli := message.CustomWebhook{}
 	data, _ := json.Marshal(content)
 	dataStr := string(data)
 	dataStr = strings.Trim(dataStr, "\"")
 	bodyStr := strings.Replace(auth.Body, "TEXT", dataStr, -1)
-	_, err := cli.Request(auth.Webhook, bodyStr)
+	res, err := cli.Request(auth.Webhook, bodyStr)
 	if err != nil {
 		errMsg = fmt.Sprintf("发送失败：%s", err)
 	}
-
-	return errMsg
+	return string(res), errMsg
 }

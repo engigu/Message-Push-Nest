@@ -121,14 +121,14 @@ func (sw *SendWay) ValidateDiffWay() (string, interface{}) {
 }
 
 // TestSendWay 尝试带发信测试连通性
-func (sw *SendWay) TestSendWay(msgObj interface{}) string {
+func (sw *SendWay) TestSendWay(msgObj interface{}) (string, string) {
 	testMsg := "This is a test message from message-nest."
 	emailAuth, ok := msgObj.(WayDetailEmail)
 	if ok {
 		var emailer message.EmailMessage
 		emailer.Init(emailAuth.Server, 465, emailAuth.Account, emailAuth.Passwd)
 		errMsg := emailer.SendTextMessage(emailAuth.Account, "test email", testMsg)
-		return errMsg
+		return errMsg, ""
 	}
 	dtalkAuth, ok := msgObj.(WayDetailDTalk)
 	if ok {
@@ -136,11 +136,11 @@ func (sw *SendWay) TestSendWay(msgObj interface{}) string {
 			AccessToken: dtalkAuth.AccessToken,
 			Secret:      dtalkAuth.Secret,
 		}
-		_, err := cli.SendMessageText(testMsg + dtalkAuth.Keys)
+		res, err := cli.SendMessageText(testMsg + dtalkAuth.Keys)
 		if err != nil {
-			return fmt.Sprintf("发送失败：%s", err)
+			return fmt.Sprintf("发送失败：%s", err), string(res)
 		}
-		return ""
+		return "", string(res)
 	}
 	customAuth, ok := msgObj.(WayDetailCustom)
 	if ok {
@@ -149,11 +149,11 @@ func (sw *SendWay) TestSendWay(msgObj interface{}) string {
 		dataStr := string(data)
 		dataStr = strings.Trim(dataStr, "\"")
 		bodyStr := strings.Replace(customAuth.Body, "TEXT", dataStr, -1)
-		_, err := cli.Request(customAuth.Webhook, bodyStr)
+		res, err := cli.Request(customAuth.Webhook, bodyStr)
 		if err != nil {
-			return fmt.Sprintf("发送失败：%s", err)
+			return fmt.Sprintf("发送失败：%s", err), string(res)
 		}
-		return ""
+		return "", string(res)
 	}
-	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type)
+	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), ""
 }

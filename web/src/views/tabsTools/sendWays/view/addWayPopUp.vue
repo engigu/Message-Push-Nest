@@ -112,6 +112,7 @@ export default defineComponent({
       const rsp = await request.post('/sendways/add', postData);
       if (await rsp.data.code == 200) {
         handleCancer();
+        window.location.reload();
       }
 
     }

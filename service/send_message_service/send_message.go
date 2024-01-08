@@ -105,7 +105,8 @@ func (sm *SendMessageService) Send() string {
 		dtalkAuth, ok := msgObj.(send_way_service.WayDetailDTalk)
 		if ok {
 			es := DtalkService{}
-			errMsg := es.SendDtalkMessage(dtalkAuth, ins.SendTasksIns, typeC, sm.Title, content)
+			res, errMsg := es.SendDtalkMessage(dtalkAuth, ins.SendTasksIns, typeC, sm.Title, content)
+			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
 			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 			continue
 		}
@@ -113,7 +114,8 @@ func (sm *SendMessageService) Send() string {
 		customAuth, ok := msgObj.(send_way_service.WayDetailCustom)
 		if ok {
 			cs := CustomService{}
-			errMsg := cs.SendCustomMessage(customAuth, ins.SendTasksIns, typeC, sm.Title, content)
+			res, errMsg := cs.SendCustomMessage(customAuth, ins.SendTasksIns, typeC, sm.Title, content)
+			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
 			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 			continue
 		}
