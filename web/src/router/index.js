@@ -45,6 +45,9 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = Boolean(localStorage.getItem(CONSTANT.STORE_TOKEN_NAME));
   if (!isAuthenticated && to.path !== '/login') {
     next('/login');
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   } else {
     next();
   }
