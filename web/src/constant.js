@@ -1,7 +1,7 @@
 // 定义一些常量名
 const CONSTANT = {
     PAGE: 1,
-    PAGE_SIZE: 6,
+    PAGE_SIZE: 8,
     TOTAL: 0,
     LOG_TASK_ID: "00000000-0000-0000-0000-000000000001",
     STORE_TOKEN_NAME: '__message_nest_token__',
