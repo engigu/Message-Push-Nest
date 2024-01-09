@@ -136,13 +136,13 @@ func (sm *SendMessageService) Send() string {
 func (sm *SendMessageService) AppendSendContent() {
 	sm.LogOutput = append(sm.LogOutput, fmt.Sprintf(">> 发送的内容:"))
 	if sm.Text != "" {
-		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("Text: %s", sm.Text))
+		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("Text: %s \n", sm.Text))
 	}
 	if sm.HTML != "" {
-		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("HTML: %s", sm.HTML))
+		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("HTML: %s \n", sm.HTML))
 	}
 	if sm.MarkDown != "" {
-		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("MarkDown: %s", sm.MarkDown))
+		sm.LogOutput = append(sm.LogOutput, fmt.Sprintf("MarkDown: %s \n", sm.MarkDown))
 	}
 }
 
