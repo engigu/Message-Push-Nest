@@ -31,7 +31,7 @@ func Setup() {
 
 	formatter := new(prefixed.TextFormatter)
 	formatter.DisableTimestamp = false
-	formatter.ForceFormatting = false
+	formatter.ForceFormatting = true
 	formatter.FullTimestamp = true
 	formatter.CallerFormatter = CallerFormatter
 	formatter.TimestampFormat = "2006-01-02 15:04:05.999"
