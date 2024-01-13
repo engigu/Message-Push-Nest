@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 	"message-nest/models"
-	"message-nest/pkg/logging"
 	"message-nest/pkg/setting"
 )
 
@@ -17,7 +17,7 @@ func InitAuthTableData() {
 
 	settingO, err := models.GetSettingByKey(initSection, initAuthKey)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		logging.Logger.Error(fmt.Sprintf("查询账号初始化失败！"))
+		logrus.Error(fmt.Sprintf("查询账号初始化失败！"))
 		return
 	}
 	if settingO.Value == "1" {
@@ -26,15 +26,15 @@ func InitAuthTableData() {
 	}
 	err = models.AddUser(initAccount, initAccountPasswd)
 	if err != nil {
-		logging.Logger.Error(fmt.Sprintf("添加初始化admin账号失败！"))
+		logrus.Error(fmt.Sprintf("添加初始化admin账号失败！"))
 		return
 	} else {
-		logging.Logger.Error(fmt.Sprintf("初始化admin账号成功！您的账号：%s 密码：%s", initAccount, initAccountPasswd))
+		logrus.Error(fmt.Sprintf("初始化admin账号成功！您的账号：%s 密码：%s", initAccount, initAccountPasswd))
 	}
 
 	err = models.AddOneSetting(models.Settings{Section: initSection, Key: initAuthKey, Value: "1"})
 	if err != nil {
-		logging.Logger.Error(fmt.Sprintf("标记admin账号初始化状态失败！"))
+		logrus.Error(fmt.Sprintf("标记admin账号初始化状态失败！"))
 		return
 	}
 }

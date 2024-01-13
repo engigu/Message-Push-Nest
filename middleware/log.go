@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 	"math"
-	"message-nest/pkg/logging"
+
 	"net/http"
 	"net/url"
 	"time"
@@ -53,7 +53,7 @@ func LogMiddleware(notLogged ...string) gin.HandlerFunc {
 			return
 		}
 
-		entry := logging.Logger.WithFields(logrus.Fields{
+		entry := logrus.WithFields(logrus.Fields{
 			////"hostname":   hostname,
 			//"statusCode": statusCode,
 			//"latency":    latency,

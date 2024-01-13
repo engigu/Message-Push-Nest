@@ -4,9 +4,11 @@ import (
 	"embed"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"message-nest/migrate"
 	"message-nest/models"
 	"message-nest/pkg/logging"
+
 	"message-nest/pkg/setting"
 	"message-nest/pkg/table"
 	"message-nest/routers"
@@ -51,11 +53,11 @@ func GinServerUp() {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
-	logging.Logger.Info("start http server listening http://0.0.0.0", endPoint)
+	logrus.Info("start http server listening http://0.0.0.0", endPoint)
 
 	err := server.ListenAndServe()
 	if err != nil {
-		logging.Logger.Error("Server err: ", err)
+		logrus.Error("Server err: ", err)
 	}
 }
 

@@ -2,8 +2,8 @@ package send_message_service
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"message-nest/models"
-	"message-nest/pkg/logging"
 	"message-nest/service/send_task_service"
 	"message-nest/service/send_way_service"
 	"strings"
@@ -38,7 +38,7 @@ func (sm *SendMessageService) LogsAndStatusMark(errStr string, status int) {
 	if status == SendFail {
 		sm.Status = SendFail
 	}
-	logging.Logger.Error(fmt.Sprintf("%s, 状态：%d", errStr, status))
+	logrus.Error(fmt.Sprintf("%s, 状态：%d", errStr, status))
 }
 
 // Send 发送一个消息任务的所有实例
@@ -158,7 +158,7 @@ func (sm *SendMessageService) RecordSendLog() {
 	}
 	err := log.Add()
 	if err != nil {
-		logging.Logger.Error(fmt.Sprintf("添加日志失败！原因是：%s", err))
+		logrus.Error(fmt.Sprintf("添加日志失败！原因是：%s", err))
 	}
 }
 
@@ -182,10 +182,10 @@ func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) (string, strin
 	if !ok || len(content) == 0 {
 		content, ok := data["text"]
 		if !ok {
-			logging.Logger.Error("text节点数据为空！")
+			logrus.Error("text节点数据为空！")
 			return "text", ""
 		} else {
-			logging.Logger.Error(fmt.Sprintf("没有找到%s对应的消息，使用text消息替代！", ins.ContentType))
+			logrus.Error(fmt.Sprintf("没有找到%s对应的消息，使用text消息替代！", ins.ContentType))
 			return "text", content
 		}
 	} else {

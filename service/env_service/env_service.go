@@ -1,9 +1,9 @@
 package env_service
 
 import (
+	"github.com/sirupsen/logrus"
 	"message-nest/models"
 	"message-nest/pkg/constant"
-	"message-nest/pkg/logging"
 )
 
 type EnvService struct {
@@ -18,9 +18,9 @@ func (es *EnvService) CommonAdd(section string, key string, value string) {
 			Value:   value,
 		})
 		if err != nil {
-			logging.Logger.Error("初始化%s:%s失败", section, key)
+			logrus.Error("初始化%s:%s失败", section, key)
 		} else {
-			logging.Logger.Infof("初始化%s:%s成功", section, key)
+			logrus.Infof("初始化%s:%s成功", section, key)
 		}
 	}
 }

@@ -3,10 +3,10 @@ package cron_service
 import (
 	"fmt"
 	"github.com/robfig/cron/v3"
+	"github.com/sirupsen/logrus"
 	"github.com/unknwon/com"
 	"message-nest/models"
 	"message-nest/pkg/constant"
-	"message-nest/pkg/logging"
 	"message-nest/service/send_message_service"
 )
 
@@ -47,7 +47,7 @@ func (cs *CronService) InitLogsCronRun() {
 	// 注册任务
 	setting, err := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanCronKeyName)
 	if err != nil {
-		logging.Logger.Error(fmt.Sprintf("获取日志的cron失败，原因：%s", err))
+		logrus.Error(fmt.Sprintf("获取日志的cron失败，原因：%s", err))
 	}
 	ClearLogsTaskId = AddTask(ScheduledTask{
 		Schedule: setting.Value,
@@ -57,7 +57,7 @@ func (cs *CronService) InitLogsCronRun() {
 	// 添加任务
 	err = models.AddSendTaskWithID("日志定时清除", constant.CleanLogsTaskId, "admin")
 	if err != nil {
-		logging.Logger.Error(fmt.Sprintf("添加日志定时清除任务失败，原因：%s", err))
+		logrus.Error(fmt.Sprintf("添加日志定时清除任务失败，原因：%s", err))
 	}
 }
 
@@ -68,8 +68,8 @@ func (cs *CronService) UpdateLogsCronRun(cron string) {
 		Schedule: cron,
 		Job:      ClearLogs,
 	})
-	logging.Logger.Error(fmt.Sprintf("更新日志的cron成功，%s", cron))
-	logging.Logger.Error(fmt.Sprintf("所有的定时任务： %s", TaskList))
+	logrus.Error(fmt.Sprintf("更新日志的cron成功，%s", cron))
+	logrus.Error(fmt.Sprintf("所有的定时任务： %s", TaskList))
 
 }
 

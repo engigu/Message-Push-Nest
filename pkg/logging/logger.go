@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var Logger = logrus.New()
+//var Logger = logrus.New()
 
 func getFuncOutStr(funcStr string) string {
 	parts := strings.Split(funcStr, ".")
@@ -41,21 +41,21 @@ func Setup() {
 		PrefixStyle:    "green",
 	})
 
-	Logger.Formatter = formatter
-	Logger.SetReportCaller(true)
-	Logger.SetOutput(os.Stdout)
+	logrus.SetFormatter(formatter)
+	logrus.SetReportCaller(true)
+	logrus.SetOutput(os.Stdout)
 
 	level := strings.ToLower(setting.AppSetting.LogLevel)
 	switch level {
 	case "debug":
-		Logger.SetLevel(logrus.DebugLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 	case "info":
-		Logger.SetLevel(logrus.InfoLevel)
+		logrus.SetLevel(logrus.InfoLevel)
 	case "warn":
-		Logger.SetLevel(logrus.WarnLevel)
+		logrus.SetLevel(logrus.WarnLevel)
 	case "error":
-		Logger.SetLevel(logrus.ErrorLevel)
+		logrus.SetLevel(logrus.ErrorLevel)
 	default:
-		Logger.SetLevel(logrus.DebugLevel)
+		logrus.SetLevel(logrus.DebugLevel)
 	}
 }

@@ -3,7 +3,8 @@ package cron_service
 import (
 	"fmt"
 	"github.com/robfig/cron/v3"
-	"message-nest/pkg/logging"
+	"github.com/sirupsen/logrus"
+
 	"sync"
 )
 
@@ -33,10 +34,10 @@ func AddTask(task ScheduledTask) cron.EntryID {
 	taskId, err := CronInstance.AddFunc(task.Schedule, task.Job)
 	if err != nil {
 		// 处理错误
-		logging.Logger.Error(fmt.Sprintf("添加定时任务失败，原因：%s", err))
+		logrus.Error(fmt.Sprintf("添加定时任务失败，原因：%s", err))
 	} else {
 		TaskList[taskId] = &task
-		logging.Logger.Error(fmt.Sprintf("添加定时任务成功，entryID: %d, cron: %s", taskId, task.Schedule))
+		logrus.Error(fmt.Sprintf("添加定时任务成功，entryID: %d, cron: %s", taskId, task.Schedule))
 	}
 	return taskId
 }

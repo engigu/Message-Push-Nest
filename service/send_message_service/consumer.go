@@ -1,8 +1,9 @@
 package send_message_service
 
 import (
+	"github.com/sirupsen/logrus"
 	"message-nest/pkg/constant"
-	"message-nest/pkg/logging"
+
 	"sync"
 )
 
@@ -13,7 +14,7 @@ func DoSendTask(task SendMessageService, wg *sync.WaitGroup) {
 	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
-			logging.Logger.Error("DoSendTask: Recovered from panic:", r)
+			logrus.Error("DoSendTask: Recovered from panic:", r)
 		}
 	}()
 
@@ -31,7 +32,7 @@ func MessageConsumer(wg *sync.WaitGroup) {
 	for {
 		task, ok := <-Buffer
 		if !ok {
-			logging.Logger.Error("MessageConsumer: Channel closed. Exiting.")
+			logrus.Error("MessageConsumer: Channel closed. Exiting.")
 			return
 		}
 
