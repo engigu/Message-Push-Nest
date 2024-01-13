@@ -23,7 +23,6 @@ func getFuncOutStr(funcStr string) string {
 
 func CallerFormatter(funcStr string, fileStr string) string {
 	fName := filepath.Base(fileStr)
-	println(fileStr, funcStr, fName)
 	funcOut := getFuncOutStr(funcStr)
 	return fmt.Sprintf(" [%s %s]", fName, funcOut)
 }
