@@ -12,6 +12,7 @@ type App struct {
 
 	RuntimeRootPath string
 	LogLevel        string
+	InitData        string
 }
 
 var AppSetting = &App{}

@@ -45,6 +45,21 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 3. 重命名conf/app.example.ini为conf/app.ini
 4. 修改app.ini对应的配置
 5. 启动项目会自动创建表和账号 （也可以使用database.sql在数据库中执行，进行表数据初始化）
+```shell
+# 第一次运行将app.ini中的app.InitData设置为enable，会自动进行表数据的初始化
+# 后续不需要开启这个配置
+# INFO登录启动回出现如下日志
+
+[2024-01-13 13:40:09.075]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_auth
+[2024-01-13 13:40:11.778]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_send_tasks
+[2024-01-13 13:40:16.518]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_send_ways
+[2024-01-13 13:40:23.300]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_send_tasks_logs
+[2024-01-13 13:40:28.715]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_send_tasks_ins
+[2024-01-13 13:40:39.538]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_settings
+[2024-01-13 13:40:46.299]  INFO [migrate.go:74 Setup] [Init Data]: Init Account data...
+[2024-01-13 13:40:46.751]  INFO [migrate.go:77 Setup] [Init Data]: All table data init done.
+
+```
 6. 启动项目，访问8000端口，初始账号为admin，密码为123456
 
 

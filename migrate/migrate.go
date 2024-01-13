@@ -40,7 +40,6 @@ func InitAuthTableData() {
 }
 
 func Setup() {
-	setting.Setup()
 	db := models.Setup()
 	defer func(db *gorm.DB) {
 		err := db.Close()
@@ -49,15 +48,31 @@ func Setup() {
 		}
 	}(db)
 
-	db.AutoMigrate(
+	if setting.AppSetting.InitData != "enable" {
+		return
+	}
+
+	entry := logrus.WithFields(logrus.Fields{
+		"prefix": "[Init Data]",
+	})
+
+	tables := []interface{}{
 		&models.Auth{},
 		&models.SendTasks{},
 		&models.SendWays{},
 		&models.SendTasksLogs{},
 		&models.SendTasksIns{},
 		&models.Settings{},
-	)
+	}
 
+	for _, table := range tables {
+		tableName := db.NewScope(table).TableName()
+		entry.Infof("Migrate table: %s", tableName)
+		db.AutoMigrate(table)
+	}
+
+	entry.Infof("Init Account data...")
 	InitAuthTableData()
 
+	entry.Infof("All table data init done.")
 }
