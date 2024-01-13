@@ -54,21 +54,22 @@ func LogMiddleware(notLogged ...string) gin.HandlerFunc {
 		}
 
 		entry := logging.Logger.WithFields(logrus.Fields{
-			//"hostname":   hostname,
-			"statusCode": statusCode,
-			"latency":    latency,
-			"clientIP":   clientIP,
-			"method":     c.Request.Method,
-			"path":       path,
-			//"referer":    referer,
-			"dataLength": dataLength,
-			//"userAgent":  clientUserAgent,
+			////"hostname":   hostname,
+			//"statusCode": statusCode,
+			//"latency":    latency,
+			//"clientIP":   clientIP,
+			//"method":     c.Request.Method,
+			//"path":       path,
+			////"referer":    referer,
+			//"dataLength": dataLength,
+			////"userAgent":  clientUserAgent,
+			"prefix": "[Gin]",
 		})
 
 		if len(c.Errors) > 0 {
 			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
 		} else {
-			msg := fmt.Sprintf("[Gin] %s [%s] %s %d %d (%dms)", clientIP, c.Request.Method, path, statusCode, dataLength, latency)
+			msg := fmt.Sprintf("%s [%s] %s %d %d (%dms)", clientIP, c.Request.Method, path, statusCode, dataLength, latency)
 			if statusCode >= http.StatusInternalServerError {
 				entry.Error(msg)
 			} else if statusCode >= http.StatusBadRequest {

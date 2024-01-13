@@ -3,20 +3,18 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"message-nest/migrate"
+	"message-nest/models"
+	"message-nest/pkg/logging"
+	"message-nest/pkg/setting"
 	"message-nest/pkg/table"
+	"message-nest/routers"
 	"message-nest/service/cron_service"
 	"message-nest/service/env_service"
 	"message-nest/service/send_message_service"
 	"net/http"
 	"sync"
-
-	"github.com/gin-gonic/gin"
-
-	"message-nest/migrate"
-	"message-nest/models"
-	"message-nest/pkg/logging"
-	"message-nest/pkg/setting"
-	"message-nest/routers"
 )
 
 var (
@@ -27,9 +25,9 @@ var (
 )
 
 func init() {
+	setting.Setup()
 	logging.Setup()
 	migrate.Setup()
-	setting.Setup()
 	models.Setup()
 	table.Setup()
 	env_service.Setup()

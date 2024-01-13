@@ -11,6 +11,7 @@ type App struct {
 	JwtSecret string
 
 	RuntimeRootPath string
+	LogLevel        string
 }
 
 var AppSetting = &App{}

@@ -3,14 +3,14 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus'
 import { usePageState } from '../store/page_sate';
 import { CONSTANT } from '../constant';
-import config  from '../../config.js';
+import config from '../../config.js';
 
 const ERR_NETWORK = "ERR_NETWORK";
 
 const request = axios.create({
     baseURL: config.apiUrl,
     timeout: 50000,
-    withCredentials: true, 
+    withCredentials: true,
 });
 
 
@@ -81,6 +81,9 @@ const logout = () => {
     const pageState = usePageState();
     pageState.setIsLogin(true);
     localStorage.setItem(CONSTANT.STORE_TOKEN_NAME, "");
+    setTimeout(() => {
+        window.location.href = '/';
+    }, 500);
 };
 
 export { request, handleException, logout };
