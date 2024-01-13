@@ -31,6 +31,7 @@ func Setup() {
 
 	formatter := new(prefixed.TextFormatter)
 	formatter.DisableTimestamp = false
+	formatter.DisableColors = false
 	formatter.ForceFormatting = true
 	formatter.FullTimestamp = true
 	formatter.CallerFormatter = CallerFormatter
