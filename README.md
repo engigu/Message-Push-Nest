@@ -44,7 +44,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 2. 新建一个数据库
 3. 重命名conf/app.example.ini为conf/app.ini
 4. 修改app.ini对应的配置
-5. 启动项目会自动创建表和账号 （也可以使用database.sql在数据库中执行，进行表数据初始化）
+5. 启动项目会自动创建表和账号 
 ```shell
 # 第一次运行将app.ini中的app.InitData设置为enable，会自动进行表数据的初始化
 # 后续不需要开启这个配置
