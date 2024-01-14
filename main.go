@@ -49,7 +49,7 @@ func main() {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
-	logrus.Info("start http server listening http://0.0.0.0", endPoint)
+	logrus.Infof("start message server listening http://0.0.0.0%s", endPoint)
 
 	err := server.ListenAndServe()
 	if err != nil {
