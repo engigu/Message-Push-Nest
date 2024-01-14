@@ -208,5 +208,12 @@ func UpdateMsgTaskInsEnable(c *gin.Context) {
 		return
 	}
 
-	appG.CResponse(http.StatusOK, "更新实例成功！", nil)
+	msg := ""
+	if req.Enable == 1 {
+		msg = fmt.Sprintf("设置实例发送为开启成功！")
+	} else {
+		msg = fmt.Sprintf("设置实例发送为暂停成功！")
+
+	}
+	appG.CResponse(http.StatusOK, msg, nil)
 }

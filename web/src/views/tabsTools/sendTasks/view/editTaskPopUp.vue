@@ -67,7 +67,7 @@
               {{ scope.row.way_type }}+{{ scope.row.content_type }}
             </template>
           </el-table-column>
-          <el-table-column prop="way_type" label="额外信息" >
+          <el-table-column prop="way_type" label="额外信息">
             <template #default="scope">
               {{ formatExtraInfo(scope) }}
             </template>
@@ -229,6 +229,7 @@ export default defineComponent({
       const rsp = await request.post('/sendtasks/ins/update_enable', postData);
       if (await rsp.data.code == 200) {
         row.enable = status;
+        ElMessage({ message: await rsp.data.msg, type: 'success' });
       }
     }
 
@@ -236,7 +237,7 @@ export default defineComponent({
       let postData = { id: state.currTaskInput.taskId, name: state.currTaskInput.taskName };
       const rsp = await request.post('/sendtasks/edit', postData);
       if (await rsp.data.code == 200) {
-        ElMessage({ message: await rsp.data.msg, type: 'success' })
+        ElMessage({ message: await rsp.data.msg, type: 'success' });
       }
     }
 
