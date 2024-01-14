@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"message-nest/models"
+	"message-nest/pkg/constant"
 	"message-nest/service/send_task_service"
 	"message-nest/service/send_way_service"
 	"strings"
@@ -13,6 +14,10 @@ const (
 	SendSuccess = 1
 	SendFail    = 0
 )
+
+//var logger = logrus.WithFields(logrus.Fields{
+//	"prefix": "[Message]",
+//})
 
 func errStrIsSuccess(errStr string) int {
 	if errStr == "" {
@@ -39,6 +44,23 @@ func (sm *SendMessageService) LogsAndStatusMark(errStr string, status int) {
 		sm.Status = SendFail
 	}
 	logrus.Infof("%s, 状态：%d", strings.Trim(errStr, "\n"), status)
+}
+
+// AsyncSend 异步发送一个消息任务的所有实例
+func (sm *SendMessageService) AsyncSend() {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.Error("AsyncSend: Recovered from panic:", r)
+		}
+	}()
+
+	// 限制并发异步发送数量
+	constant.MaxSendTaskSemaphoreChan <- ""
+	defer func() {
+		<-constant.MaxSendTaskSemaphoreChan
+	}()
+
+	go sm.Send()
 }
 
 // Send 发送一个消息任务的所有实例

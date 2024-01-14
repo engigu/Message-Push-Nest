@@ -28,4 +28,4 @@ var LogsCleanDefaultValueMap = map[string]string{
 const AboutSectionName = "about"
 
 // 限制goroutine的最大数量
-var MaxSemaphore = make(chan struct{}, 2048)
+var MaxSendTaskSemaphoreChan = make(chan string, 2048)

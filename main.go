@@ -14,16 +14,12 @@ import (
 	"message-nest/routers"
 	"message-nest/service/cron_service"
 	"message-nest/service/env_service"
-	"message-nest/service/send_message_service"
 	"net/http"
-	"sync"
 )
 
 var (
 	//go:embed web/dist/*
 	f embed.FS
-
-	wg sync.WaitGroup
 )
 
 func init() {
@@ -36,7 +32,7 @@ func init() {
 	cron_service.Setup()
 }
 
-func GinServerUp() {
+func main() {
 	gin.SetMode(setting.ServerSetting.RunMode)
 
 	routersInit := routers.InitRouter(f)
@@ -59,14 +55,4 @@ func GinServerUp() {
 	if err != nil {
 		logrus.Error("Server err: ", err)
 	}
-}
-
-func main() {
-	wg.Add(1)
-
-	go GinServerUp()
-	go send_message_service.MessageConsumer(&wg)
-
-	wg.Wait()
-	fmt.Println("Server exit...")
 }

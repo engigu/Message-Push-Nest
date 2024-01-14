@@ -47,7 +47,7 @@ func DoSendMassage(c *gin.Context) {
 		appG.CResponse(http.StatusOK, "发送成功！", nil)
 	} else {
 		// 异步发送
-		send_message_service.Buffer <- msgService
+		msgService.AsyncSend()
 		appG.CResponse(http.StatusOK, "提交成功！", nil)
 	}
 }
