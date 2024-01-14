@@ -75,8 +75,8 @@ var LatestVersion = map[string]string{}
 //13. 支持更多的api接入示例
 //`
 
-var V6Version = "v0.0.6"
-var V6VersionDesc = `
+var LatestVersionS = "v0.0.7"
+var LatestVersionDesc = `
 1. 单应用打包
 2. 支持邮件发送
 3. 用户密码设置
@@ -91,9 +91,10 @@ var V6VersionDesc = `
 12. 调整日志格式
 13. 支持更多的api接入示例
 14. 支持发送实例的暂停与开启
+15. 支持企业微信消息发送
 `
 
 func init() {
-	LatestVersion["version"] = V6Version
-	LatestVersion["desc"] = strings.TrimSpace(V6VersionDesc)
+	LatestVersion["version"] = LatestVersionS
+	LatestVersion["desc"] = strings.TrimSpace(LatestVersionDesc)
 }
