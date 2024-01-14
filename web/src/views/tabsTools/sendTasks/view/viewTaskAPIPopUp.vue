@@ -19,8 +19,8 @@
     </template>
 
     <el-tabs v-model="activeName" @tab-click="renderApiString">
-      <el-tab-pane label="curl" name="curl">
-        <pre><code class="language-shell line-numbers">{{ currCode }}</code></pre>
+      <el-tab-pane :label="item.label" :name="item.label" v-for="item in apiViewData">
+        <pre><code :class="item.class">{{ item.code }}</code></pre>
       </el-tab-pane>
     </el-tabs>
 
@@ -38,9 +38,10 @@ import { defineComponent, onMounted, watch, reactive, toRefs, onUpdated } from '
 import { _ } from 'lodash';
 import { usePageState } from '@/store/page_sate.js';
 import Prism from "prismjs";
-import { ApiStrGenerate } from "@/util/viewApi.js";
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { request } from '@/api/api'
+import { CONSTANT } from '@/constant'
+
 
 export default defineComponent({
   components: {
@@ -54,8 +55,9 @@ export default defineComponent({
     const state = reactive({
       isShow: false,
       currCode: '',
+      currOption: '',
       activeName: 'curl',
-      language: "python",
+      apiViewData: CONSTANT.API_VIEW_DATA,
     });
 
     watch(pageState.ShowDialogData, (newValue, oldValue) => {
@@ -84,12 +86,17 @@ export default defineComponent({
       return viewOptions
     }
 
+    // 渲染api接口代码
     const renderApiString = async () => {
       let task_id = pageState.ShowDialogData[props.componentName].rowData.id;
-      let options = await getViewOptions(task_id)
-      if (state.activeName == 'curl') {
-        state.currCode = ApiStrGenerate.getCurlString(task_id, options);
+      if (!state.currOption) {
+        state.currOption = await getViewOptions(task_id);
       }
+      state.apiViewData.forEach(element => {
+        if (!element.code) {
+          element.code = element.func(task_id, state.currOption);
+        }
+      });
       setTimeout(() => {
         Prism.highlightAll()
       }, 100)
