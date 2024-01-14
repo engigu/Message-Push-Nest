@@ -62,7 +62,9 @@ export default defineComponent({
     watch(pageState.ShowDialogData, (newValue, oldValue) => {
       if (newValue[props.componentName]) {
         state.isShow = pageState.ShowDialogData[props.componentName].isShow;
-        renderApiString();
+        if (state.isShow) {
+          renderApiString();
+        }
       }
     });
 
