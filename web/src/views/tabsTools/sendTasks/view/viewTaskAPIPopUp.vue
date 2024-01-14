@@ -54,7 +54,6 @@ export default defineComponent({
     const pageState = usePageState();
     const state = reactive({
       isShow: false,
-      currCode: '',
       currOption: '',
       activeName: 'curl',
       apiViewData: CONSTANT.API_VIEW_DATA,
@@ -70,6 +69,7 @@ export default defineComponent({
     const handleCancer = () => {
       if (pageState.ShowDialogData[props.componentName]) {
         pageState.ShowDialogData[props.componentName].isShow = false;
+        state.currOption = '';
       }
     }
 
@@ -93,9 +93,9 @@ export default defineComponent({
         state.currOption = await getViewOptions(task_id);
       }
       state.apiViewData.forEach(element => {
-        if (!element.code) {
-          element.code = element.func(task_id, state.currOption);
-        }
+        // if (!element.code) {
+        element.code = element.func(task_id, state.currOption);
+        // }
       });
       setTimeout(() => {
         Prism.highlightAll()
