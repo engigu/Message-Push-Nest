@@ -9,7 +9,6 @@ import (
 	"message-nest/models"
 	"message-nest/pkg/logging"
 	"message-nest/pkg/setting"
-	"message-nest/pkg/table"
 	"message-nest/routers"
 	"message-nest/service/cron_service"
 	"message-nest/service/env_service"
@@ -27,7 +26,6 @@ func init() {
 	logging.Setup()
 	migrate.Setup()
 	models.Setup()
-	table.Setup()
 	env_service.Setup()
 	cron_service.Setup()
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
-	"message-nest/pkg/table"
 )
 
 type SendTasks struct {
@@ -103,10 +102,10 @@ type TaskIns struct {
 	InsData []SendTasksInsRes `json:"ins_data"`
 }
 
-// GetSendTasksTotal 获取所有任务下所有的实例
+// GetTasksIns 获取所有任务下所有的实例
 func GetTasksIns(id string) (TaskIns, error) {
-	insTable := table.InsTableName
-	waysTable := table.WayTableName
+	insTable := db.NewScope(SendTasksIns{}).TableName()
+	waysTable := db.NewScope(SendWays{}).TableName()
 	var (
 		task       SendTasks
 		taskIns    []SendTasksInsRes
@@ -133,8 +132,8 @@ func GetTasksIns(id string) (TaskIns, error) {
 
 // FindTaskByWayId 通过way_id找到关联的任务
 func FindTaskByWayId(wayId string) []SendTasks {
-	insTable := table.InsTableName
-	taskTable := table.TasksTableName
+	insTable := db.NewScope(SendTasksIns{}).TableName()
+	taskTable := db.NewScope(SendTasks{}).TableName()
 	var (
 		tasks []SendTasks
 	)

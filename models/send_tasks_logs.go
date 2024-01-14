@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"message-nest/pkg/table"
 	"message-nest/pkg/util"
 )
 
@@ -38,8 +37,8 @@ type LogsResult struct {
 // GetSendLogs 获取所有日志记录
 func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps interface{}) ([]LogsResult, error) {
 	var logs []LogsResult
-	logt := table.LogsTableName
-	taskt := table.TasksTableName
+	logt := db.NewScope(SendTasksLogs{}).TableName()
+	taskt := db.NewScope(SendTasks{}).TableName()
 
 	query := db.
 		Table(logt).
@@ -64,8 +63,8 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps int
 // GetSendLogsTotal 获取所有日志总数
 func GetSendLogsTotal(name string, taskId string, maps interface{}) (int, error) {
 	var total int
-	logt := table.LogsTableName
-	taskt := table.TasksTableName
+	logt := db.NewScope(SendTasksLogs{}).TableName()
+	taskt := db.NewScope(SendTasks{}).TableName()
 	query := db.
 		Table(logt).
 		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
@@ -82,7 +81,7 @@ func GetSendLogsTotal(name string, taskId string, maps interface{}) (int, error)
 // GetSendLogsTotal 获取所有日志总数
 func DeleteOutDateLogs(keepNum int) (int, error) {
 	var affectedRows int
-	logt := table.LogsTableName
+	logt := db.NewScope(SendTasksLogs{}).TableName()
 	sql := fmt.Sprintf(`DELETE FROM %s
 			WHERE id NOT IN (
 				SELECT id FROM (

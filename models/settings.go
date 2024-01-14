@@ -3,7 +3,6 @@ package models
 import (
 	"errors"
 	"github.com/jinzhu/gorm"
-	"message-nest/pkg/table"
 )
 
 type Settings struct {
@@ -50,7 +49,7 @@ func GetSettingByKey(section string, key string) (Settings, error) {
 
 func GetSettingBySection(section string) ([]Settings, error) {
 	var settings []Settings
-	err := db.Table(table.SettingsTableName).Where("`section` = ? ", section).Scan(&settings).Error
+	err := db.Table(db.NewScope(Settings{}).TableName()).Where("`section` = ? ", section).Scan(&settings).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return settings, err
 	}
