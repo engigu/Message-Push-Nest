@@ -141,7 +141,9 @@ export default defineComponent({
         state.isShow = pageState.ShowDialogData[props.componentName].isShow;
         resetPageInitData();
         state.currTaskInput.taskId = pageState.ShowDialogData[props.componentName].rowData.id;
-        queryListData();
+        if (state.isShow) {
+          queryListData();
+        }
       }
     });
 
