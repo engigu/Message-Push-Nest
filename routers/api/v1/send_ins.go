@@ -204,9 +204,9 @@ func UpdateMsgTaskInsEnable(c *gin.Context) {
 		"enable": req.Enable,
 	})
 	if err != nil {
-		appG.CResponse(http.StatusBadRequest, "删除实例失败！", nil)
+		appG.CResponse(http.StatusBadRequest, "更新实例失败！", nil)
 		return
 	}
 
-	appG.CResponse(http.StatusOK, "删除实例成功！", nil)
+	appG.CResponse(http.StatusOK, "更新实例成功！", nil)
 }
