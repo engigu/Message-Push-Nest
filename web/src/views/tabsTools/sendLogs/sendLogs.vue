@@ -19,7 +19,7 @@
               </el-tooltip>
             </template>
           </el-table-column>
-          <el-table-column label="创建时间" prop="created_on" width="160px" />
+          <el-table-column label="发送时间" prop="created_on" width="160px" />
           <el-table-column label="状态" prop="status" width="120px" fixed="right">
             <template #default="scope">
               <el-button link size="small" style="margin-right: 10px;" type="primary"
