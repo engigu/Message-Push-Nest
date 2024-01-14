@@ -18,7 +18,7 @@
       </el-tooltip>
     </template>
 
-    <el-tabs v-model="activeName" @tab-click="renderApiString">
+    <el-tabs v-model="activeName">
       <el-tab-pane :label="item.label" :name="item.label" v-for="item in apiViewData">
         <pre><code :class="item.class">{{ item.code }}</code></pre>
       </el-tab-pane>
