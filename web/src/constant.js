@@ -29,7 +29,6 @@ const CONSTANT = {
             taskInsInputs: [
                 { value: '', col: 'to_account', desc: "目的邮箱账号（发给谁）" },
                 // { value: '', col: 'title', desc: "邮箱标题" },
-
             ],
         },
         {
@@ -42,6 +41,22 @@ const CONSTANT = {
             ],
             tips: {
                 text: "输入框说明", desc: "钉钉支持加签和关键字过滤，如果是配置了关键字过滤，只需要消息里面包含了关键字，就会发送"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+                { subLabel: 'markdown', content: 'markdown' },
+            ],
+            taskInsInputs: [
+            ],
+        },
+        {
+            type: 'QyWeiXin',
+            label: '企业微信',
+            inputs: [
+                { subLabel: 'token', value: '', col: 'access_token', desc: "企业微信webhook中的token" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
             },
             taskInsRadios: [
                 { subLabel: 'text', content: 'text' },

@@ -205,6 +205,7 @@ export default defineComponent({
     const getFinalData = () => {
       let postData = {
         id: uuidv4(),
+        enable: 1,
         task_id: state.currTaskInput.taskId,
         way_id: state.currWayTmp.id,
         way_type: state.currWayTmp.type,

@@ -139,6 +139,15 @@ func (sm *SendMessageService) Send() string {
 			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 			continue
 		}
+		// 企业微信类型的实例发送
+		qywxAuth, ok := msgObj.(send_way_service.WayDetailQyWeiXin)
+		if ok {
+			es := QyWeiXinService{}
+			res, errMsg := es.SendQyWeiXinMessage(qywxAuth, ins.SendTasksIns, typeC, sm.Title, content)
+			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
+			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+			continue
+		}
 		// 自定义webhook类型的实例发送
 		customAuth, ok := msgObj.(send_way_service.WayDetailCustom)
 		if ok {

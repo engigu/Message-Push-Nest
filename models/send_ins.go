@@ -22,6 +22,10 @@ type InsEmailConfig struct {
 type InsDtalkConfig struct {
 }
 
+// InsQyWeiXinConfig 实例里面的企业微信config
+type InsQyWeiXinConfig struct {
+}
+
 // InsCustomConfig 实例里面的自定义config
 type InsCustomConfig struct {
 }

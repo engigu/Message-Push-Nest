@@ -38,6 +38,11 @@ type WayDetailDTalk struct {
 	Secret      string `json:"secret" validate:"max=100" label:"钉钉加签秘钥"`
 }
 
+// WayDetailQyWeiXin 企业微信渠道明细字段
+type WayDetailQyWeiXin struct {
+	AccessToken string `json:"access_token" validate:"required,max=100" label:"企业微信access_token"`
+}
+
 // WayDetailCustom 自定义渠道
 type WayDetailCustom struct {
 	Webhook string `json:"webhook" validate:"required,max=200" label:"自定义的webhook地址"`
@@ -108,6 +113,14 @@ func (sw *SendWay) ValidateDiffWay() (string, interface{}) {
 		}
 		_, Msg := app.CommonPlaygroundValid(dtalk)
 		return Msg, dtalk
+	} else if sw.Type == "QyWeiXin" {
+		var config WayDetailQyWeiXin
+		err := json.Unmarshal([]byte(sw.Auth), &config)
+		if err != nil {
+			return "企业微信auth反序列化失败！", empty
+		}
+		_, Msg := app.CommonPlaygroundValid(config)
+		return Msg, config
 	} else if sw.Type == "Custom" {
 		var custom WayDetailCustom
 		err := json.Unmarshal([]byte(sw.Auth), &custom)
@@ -137,6 +150,17 @@ func (sw *SendWay) TestSendWay(msgObj interface{}) (string, string) {
 			Secret:      dtalkAuth.Secret,
 		}
 		res, err := cli.SendMessageText(testMsg + dtalkAuth.Keys)
+		if err != nil {
+			return fmt.Sprintf("发送失败：%s", err), string(res)
+		}
+		return "", string(res)
+	}
+	qywxAuth, ok := msgObj.(WayDetailQyWeiXin)
+	if ok {
+		var cli = message.QyWeiXin{
+			AccessToken: qywxAuth.AccessToken,
+		}
+		res, err := cli.SendMessageText(testMsg)
 		if err != nil {
 			return fmt.Sprintf("发送失败：%s", err), string(res)
 		}
