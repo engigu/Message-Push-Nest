@@ -101,6 +101,12 @@ func (sm *SendMessageService) Send() string {
 		sm.LogsAndStatusMark(fmt.Sprintf("实例类型: %s + %s", ins.WayType, ins.ContentType), sm.Status)
 		sm.LogsAndStatusMark(fmt.Sprintf("实例配置: %s", ins.Config), sm.Status)
 
+		// 暂停了实例的发送
+		if ins.Enable != 1 {
+			sm.LogsAndStatusMark("该实例发送已经被暂停，跳过发送！\n", sm.Status)
+			continue
+		}
+
 		// 发送内容校验绑定
 		typeC, content := sm.GetSendMsg(ins.SendTasksIns)
 		if content == "" {

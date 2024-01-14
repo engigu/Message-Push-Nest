@@ -68,6 +68,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 		apiV1.POST("/sendtasks/ins/addone", v1.AddTasksIns)
 		apiV1.GET("/sendtasks/ins/gettask", v1.GetMsgSendWayIns)
 		apiV1.POST("/sendtasks/ins/delete", v1.DeleteMsgTaskIns)
+		apiV1.POST("/sendtasks/ins/update_enable", v1.UpdateMsgTaskInsEnable)
 
 		// message/send
 		apiV1.POST("/message/send", v1.DoSendMassage)

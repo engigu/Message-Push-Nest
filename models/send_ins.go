@@ -9,6 +9,7 @@ type SendTasksIns struct {
 	ContentType string `json:"content_type" gorm:"type:varchar(100) comment '实例类型';default:'';index:content_type"`
 	Config      string `json:"config" gorm:"type:text comment '实例配置';"`
 	Extra       string `json:"extra" gorm:"type:text comment '额外信息';"`
+	Enable      int    `json:"enable" gorm:"type:int comment '开启、暂停状态';default:1;"`
 }
 
 // InsEmailConfig 实例里面的邮箱config
@@ -57,6 +58,14 @@ func AddTaskInsOne(ins SendTasksIns) error {
 // DeleteMsgTaskIns 删除一条实例
 func DeleteMsgTaskIns(id string) error {
 	if err := db.Where("id = ?", id).Delete(&SendTasksIns{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateMsgTaskIns 更新实例
+func UpdateMsgTaskIns(id string, data map[string]interface{}) error {
+	if err := db.Model(&SendTasksIns{}).Where("id = ?", id).Updates(data).Error; err != nil {
 		return err
 	}
 	return nil

@@ -16,6 +16,7 @@ type SendTaskInsService struct {
 
 	PageNum  int
 	PageSize int
+	Enable   int
 }
 
 // ValidateDiffWay 各种发信渠道具体字段校验
@@ -75,6 +76,10 @@ func (st *SendTaskInsService) AddOne(ins models.SendTasksIns) string {
 
 func (st *SendTaskInsService) Delete() error {
 	return models.DeleteMsgTaskIns(st.ID)
+}
+
+func (st *SendTaskInsService) Update(data map[string]interface{}) error {
+	return models.UpdateMsgTaskIns(st.ID, data)
 }
 
 func (st *SendTaskInsService) Count() (int, error) {

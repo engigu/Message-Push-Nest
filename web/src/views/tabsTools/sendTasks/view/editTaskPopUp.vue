@@ -2,6 +2,16 @@
   <el-dialog v-model="isShow" width="58%" :close-on-press-escape="false" :before-close="() => { }" :show-close="false">
     <template #header="">
       <el-text class="mx-1">编辑发信任务</el-text>
+      <el-tooltip placement="top">
+        <template #content>
+          实例可以实时暂停或者删除，意味着可以实时控制发送的渠道
+          <br />
+          ** 暂停或者删除，都将不会往该实例发送
+        </template>
+        <el-icon>
+          <QuestionFilled />
+        </el-icon>
+      </el-tooltip>
     </template>
 
     <div class="add-top">
@@ -62,9 +72,18 @@
               {{ formatExtraInfo(scope) }}
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="60px">
+          <el-table-column label="状态" prop="status" width="60px">
+            <template #default="scope">
+              <el-tag v-if="scope.row.enable != 1" type="danger">暂停</el-tag>
+              <el-tag v-if="scope.row.enable == 1" type="success">开启</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column fixed="right" label="操作" width="100px">
             <template #default="scope">
               <tableDeleteButton @customHandleDelete="handleDelete(scope.$index, scope.row)" />
+              <el-button link size="small" style="" type="primary" @click="updateInsEnableStatus(scope.row)">
+                {{ scope.row.enable == 1 ? '暂停' : '开启' }}
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -82,7 +101,7 @@
 
 <script>
 import { defineComponent, onMounted, watch, reactive, toRefs } from 'vue';
-import { _ } from 'lodash';
+import { _, intersection } from 'lodash';
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { v4 as uuidv4 } from 'uuid';
 import { usePageState } from '@/store/page_sate.js';
@@ -194,12 +213,20 @@ export default defineComponent({
       return postData
     }
 
-
     const handleAddSubmit = async () => {
       let postData = getFinalData();
       const rsp = await request.post('/sendtasks/ins/addone', postData);
       if (await rsp.data.code == 200) {
         state.insTableData.push(postData);
+      }
+    }
+
+    const updateInsEnableStatus = async (row) => {
+      let status = Number(!row.enable);
+      let postData = { ins_id: row.id, status: status };
+      const rsp = await request.post('/sendtasks/ins/update_enable', postData);
+      if (await rsp.data.code == 200) {
+        row.enable = status;
       }
     }
 
@@ -212,8 +239,8 @@ export default defineComponent({
     }
 
     return {
-      ...toRefs(state), handleCancer, handleAddSubmit, handleEditTask,CONSTANT,
-      searchID, handleDelete, insRowStyle, formatExtraInfo
+      ...toRefs(state), handleCancer, handleAddSubmit, handleEditTask, CONSTANT,
+      searchID, handleDelete, insRowStyle, formatExtraInfo, updateInsEnableStatus
     };
   },
 });

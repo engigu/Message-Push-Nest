@@ -177,3 +177,36 @@ func AddTasksIns(c *gin.Context) {
 	appG.CResponse(http.StatusOK, "添加实例成功！", nil)
 
 }
+
+type UpdateMsgTaskInsEnableReq struct {
+	ID     string `json:"ins_id" validate:"required,len=36" label:"实例id"`
+	Enable int    `json:"status" validate:"" label:"实例开启状态"`
+}
+
+// UpdateMsgTaskInsEnable 更新消息渠道实例的是否开启
+func UpdateMsgTaskInsEnable(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+		req  UpdateMsgTaskInsEnableReq
+	)
+
+	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
+	if errCode != e.SUCCESS {
+		appG.CResponse(errCode, errMsg, nil)
+		return
+	}
+
+	InsService := send_ins_service.SendTaskInsService{
+		ID: req.ID,
+		//Enable: req.Enable,
+	}
+	err := InsService.Update(map[string]interface{}{
+		"enable": req.Enable,
+	})
+	if err != nil {
+		appG.CResponse(http.StatusBadRequest, "删除实例失败！", nil)
+		return
+	}
+
+	appG.CResponse(http.StatusOK, "删除实例成功！", nil)
+}

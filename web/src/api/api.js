@@ -45,14 +45,13 @@ request.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response && error.response.status === 401) {
+        if (error.response && error.response.status == 401) {
             logout();
-        } else if (20000 <= error.response.status <= 29999) {
+        } else if (20000 <= error.response.status && error.response.status <= 29999) {
             logout();
+        } else {
+            handleException(error);
         }
-
-        handleException(error);
-        // return Promise.reject(error);
     }
 );
 
@@ -60,20 +59,11 @@ request.interceptors.response.use(
 const handleException = (error) => {
     if (error.code == ERR_NETWORK) {
         ElMessage({ message: `网络错误！`, type: 'error' })
-    } else if (error.response && error.response.data.code != 200) {
-        ElMessage({ message: error.response.data.msg, type: 'error' })
+    } else {
+        let msg = `未知错误：${error.response.status}, ${error.response.data.msg}`;
+        ElMessage({ message: msg, type: 'error' })
     };
 
-    // if (error.response) {
-    //     // 服务器返回错误状态码
-    //     console.error('Server Error:', error.response.status, error.response.data);
-    // } else if (error.request) {
-    //     // 请求发送成功，但没有收到响应
-    //     console.error('No response received:', error.request);
-    // } else {
-    //     // 其他错误
-    //     console.error('Error:', error.message);
-    // }
 };
 
 // 登出系统
