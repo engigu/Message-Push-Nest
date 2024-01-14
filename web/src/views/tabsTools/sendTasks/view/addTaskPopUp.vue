@@ -226,7 +226,7 @@ export default defineComponent({
 
 .ins-area {
   display: flex;
-  max-width: 900px;
+  /* max-width: 900px; */
 }
 
 .add-top {
