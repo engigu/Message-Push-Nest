@@ -38,7 +38,7 @@ func (sm *SendMessageService) LogsAndStatusMark(errStr string, status int) {
 	if status == SendFail {
 		sm.Status = SendFail
 	}
-	logrus.Error(fmt.Sprintf("%s, 状态：%d", errStr, status))
+	logrus.Infof("%s, 状态：%d", strings.Trim(errStr, "\n"), status)
 }
 
 // Send 发送一个消息任务的所有实例
