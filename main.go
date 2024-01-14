@@ -8,13 +8,13 @@ import (
 	"message-nest/migrate"
 	"message-nest/models"
 	"message-nest/pkg/logging"
-
 	"message-nest/pkg/setting"
 	"message-nest/pkg/table"
 	"message-nest/routers"
 	"message-nest/service/cron_service"
 	"message-nest/service/env_service"
 	"net/http"
+	"os"
 )
 
 var (
@@ -49,7 +49,9 @@ func main() {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
-	logrus.Infof("start message server listening http://0.0.0.0%s", endPoint)
+	logrus.WithFields(logrus.Fields{
+		"prefix": fmt.Sprintf("[PID:%d]", os.Getpid()),
+	}).Infof("start message server listening http://0.0.0.0%s", endPoint)
 
 	err := server.ListenAndServe()
 	if err != nil {
