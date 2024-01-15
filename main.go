@@ -49,10 +49,10 @@ func main() {
 
 	logrus.WithFields(logrus.Fields{
 		"prefix": fmt.Sprintf("[PID:%d]", os.Getpid()),
-	}).Infof("start message server listening http://0.0.0.0%s", endPoint)
+	}).Infof("start message server @ http://0.0.0.0%s", endPoint)
 
 	err := server.ListenAndServe()
 	if err != nil {
-		logrus.Error("Server err: ", err)
+		logrus.Errorf("Server err: ", err)
 	}
 }
