@@ -3,6 +3,7 @@
     <el-menu :collapse="isCollapse" breakpoint="768px" mode="horizontal" @select="handleSelect()"
       :default-active="currActivate()" :ellipsis="false" :menu-width="'auto'">
       <el-menu-item index="0" :disabled="false">
+        <!-- <div class="title-logo"  v-html="titleLogo"></div> -->
         <img style="width: 60px" class="title-logo" :src="titleLogo" alt="Message logo" />
       </el-menu-item>
 
@@ -30,7 +31,7 @@ export default {
     const router = useRouter();
     const isCollapse = ref(false);
     const state = reactive({
-      titleLogo: 'data:image/svg+xml;utf8,' + CONSTANT.LOGO,
+      titleLogo: '',
     });
     const menuData = reactive([
       {
@@ -76,10 +77,16 @@ export default {
       return result;
     }
 
+    const setSiteConfig = () => {
+      document.title = pageState.siteConfigData.title;
+      state.titleLogo = 'data:image/svg+xml;base64,' + btoa(pageState.siteConfigData.logo);
+    }
+
     onMounted(() => {
       changeFavicon();
       checkIsLogin();
       loadLocalToken();
+      setSiteConfig();
     });
 
     const changeFavicon = () => {
@@ -87,7 +94,7 @@ export default {
       if (link) {
         link.type = 'image/svg+xml';
         link.rel = 'icon';
-        link.href = 'data:image/svg+xml;utf8,' + CONSTANT.LOGO;
+        link.href = 'data:image/svg+xml;base64,' + btoa(pageState.siteConfigData.logo)
         document.getElementsByTagName('head')[0].appendChild(link);
       }
     }
@@ -116,6 +123,10 @@ export default {
 
 .el-menu-item li {
   margin: 0 auto;
+}
+
+.title-logo svg {
+  height: 50px;
 }
 
 .logout-btn {

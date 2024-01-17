@@ -11,7 +11,6 @@ import (
 	"message-nest/pkg/setting"
 	"message-nest/routers"
 	"message-nest/service/cron_service"
-	"message-nest/service/env_service"
 	"net/http"
 	"os"
 )
@@ -26,13 +25,12 @@ func init() {
 	logging.Setup()
 	migrate.Setup()
 	models.Setup()
-	env_service.Setup()
-	cron_service.Setup()
 }
 
 func main() {
-	gin.SetMode(setting.ServerSetting.RunMode)
+	cron_service.StartLogsCronRun()
 
+	gin.SetMode(setting.ServerSetting.RunMode)
 	routersInit := routers.InitRouter(f)
 	readTimeout := setting.ServerSetting.ReadTimeout
 	writeTimeout := setting.ServerSetting.WriteTimeout

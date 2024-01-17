@@ -4,11 +4,14 @@
             <el-input v-model="title" size="small" placeholder="请输入自定义的网站标题">
                 <template size="small" #prepend>站点标题</template>
             </el-input>
-            <el-input v-model.number="slogan" size="small" placeholder="请输入自定义的网站slogan" style="margin-top: 15px;">
+            <el-input v-model="slogan" size="small" placeholder="请输入自定义的网站slogan">
                 <template size="small" #prepend>站点标语</template>
             </el-input>
-            <el-input v-model.number="logo" size="small" placeholder="请输入自定义的网站logo（svg文本）" style="margin-top: 15px;">
+            <el-input v-model="logo" size="small" placeholder="请输入自定义的网站logo（svg文本）">
                 <template size="small" #prepend>站点图标</template>
+            </el-input>
+            <el-input v-model="pagesize" size="small" placeholder="页面分页大小">
+                <template size="small" #prepend>分页大小</template>
             </el-input>
         </div>
         <div class="buttom">
@@ -27,7 +30,7 @@
                     </el-icon>
                 </el-tooltip>
             </div>
-            <el-button @click="handleView" size="small">恢复默认</el-button>
+            <el-button @click="handleSubmitReset" size="small">恢复默认</el-button>
             <el-button @click="handleSubmit" size="small" type="primary">确定</el-button>
         </div>
     </div>
@@ -40,6 +43,8 @@ import { QuestionFilled } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router';
 import { request } from '@/api/api'
 import { CONSTANT } from '@/constant'
+import { LocalStieConfigUtils } from '@/util/localSiteConfig'
+
 
 export default defineComponent({
     components: {
@@ -55,6 +60,7 @@ export default defineComponent({
             title: '',
             slogan: '',
             logo: '',
+            pagesize: '',
             section: 'site_config',
         });
 
@@ -65,6 +71,7 @@ export default defineComponent({
                     title: state.title.trim(),
                     slogan: state.slogan.trim(),
                     logo: state.logo.trim(),
+                    pagesize: state.pagesize,
                 },
             };
             const rsp = await request.post('/settings/set', postData);
@@ -73,8 +80,15 @@ export default defineComponent({
                 ElMessage({ message: msg, type: 'success' })
             }
         }
-        const handleView = async () => {
-            router.push('/sendlogs?taskid=' + CONSTANT.LOG_TASK_ID, { replace: true });
+
+        const handleSubmitReset = async () => {
+            const rsp = await request.post('/settings/reset', {});
+            if (await rsp.data.code == 200) {
+                let msg = await rsp.data.msg;
+                ElMessage({ message: msg, type: 'success' });
+                // 重新获取设置
+                await getSiteConfig();
+            }
         }
 
         const getSiteConfig = async () => {
@@ -85,6 +99,9 @@ export default defineComponent({
                 state.title = data.title;
                 state.logo = data.logo;
                 state.slogan = data.slogan;
+                state.pagesize = data.pagesize;
+
+                LocalStieConfigUtils.updateLocalConfig(data);
             }
         }
 
@@ -93,7 +110,7 @@ export default defineComponent({
         })
 
         return {
-            ...toRefs(state), handleSubmit, handleView
+            ...toRefs(state), handleSubmit, handleSubmitReset
         }
     }
 

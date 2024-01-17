@@ -13,6 +13,7 @@ import (
 
 var ExcludedRoutes = []string{
 	"/api/v1/message/send",
+	"/api/v1/settings/getsetting",
 }
 
 // JWT is jwt middleware

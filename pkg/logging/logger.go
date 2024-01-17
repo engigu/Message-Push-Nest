@@ -21,7 +21,7 @@ func getFuncOutStr(funcStr string) string {
 	}
 }
 
-func CallerFormatter(funcStr string, fileStr string) string {
+func CustomCallerFormatter(funcStr string, fileStr string) string {
 	fName := filepath.Base(fileStr)
 	funcOut := getFuncOutStr(funcStr)
 	return fmt.Sprintf(" [%s %s]", fName, funcOut)
@@ -35,7 +35,7 @@ func Setup() {
 	formatter.ForceColors = true
 	formatter.ForceFormatting = true
 	formatter.FullTimestamp = true
-	formatter.CallerFormatter = CallerFormatter
+	formatter.CallerFormatter = CustomCallerFormatter
 	formatter.TimestampFormat = "2006-01-02 15:04:05.000"
 	formatter.SetColorScheme(&prefixed.ColorScheme{
 		TimestampStyle: "cyan",

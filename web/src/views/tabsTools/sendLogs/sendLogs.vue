@@ -37,7 +37,7 @@
 
       <div class="pagination-block">
         <el-pagination layout="prev, pager, next" :total="total" :page-size="pageSize" @current-change="handPageChange" />
-        <el-text class="total-tip" size="small">共{{ total }}条</el-text>
+        <el-text class="total-tip" size="small">每页{{ pageSize }}条，共{{ total }}条</el-text>
       </div>
 
     </div>
@@ -50,11 +50,13 @@ import { request } from '../../../api/api'
 import { copyToClipboard } from '../../../util/clipboard.js';
 import { useRoute } from 'vue-router';
 import { CONSTANT } from '@/constant'
+import { usePageState } from '@/store/page_sate.js';
 
 export default {
   components: {
   },
   setup() {
+    const pageState = usePageState();
     const router = useRoute();
     const state = reactive({
       search: '',
@@ -63,7 +65,7 @@ export default {
       drawer: false,
       tableData: [],
       total: CONSTANT.TOTAL,
-      pageSize: CONSTANT.PAGE_SIZE,
+      pageSize: pageState.siteConfigData.pagesize,
       currPage: CONSTANT.PAGE,
     });
 

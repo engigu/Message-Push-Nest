@@ -78,6 +78,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 		// settings
 		apiV1.POST("/settings/setpasswd", v1.EditPasswd)
 		apiV1.POST("/settings/set", v1.EditSettings)
+		apiV1.POST("/settings/reset", v1.RestDefaultSettings)
 		apiV1.GET("/settings/getsetting", v1.GetUserSetting)
 
 	}

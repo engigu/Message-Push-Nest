@@ -1,4 +1,4 @@
-package env_service
+package settings_service
 
 import (
 	"github.com/sirupsen/logrus"
@@ -6,10 +6,11 @@ import (
 	"message-nest/pkg/constant"
 )
 
-type EnvService struct {
+// 初始化环境的设置数据
+type InitSettingService struct {
 }
 
-func (es *EnvService) CommonAdd(section string, key string, value string) {
+func (es *InitSettingService) CommonAddSetting(section string, key string, value string) {
 	setting, _ := models.GetSettingByKey(section, key)
 	if setting.ID <= 0 {
 		err := models.AddOneSetting(models.Settings{
@@ -26,23 +27,17 @@ func (es *EnvService) CommonAdd(section string, key string, value string) {
 }
 
 // InitSiteConfig 初始化、重置站点信息设置
-func (es *EnvService) InitSiteConfig() {
+func (es *InitSettingService) InitSiteConfig() {
 	section := constant.SiteSettingSectionName
 	for key, value := range constant.SiteSiteDefaultValueMap {
-		es.CommonAdd(section, key, value)
+		es.CommonAddSetting(section, key, value)
 	}
 }
 
 // InitLogConfig 初始化日志清理设置
-func (es *EnvService) InitLogConfig() {
+func (es *InitSettingService) InitLogConfig() {
 	section := constant.LogsCleanSectionName
 	for key, value := range constant.LogsCleanDefaultValueMap {
-		es.CommonAdd(section, key, value)
+		es.CommonAddSetting(section, key, value)
 	}
-}
-
-func Setup() {
-	es := EnvService{}
-	es.InitSiteConfig()
-	es.InitLogConfig()
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"message-nest/pkg/app"
+	"message-nest/pkg/constant"
 	"message-nest/pkg/e"
 	"message-nest/service/settings_service"
 	"net/http"
@@ -93,11 +94,32 @@ func EditSettings(c *gin.Context) {
 	for key, value := range req.Data {
 		err := settingService.EditSettings(req.Section, key, value, currentUser)
 		if err != nil {
-			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("修改密码失败！错误原因：%s", err), nil)
+			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("修改站点设置失败！错误原因：%s", err), nil)
 			return
 		}
 	}
 
-	appG.CResponse(http.StatusOK, "修改成功！", nil)
+	appG.CResponse(http.StatusOK, "修改站点设置成功！", nil)
+
+}
+
+// RestDefaultSettings 重设默认设置
+func RestDefaultSettings(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+	)
+
+	currentUser := app.GetCurrentUserName(c)
+	settingService := settings_service.UserSettings{}
+
+	for key, value := range constant.SiteSiteDefaultValueMap {
+		err := settingService.EditSettings(constant.SiteSettingSectionName, key, value, currentUser)
+		if err != nil {
+			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("重设站点设置失败！错误原因：%s", err), nil)
+			return
+		}
+	}
+
+	appG.CResponse(http.StatusOK, "重设站点设置成功！", nil)
 
 }

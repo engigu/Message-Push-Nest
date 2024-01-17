@@ -10,9 +10,9 @@
             <el-menu-item index="logCleanSetting">
               日志清理
             </el-menu-item>
-            <!-- <el-menu-item index="siteCustomSetting">
+            <el-menu-item index="siteCustomSetting">
               站点设置
-            </el-menu-item> -->
+            </el-menu-item>
             <el-menu-item index="aboutSetting">
               站点关于
             </el-menu-item>
@@ -82,9 +82,9 @@ hr {
   margin-top: -10vh;
 }
 
-/* .setting-main {
-
-} */
+:deep(.el-input ) {
+    margin-top: 14px;
+}
 
 .setting-right {
   width: 100%;

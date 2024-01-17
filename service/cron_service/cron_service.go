@@ -10,12 +10,9 @@ import (
 	"message-nest/service/send_message_service"
 )
 
-type CronService struct {
-}
-
 var ClearLogsTaskId cron.EntryID
 
-// 清除日志的定时任务
+// ClearLogs 清除日志的定时任务
 func ClearLogs() {
 	var errStr string
 	sm := send_message_service.SendMessageService{TaskID: constant.CleanLogsTaskId}
@@ -42,8 +39,11 @@ func ClearLogs() {
 	sm.RecordSendLog()
 }
 
-// 启动注册清除任务定时任务
-func (cs *CronService) InitLogsCronRun() {
+type CronService struct {
+}
+
+// StartLogsCronRun 启动注册清除任务定时任务
+func (cs *CronService) StartLogsCronRun() {
 	// 注册任务
 	setting, err := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanCronKeyName)
 	if err != nil {
@@ -61,7 +61,7 @@ func (cs *CronService) InitLogsCronRun() {
 	}
 }
 
-// 更新清除任务定时任务
+// UpdateLogsCronRun 更新清除任务定时任务
 func (cs *CronService) UpdateLogsCronRun(cron string) {
 	RemoveTask(ClearLogsTaskId)
 	ClearLogsTaskId = AddTask(ScheduledTask{
@@ -73,7 +73,8 @@ func (cs *CronService) UpdateLogsCronRun(cron string) {
 
 }
 
-func Setup() {
+// StartLogsCronRun 启动的时候开启定时任务
+func StartLogsCronRun() {
 	cs := CronService{}
-	cs.InitLogsCronRun()
+	cs.StartLogsCronRun()
 }

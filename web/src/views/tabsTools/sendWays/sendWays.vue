@@ -43,7 +43,7 @@
       </div>
       <div class="pagination-block">
         <el-pagination layout="prev, pager, next" :total="total" :page-size="pageSize" @current-change="handPageChange" />
-        <el-text class="total-tip" size="small">共{{ total }}条</el-text>
+        <el-text class="total-tip" size="small">每页{{ pageSize }}条，共{{ total }}条</el-text>
       </div>
 
       <addWayComponent :componentName="addWayComponentName" />
@@ -83,7 +83,7 @@ export default {
       // confirmBtnVisible: false,
       tableData: [],
       total: CONSTANT.TOTAL,
-      pageSize:  CONSTANT.PAGE_SIZE,
+      pageSize: pageState.siteConfigData.pagesize,
       currPage: CONSTANT.PAGE,
       displayCols: [
         { 'col': 'id', 'label': '渠道ID' },

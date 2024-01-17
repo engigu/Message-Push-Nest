@@ -7,8 +7,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"message-nest/models"
 	"message-nest/pkg/setting"
+	"message-nest/service/settings_service"
 )
 
+// 初始化admin账户
 func InitAuthTableData() {
 	initSection := "init"
 	initAuthKey := "account"
@@ -73,6 +75,13 @@ func Setup() {
 
 	entry.Infof("Init Account data...")
 	InitAuthTableData()
+
+	entry.Infof("Init Custom Site data...")
+	ss := settings_service.InitSettingService{}
+	ss.InitSiteConfig()
+
+	entry.Infof("Init Cron data...")
+	ss.InitLogConfig()
 
 	entry.Infof("All table data init done.")
 }

@@ -4,7 +4,7 @@
         <div class="main-center-body">
             <div class="container">
                 <img class="login-logo" :src="logo" alt="login logo">
-                <p class="desc">A Message Way Hosted Site</p>
+                <p class="desc">{{ slogan }}</p>
 
                 <div class="login-block">
                     <p class="login-text">账号：</p>
@@ -33,21 +33,25 @@ import { request } from '../../api/api'
 import { CONSTANT } from '../../constant'
 import { usePageState } from '../../store/page_sate';
 import { useRouter } from 'vue-router';
+import { LocalStieConfigUtils } from '@/util/localSiteConfig'
 
 
 export default {
     setup() {
         const router = useRouter();
-
-
         const pageState = usePageState();
         const state = reactive({
             account: '',
             passwd: '',
-            logo: 'data:image/svg+xml;utf8,' + CONSTANT.LOGO,
+            logo: 'data:image/svg+xml;base64,' + btoa(pageState.siteConfigData.logo),
+            slogan: pageState.siteConfigData.slogan,
         });
 
         onMounted(() => {
+            // 加载站点信息
+            setTimeout(() => {
+                LocalStieConfigUtils.getLatestLocalConfig();
+            }, 100)
         });
 
         // 登录
@@ -60,7 +64,7 @@ export default {
                 pageState.setToken(rsp.data.token);
                 pageState.setIsLogin(true);
                 localStorage.setItem(CONSTANT.STORE_TOKEN_NAME, rsp.data.token);
-                router.push('/sendlogs', { replace: true })
+                router.push('/sendlogs', { replace: true });
             }
         };
 
