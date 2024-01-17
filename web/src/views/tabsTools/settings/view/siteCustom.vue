@@ -23,7 +23,9 @@
                         <br />
                         2. slogan将在登录页面展示
                         <br />
-                        *将在下一次登录的时候生效
+                        ** 将在下一次登录的时候生效，如果不生效请在登录页面Ctrl+F5强制刷新   
+                        <br />
+                        ** logo将替换网页ico，登录页面logo，导航栏logo
                     </template>
                     <el-icon>
                         <QuestionFilled />
