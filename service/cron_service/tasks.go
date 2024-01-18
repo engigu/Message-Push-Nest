@@ -1,9 +1,11 @@
 package cron_service
 
 import (
-	"fmt"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
+	"reflect"
+	"runtime"
+	"strings"
 
 	"sync"
 )
@@ -26,23 +28,30 @@ func init() {
 	TaskList = make(map[cron.EntryID]*ScheduledTask)
 }
 
-// 添加定时任务
+func getFunctionName(f interface{}) string {
+	ptr := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+	name := ptr[strings.LastIndex(ptr, ".")+1:]
+	return name
+}
+
+// AddTask 添加定时任务
 func AddTask(task ScheduledTask) cron.EntryID {
 	mutex.Lock()
 	defer mutex.Unlock()
 
+	jobName := getFunctionName(task.Job)
 	taskId, err := CronInstance.AddFunc(task.Schedule, task.Job)
 	if err != nil {
 		// 处理错误
-		logrus.Error(fmt.Sprintf("添加定时任务失败，原因：%s", err))
+		logrus.Errorf("注册定时任务失败, job: %s, 原因：%s", jobName, err)
 	} else {
 		TaskList[taskId] = &task
-		logrus.Info(fmt.Sprintf("添加定时任务成功，entryID: %d, cron: %s", taskId, task.Schedule))
+		logrus.Infof("注册定时任务成功, job: %s, entryID: %d, cron: %s", jobName, taskId, task.Schedule)
 	}
 	return taskId
 }
 
-// 删除定时任务
+// RemoveTask 删除定时任务
 func RemoveTask(taskID cron.EntryID) {
 	mutex.Lock()
 	defer mutex.Unlock()

@@ -75,6 +75,7 @@ func (cs *CronService) UpdateLogsCronRun(cron string) {
 
 // StartLogsCronRun 启动的时候开启定时任务
 func StartLogsCronRun() {
+	logrus.Infof("开始注册定时清除日志任务...")
 	cs := CronService{}
 	cs.StartLogsCronRun()
 }
