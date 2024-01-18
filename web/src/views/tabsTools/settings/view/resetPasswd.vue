@@ -44,10 +44,6 @@ export default defineComponent({
 </script>
   
 <style scoped>
-/* :deep(.el-input .el-input__wrapper) {
-    margin-top: 10px;
-} */
-
 :deep(.el-button) {
     float: right !important;
     margin-top: 10px;

@@ -49,7 +49,6 @@
       <addWayComponent :componentName="addWayComponentName" />
       <editWayComponent :componentName="editWayComponentName" />
 
-
     </div>
   </div>
 </template>
@@ -117,20 +116,20 @@ export default {
       await queryListData(pageNum, state.pageSize);
 
     }
+    
     const rowStyle = () => {
       return {
         'font-size': '13px',
       }
     }
+
     const filterFunc = async () => {
-      // console.log('state.optionValue', state.optionValue);
       await queryListData(state.currPage, state.pageSize, state.search, state.optionValue);
 
     }
     const clickAdd = () => {
       pageState.ShowDialogData[state.addWayComponentName] = {};
       pageState.ShowDialogData[state.addWayComponentName].isShow = true;
-      // console.log('clickAdd', pageState.ShowDialogData[state.addWayComponentName].isShow)
     }
 
     const queryListData = async (page, size, name = '', type = '') => {

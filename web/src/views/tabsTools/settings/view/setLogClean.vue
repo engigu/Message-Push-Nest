@@ -40,10 +40,6 @@ export default defineComponent({
     components: {
         QuestionFilled,
     },
-    props: {
-    },
-    methods: {
-    },
     setup() {
         const router = useRouter();
         const state = reactive({
@@ -66,6 +62,7 @@ export default defineComponent({
                 ElMessage({ message: msg, type: 'success' })
             }
         }
+
         const handleView = async () => {
             router.push('/sendlogs?taskid=' + CONSTANT.LOG_TASK_ID, { replace: true });
         }
@@ -93,9 +90,6 @@ export default defineComponent({
 </script>
   
 <style scoped>
-/* :deep(.el-input .el-input__wrapper) {
-    margin-top: 10px;
-} */
 
 :deep(.el-button) {
     float: right !important;

@@ -19,7 +19,6 @@
       <el-button @click="handleEditTask()" size="small" type="primary" style="margin-left: 20px;">修改</el-button>
     </div>
 
-
     <div class="dashed" />
 
     <div class="ins-area">
@@ -101,7 +100,7 @@
 
 <script>
 import { defineComponent, onMounted, watch, reactive, toRefs } from 'vue';
-import { _, intersection } from 'lodash';
+import { _ } from 'lodash';
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { v4 as uuidv4 } from 'uuid';
 import { usePageState } from '@/store/page_sate.js';

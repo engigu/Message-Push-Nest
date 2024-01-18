@@ -3,7 +3,6 @@
     <el-menu :collapse="isCollapse" breakpoint="768px" mode="horizontal" @select="handleSelect()"
       :default-active="currActivate()" :ellipsis="false" :menu-width="'auto'">
       <el-menu-item index="0" :disabled="false">
-        <!-- <div class="title-logo"  v-html="titleLogo"></div> -->
         <img style="width: 60px" class="title-logo" :src="titleLogo" alt="Message logo" />
       </el-menu-item>
 
@@ -34,23 +33,10 @@ export default {
       titleLogo: '',
     });
     const menuData = reactive([
-      {
-        id: '1',
-        title: '发信日志',
-        path: '/sendlogs',
-      }, {
-        id: '2',
-        title: '发信任务',
-        path: '/sendtasks',
-      }, {
-        id: '3',
-        title: '发信渠道',
-        path: '/sendways',
-      }, {
-        id: '4',
-        title: '设置',
-        path: '/settings',
-      },
+      { id: '1', title: '发信日志', path: '/sendlogs' },
+      { id: '2', title: '发信任务', path: '/sendtasks' },
+      { id: '3', title: '发信渠道', path: '/sendways' },
+      { id: '4', title: '设置', path: '/settings' },
     ]);
 
     const checkIsLogin = () => {
@@ -118,7 +104,6 @@ export default {
   font-size: 15px;
   justify-content: center;
   align-items: center;
-
 }
 
 .el-menu-item li {
@@ -132,7 +117,8 @@ export default {
 .logout-btn {
   margin: auto 40px auto 40px;
   float: right;
-  /* background-color: #f7efee;
+  /*
+  background-color: #f7efee;
   border: none;
   padding: 10px 20px;
   text-align: center;
@@ -140,6 +126,7 @@ export default {
   font-size: 16px;
   cursor: pointer;
   border-radius: 5px;
-  transition: background-color 0.3s ease; */
+  transition: background-color 0.3s ease; 
+  */
 }
 </style>

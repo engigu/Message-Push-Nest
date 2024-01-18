@@ -51,7 +51,6 @@
 
 <script >
 import { computed, ref, reactive, toRefs, onMounted } from 'vue'
-// import { InfoFilled } from '@element-plus/icons-vue'
 import { usePageState } from '@/store/page_sate';
 import { request } from '@/api/api'
 import addTaskPopUpComponent from './view/addTaskPopUp.vue'
@@ -67,7 +66,6 @@ export default {
     editTaskPopUpComponent,
     tableDeleteButton,
     viewTaskAPIPopUpComponent,
-    // InfoFilled,
   },
   setup() {
     const pageState = usePageState();
@@ -125,6 +123,7 @@ export default {
       await queryListData(pageNum, state.pageSize);
 
     }
+
     const rowStyle = () => {
       return {
         'font-size': '13px',
@@ -139,6 +138,7 @@ export default {
       await queryListData(state.currPage, state.pageSize, state.search, state.optionValue);
 
     }
+
     const clickAdd = () => {
       pageState.ShowDialogData[state.addTaskPopUpComponentName] = {};
       pageState.ShowDialogData[state.addTaskPopUpComponentName].isShow = true;
@@ -155,7 +155,6 @@ export default {
       await queryListData(1, state.pageSize);
     });
 
-
     return {
       ...toRefs(state), handleEdit, handleDelete, handleViewAPI, handleViewLogs,
       clickAdd, rowStyle, handPageChange, filterFunc
@@ -163,7 +162,6 @@ export default {
   }
 }
 </script>
-
 
 <style scoped>
 hr {

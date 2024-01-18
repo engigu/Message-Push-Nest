@@ -138,7 +138,6 @@ hr {
   margin-top: -10vh;
 }
 
-
 .pagination-block {
   margin-top: 30px;
   display: flex;

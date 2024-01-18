@@ -71,7 +71,6 @@ export default {
         // 注册
         const clickRegister = () => {
             ElMessage({ message: `暂未开放注册！`, type: 'error' })
-
         };
 
         return { ...toRefs(state), clickLogin, clickRegister, pageState };

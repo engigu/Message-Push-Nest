@@ -101,7 +101,7 @@ export default defineComponent({
       });
       setTimeout(() => {
         Prism.highlightAll()
-      }, 10)
+      }, 100)
     }
 
     return {
@@ -115,51 +115,5 @@ export default defineComponent({
 .language-javascript {
   background-color: #f0f0f0;
 }
-
-
-/* pre {
-    overflow: hidden !important;
-    code{ 
-        display: inline-block;
-        padding-bottom: 20px;
-        position: relative;
-        top: 20px;
-    }
-    &::before {
-        content: "";
-        position: absolute;
-        background: red;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        top: 10px;
-        left: 15px;
-        transform: translate(-50%);
-    }
-    &::after {
-        content: "";
-        position: absolute;
-        background: sandybrown;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        top: 10px;
-        left: 30px;
-        transform: translate(-50%);
-    }
-    code:first-child{
-        &::after{
-            content: "";
-            position: absolute;
-            background: limegreen;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            top: -24px;
-            left: -7px;
-            transform: translate(-50%);
-        }
-    }
-} */
 </style>
 

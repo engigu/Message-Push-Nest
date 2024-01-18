@@ -52,12 +52,7 @@ export default defineComponent({
     components: {
         QuestionFilled,
     },
-    props: {
-    },
-    methods: {
-    },
     setup() {
-        const router = useRouter();
         const state = reactive({
             title: '',
             slogan: '',

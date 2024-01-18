@@ -114,7 +114,6 @@ export default defineComponent({
         handleCancer();
         window.location.reload();
       }
-
     }
 
     return {
@@ -125,15 +124,5 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* :global(.el-dialog) {
-  width: 500px;
 
-} */
-/* :global(.el-dialog__title) {
-  font-size: 14px;
-}
-
-:global(.el-dialog label) {
-  font-size: 13px;
-} */
 </style>

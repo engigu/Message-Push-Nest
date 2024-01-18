@@ -7,13 +7,11 @@
     <el-tabs class="demo-tabs" @tab-click="handleClick">
 
       <el-form label-width="100px" v-for="item in waysLabelData">
-        <!-- <el-tab-pane :label="item.label" :name="item.type"> -->
         <el-form-item :label="one.subLabel" v-for="one in item.inputs">
           <el-input v-if="one.isTextArea != true" size="small" v-model="one.value" :placeholder="one.desc" />
             <el-input v-if="one.isTextArea == true" size="small" type="textarea" v-model="one.value"
               :placeholder="one.desc" :autosize="{ minRows: 4, maxRows: 10 }" />
         </el-form-item>
-        <!-- </el-tab-pane> -->
       </el-form>
 
     </el-tabs>
@@ -53,14 +51,8 @@ export default defineComponent({
       isShow: false,
       waysLabelData: [],
       editData: {},
-
     });
 
-    const dealDisplayData = () => {
-
-    }
-
-    // 监测父页面传过来的数据
     watch(pageState.ShowDialogData, (newValue, oldValue) => {
       if (newValue[props.componentName]) {
         // 弹出编辑框
@@ -88,26 +80,22 @@ export default defineComponent({
       };
     });
 
-
     const handleCancer = () => {
       if (pageState.ShowDialogData[props.componentName]) {
         pageState.ShowDialogData[props.componentName].isShow = false;
       }
     }
 
-
     const handleClick = () => {
     }
 
     const getEditData = (type) => {
       for (const element of state.waysLabelData) {
-        // if (element.type == type) {
         const data = {};
         for (const item of element.inputs) {
           data[item.col] = item.value;
         }
         return data;
-        // }
       }
       return {};
     }
@@ -136,7 +124,6 @@ export default defineComponent({
     const handleSubmit = async () => {
       let postData = getFinalData();
       const rsp = await request.post('/sendways/edit', postData);
-      // console.log('edit res',rsp)
       if (await rsp.data.code == 200) {
         handleCancer();
       }
@@ -147,18 +134,9 @@ export default defineComponent({
     };
   },
 });
+
 </script>
 
 <style scoped>
-/* :global(.el-dialog) {
-  width: 500px;
 
-} */
-/* :global(.el-dialog__title) {
-  font-size: 14px;
-} */
-
-/* :global(.el-dialog label) {
-  font-size: 13px;
-} */
 </style>

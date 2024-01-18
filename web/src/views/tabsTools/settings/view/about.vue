@@ -27,10 +27,6 @@ export default defineComponent({
     components: {
         QuestionFilled,
     },
-    props: {
-    },
-    methods: {
-    },
     setup() {
         const state = reactive({
             version: '',

@@ -14,7 +14,6 @@ import { defineComponent } from 'vue';
 export default defineComponent({
     methods: {
         handleDelete() {
-            // 触发自定义事件
             this.$emit('customHandleDelete');
         }
     }
