@@ -101,7 +101,7 @@ export default defineComponent({
       });
       setTimeout(() => {
         Prism.highlightAll()
-      }, 100)
+      }, 1)
     }
 
     return {
