@@ -25,9 +25,8 @@
     <div class="ins-area">
 
       <div class="ins-add">
-        <el-input v-model="searchWayID" placeholder="请输入要添加的渠道id" size="small" @change="searchID"
-          class="searchInput"></el-input>
-        <el-button @click="searchID()" size="small" type="primary" style="margin-left: 20px;">查询</el-button>
+        <el-autocomplete v-model="currSearchInputText" size="small" :fetch-suggestions="querySearchWayAsync"
+          placeholder="请输入渠道名进行搜索" @select="handleSearchSelect" />
 
         <div class="store-area" v-if="isShowAddBox">
 
@@ -47,7 +46,7 @@
           <div>
             <el-input v-model="currInsInput[item.col]"
               v-for="item in CONSTANT.WAYS_DATA_MAP[currWayTmp.type].taskInsInputs" :placeholder="item.desc" size="small"
-              style="width: 200px; margin: 10px 40px 5px 0;" class="searchInput">
+              style="width: 200px; margin: 10px 40px 5px 0;">
             </el-input>
           </div>
 
@@ -114,6 +113,8 @@ export default defineComponent({
     const pageState = usePageState();
     const state = reactive({
       insTableData: [],
+      currSearchWaysData: [],
+      currSearchInputText: '',
       isShow: false,
       isShowAddBox: false,
       searchWayID: '',
@@ -173,17 +174,38 @@ export default defineComponent({
       state.insTableData.push(insData);
     }
 
-    const searchID = async () => {
-      const rsp = await request.get('/sendways/get', { params: { id: state.searchWayID } });
-      let data = await rsp.data;
-      state.isShowAddBox = Boolean(data.data);
-      if (data.data) {
-        state.currWayTmp = data.data;
+    // 匹配出当前搜索的渠道数据
+    const matchSearchData = (way_name) => {
+      let result = {};
+      state.currSearchWaysData.forEach(element => {
+        if (element.name == way_name) {
+          result = element;
+        }
+      });
+      return result;
+    }
+
+    const handleSearchSelect = async () => {
+      let currWay = matchSearchData(state.currSearchInputText)
+      state.isShowAddBox = Boolean(currWay);
+      if (currWay) {
+        state.currWayTmp = currWay;
         // 初始化currInsInput
-        CONSTANT.WAYS_DATA_MAP[data.data.type].taskInsInputs.forEach(element => {
+        CONSTANT.WAYS_DATA_MAP[currWay.type].taskInsInputs.forEach(element => {
           state.currInsInput[element.col] = ""
         });
       }
+    }
+
+    const querySearchWayAsync = async (query, cb) => {
+      let params = { name: query };
+      const rsp = await request.get('/sendways/list', { params: params });
+      let tableData = await rsp.data.data.lists;
+      tableData.forEach(element => {
+        element.value = element.name
+      });
+      cb(tableData);
+      state.currSearchWaysData = tableData;
     }
 
     const getFinalData = () => {
@@ -201,13 +223,9 @@ export default defineComponent({
       }
     }
 
-    // const formatExtraInfo = (scope) => {
-    //   return CommonUtils.formatInsConfigDisplay(scope);
-    // }
-
     return {
-      ...toRefs(state), handleCancer, handleSubmit,
-      searchID, CONSTANT, CommonUtils,
+      ...toRefs(state), handleCancer, handleSubmit, querySearchWayAsync,
+      handleSearchSelect, CONSTANT, CommonUtils,
       clickStore, insRowStyle
     };
   },
@@ -241,16 +259,12 @@ export default defineComponent({
   flex: 55%;
 }
 
-.searchInput {
-  max-width: 200px;
+:deep(.el-autocomplete) {
+  width: 200px;
 }
 
-.wayTitleInput {
-  max-width: 200px;
-}
 
 .taskNameInput {
-  /* width: 80%; */
   max-width: 200px;
 }
 

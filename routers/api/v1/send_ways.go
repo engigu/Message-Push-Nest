@@ -129,7 +129,7 @@ func AddMsgSendWay(c *gin.Context) {
 
 	err := sendWayService.Add()
 	if err != nil {
-		appG.CResponse(http.StatusBadRequest, "添加渠道失败！", nil)
+		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("添加渠道失败！原因：%s", err), nil)
 		return
 	}
 

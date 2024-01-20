@@ -92,6 +92,15 @@ func GetWayByID(id string) (SendWays, error) {
 	return way, nil
 }
 
+func GetWayByName(name string) (SendWays, error) {
+	var way SendWays
+	err := db.Where("name = ? ", name).Find(&way).Error
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		return way, err
+	}
+	return way, nil
+}
+
 func DeleteMsgWay(id string) error {
 	if err := db.Where("id = ?", id).Delete(&SendWays{}).Error; err != nil {
 		return err

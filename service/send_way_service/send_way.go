@@ -54,6 +54,13 @@ func (sw *SendWay) GetByID() (interface{}, error) {
 }
 
 func (sw *SendWay) Add() error {
+	way, err := models.GetWayByName(sw.Name)
+	if err != nil {
+		return err
+	}
+	if len(way.ID) > 0 {
+		return errors.New(fmt.Sprintf("已经存在同名的渠道名：%s", way.Name))
+	}
 	return models.AddSendWay(sw.Name, sw.Auth, sw.Type, sw.CreatedBy, sw.ModifiedBy)
 }
 
