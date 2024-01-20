@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"log"
@@ -19,16 +18,16 @@ type IDModel struct {
 	CreatedBy  string    `json:"created_by" gorm:"type:varchar(100) comment '创建人';default:'';"`
 	ModifiedBy string    `json:"modified_by" gorm:"type:varchar(100) comment '修改人';default:'';"`
 	CreatedOn  util.Time `json:"created_on" gorm:"type:timestamp comment '创建时间';default:current_timestamp;"`
-	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';default:current_timestamp on update current_timestamp;"`
+	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';"`
 }
 
 type UUIDModel struct {
-	ID uuid.UUID `gorm:"type:varchar(36) comment 'id';primary_key" json:"id"`
+	ID string `gorm:"type:varchar(12) comment 'id';primary_key" json:"id"`
 
 	CreatedBy  string    `json:"created_by" gorm:"type:varchar(100) comment '创建人';default:'';"`
 	ModifiedBy string    `json:"modified_by" gorm:"type:varchar(100) comment '修改人';default:'';"`
 	CreatedOn  util.Time `json:"created_on" gorm:"type:timestamp comment '创建时间';default:current_timestamp;"`
-	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';default:current_timestamp on update current_timestamp;"`
+	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';"`
 }
 
 // Setup initializes the database instance

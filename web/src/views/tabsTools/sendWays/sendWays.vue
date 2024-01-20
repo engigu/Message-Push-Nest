@@ -19,7 +19,7 @@
       <hr />
       <div ref="refContainer">
         <el-table :data="tableData" stripe empty-text="发信渠道为空" :row-style="rowStyle()">
-          <el-table-column label="ID" width="320px">
+          <el-table-column label="ID" >
             <template #default="scope">
               {{ scope.row.id }}
               <el-icon>
@@ -116,7 +116,7 @@ export default {
       await queryListData(pageNum, state.pageSize);
 
     }
-    
+
     const rowStyle = () => {
       return {
         'font-size': '13px',

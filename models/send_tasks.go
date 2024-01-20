@@ -3,8 +3,8 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
+	"message-nest/pkg/util"
 )
 
 type SendTasks struct {
@@ -13,16 +13,20 @@ type SendTasks struct {
 	Name string `json:"name" gorm:"type:varchar(100) comment '任务名称';default:'';"`
 }
 
+func GenerateTaskUniqueID() string {
+	newUUID := util.GenerateUniqueID()
+	return fmt.Sprintf("T-%s", newUUID)
+}
+
 // AddSendTaskWithID 添加实例的时候添加任务
 func AddSendTaskWithID(name string, id string, createdBy string) error {
 	err := db.Where("id = ?", id).Find(&SendTasks{}).Error
 	if err == nil {
 		return nil
 	}
-	uuidObj, _ := uuid.Parse(id)
 	task := SendTasks{
 		UUIDModel: UUIDModel{
-			ID:         uuidObj,
+			ID:         id,
 			CreatedBy:  createdBy,
 			ModifiedBy: createdBy,
 		},
@@ -36,7 +40,7 @@ func AddSendTaskWithID(name string, id string, createdBy string) error {
 
 // AddSendTask 添加任务
 func AddSendTask(name string, createdBy string) error {
-	newUUID := uuid.New()
+	newUUID := GenerateTaskUniqueID()
 	task := SendTasks{
 		UUIDModel: UUIDModel{
 			ID:         newUUID,
@@ -97,7 +101,7 @@ type SendTasksInsRes struct {
 }
 
 type TaskIns struct {
-	ID      uuid.UUID         `json:"id"`
+	ID      string            `json:"id"`
 	Name    string            `json:"name"`
 	InsData []SendTasksInsRes `json:"ins_data"`
 }

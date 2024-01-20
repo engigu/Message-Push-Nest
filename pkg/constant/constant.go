@@ -1,6 +1,6 @@
 package constant
 
-const CleanLogsTaskId = "00000000-0000-0000-0000-000000000001"
+const CleanLogsTaskId = "T-IM1GBswSRY"
 const SiteSettingSectionName = "site_config"
 
 //const SiteSettingTitleKeyName = "title"

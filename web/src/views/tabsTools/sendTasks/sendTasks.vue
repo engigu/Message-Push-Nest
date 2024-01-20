@@ -14,7 +14,7 @@
 
       <div ref="refContainer">
         <el-table :data="tableData" stripe empty-text="发信任务为空" :row-style="rowStyle()">
-          <el-table-column label="ID" prop="id" width="320px" />
+          <el-table-column label="ID" prop="id" />
           <el-table-column label="任务名" prop="name" />
           <el-table-column label="创建时间" prop="created_on" />
           <el-table-column fixed="right" label="操作" width="190px">

@@ -62,7 +62,8 @@ export default defineComponent({
         if (newValue[props.componentName].rowData) {
           const row = pageState.ShowDialogData[props.componentName].rowData;
           let nowData = [];
-          _.cloneDeep(CONSTANT.WAYS_DATA).forEach(element => {
+          let copyData = _.cloneDeep(CONSTANT.WAYS_DATA);
+          copyData.forEach(element => {
             if (element.type == row.type) {
               // 填充输入框的值
               state.editData = row;

@@ -102,13 +102,13 @@
 import { defineComponent, onMounted, watch, reactive, toRefs } from 'vue';
 import { _ } from 'lodash';
 import { QuestionFilled } from '@element-plus/icons-vue'
-import { v4 as uuidv4 } from 'uuid';
 import { usePageState } from '@/store/page_sate.js';
 import { request } from '@/api/api'
 import tableDeleteButton from '@/views/common/tableDeleteButton.vue'
 import { ElMessage } from 'element-plus'
 import { CONSTANT } from '@/constant'
 import { CommonUtils } from "@/util/commonUtils.js";
+import { generateBizUniqueID } from "@/util/uuid.js";
 
 
 export default defineComponent({
@@ -203,7 +203,7 @@ export default defineComponent({
 
     const getFinalData = () => {
       let postData = {
-        id: uuidv4(),
+        id: generateBizUniqueID('I'),
         enable: 1,
         task_id: state.currTaskInput.taskId,
         way_id: state.currWayTmp.id,

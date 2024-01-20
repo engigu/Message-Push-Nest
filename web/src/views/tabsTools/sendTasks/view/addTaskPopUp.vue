@@ -96,11 +96,11 @@
 import { defineComponent, onMounted, watch, reactive, toRefs } from 'vue';
 import { _ } from 'lodash';
 import { QuestionFilled } from '@element-plus/icons-vue'
-import { v4 as uuidv4 } from 'uuid';
 import { usePageState } from '@/store/page_sate.js';
 import { request } from '@/api/api'
 import { CONSTANT } from '@/constant'
 import { CommonUtils } from "@/util/commonUtils.js";
+import { generateBizUniqueID } from "@/util/uuid.js";
 
 
 export default defineComponent({
@@ -122,7 +122,7 @@ export default defineComponent({
       currInsInputContentType: 'text',
       currTaskInput: {
         taskName: '',
-        taskId: uuidv4(),
+        taskId: generateBizUniqueID('T'),
       },
     });
 
@@ -149,7 +149,7 @@ export default defineComponent({
       state.isShowAddBox = false;
       state.currTaskInput = {
         taskName: '',
-        taskId: uuidv4(),
+        taskId: generateBizUniqueID('T'),
       }
     }
 
@@ -162,7 +162,7 @@ export default defineComponent({
     // 点击暂存实例
     const clickStore = () => {
       let insData = {
-        id: uuidv4(),
+        id: generateBizUniqueID('I'),
         task_id: state.currTaskInput.taskId,
         way_id: state.currWayTmp.id,
         way_type: state.currWayTmp.type,

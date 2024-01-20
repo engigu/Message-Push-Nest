@@ -12,7 +12,7 @@ import (
 )
 
 type DeleteMsgSendWayReq struct {
-	ID string `json:"id" validate:"required,len=36" label:"渠道id"`
+	ID string `json:"id" validate:"required,len=12" label:"渠道id"`
 }
 
 // DeleteMsgSendWay 删除消息渠道
@@ -138,7 +138,7 @@ func AddMsgSendWay(c *gin.Context) {
 }
 
 type EditSendWayReq struct {
-	ID   string `json:"id" validate:"required,len=36" label:"渠道id"`
+	ID   string `json:"id" validate:"required,len=12" label:"渠道id"`
 	Name string `json:"name" validate:"required,max=100,min=1" label:"渠道名"`
 	Type string `json:"type" validate:"required,max=100,min=1" label:"渠道类型"`
 	Auth string `json:"auth" validate:"required" label:"渠道认证信息"`

@@ -3,8 +3,8 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
+	"message-nest/pkg/util"
 )
 
 type SendWays struct {
@@ -15,8 +15,13 @@ type SendWays struct {
 	Auth string `json:"auth" gorm:"type:varchar(2048) comment '认证信息';default:'';"`
 }
 
+func GenerateWayUniqueID() string {
+	newUUID := util.GenerateUniqueID()
+	return fmt.Sprintf("W-%s", newUUID)
+}
+
 func AddSendWay(name string, auth string, wayType string, createdBy string, modifiedBy string) error {
-	newUUID := uuid.New()
+	newUUID := GenerateWayUniqueID()
 	way := SendWays{
 		UUIDModel: UUIDModel{
 			ID:         newUUID,

@@ -9,7 +9,7 @@ import (
 )
 
 type SendMessageReq struct {
-	TaskID   string `json:"task_id" validate:"required,len=36" label:"任务id"`
+	TaskID   string `json:"task_id" validate:"required,len=12" label:"任务id"`
 	Text     string `json:"text" validate:"required" label:"文本内容"`
 	Title    string `json:"title"  label:"消息标题"`
 	HTML     string `json:"html"  label:"html内容"`

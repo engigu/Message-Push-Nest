@@ -11,7 +11,7 @@ import (
 )
 
 type DeleteMsgSendTaskReq struct {
-	ID string `json:"id" validate:"required,len=36" label:"任务id"`
+	ID string `json:"id" validate:"required,len=12" label:"任务id"`
 }
 
 // DeleteMsgSendTask 删除消息任务
@@ -103,7 +103,7 @@ func AddMsgSendTask(c *gin.Context) {
 }
 
 type EditMsgSendTaskReq struct {
-	ID       string `json:"id" validate:"required,len=36" label:"任务id"`
+	ID       string `json:"id" validate:"required,len=12" label:"任务id"`
 	TaskName string `json:"name" validate:"required,max=100,min=1" label:"任务任务名"`
 }
 

@@ -3,7 +3,6 @@ package v1
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/e"
@@ -13,7 +12,7 @@ import (
 )
 
 type DeleteMsgTaskInsReq struct {
-	ID string `json:"id" validate:"required,len=36" label:"实例id"`
+	ID string `json:"id" validate:"required,len=12" label:"实例id"`
 }
 
 // DeleteMsgSendWay 删除消息渠道
@@ -65,9 +64,9 @@ func GetMsgSendWayIns(c *gin.Context) {
 }
 
 type SendTasksInsReq struct {
-	ID          string `json:"id" validate:"required,len=36" label:"实例id"`
-	TaskId      string `json:"task_id" validate:"required,len=36" label:"ins任务id"`
-	WayID       string `json:"way_id" validate:"required,len=36" label:"渠道id"`
+	ID          string `json:"id" validate:"required,len=12" label:"实例id"`
+	TaskId      string `json:"task_id" validate:"required,len=12" label:"ins任务id"`
+	WayID       string `json:"way_id" validate:"required,len=12" label:"渠道id"`
 	ContentType string `json:"content_type" validate:"required,max=100" label:"实例内容类型"`
 	Config      string `json:"config" validate:"" label:"任务配置"`
 	Extra       string `json:"extra" validate:"" label:"任务额外信息"`
@@ -76,7 +75,7 @@ type SendTasksInsReq struct {
 }
 
 type AddManyTasksInsReq struct {
-	TaskId   string            `json:"id" validate:"required,len=36" label:"任务id"`
+	TaskId   string            `json:"id" validate:"required,len=12" label:"任务id"`
 	TaskName string            `json:"name" validate:"required,max=100" label:"任务名"`
 	InsData  []SendTasksInsReq `json:"ins_data"`
 }
@@ -104,10 +103,9 @@ func AddManyTasksIns(c *gin.Context) {
 				appG.CResponse(code, dataErrStr, nil)
 				return
 			}
-			uuidObj, _ := uuid.Parse(data.ID)
 			taskIns = append(taskIns, models.SendTasksIns{
 				UUIDModel: models.UUIDModel{
-					ID:         uuidObj,
+					ID:         data.ID,
 					CreatedBy:  currentUser,
 					ModifiedBy: currentUser,
 				},
@@ -158,9 +156,8 @@ func AddTasksIns(c *gin.Context) {
 	}
 
 	sendTaskInsService := send_ins_service.SendTaskInsService{}
-	uuidObj, _ := uuid.Parse(req.ID)
 	err := sendTaskInsService.AddOne(models.SendTasksIns{
-		UUIDModel:   models.UUIDModel{ID: uuidObj},
+		UUIDModel:   models.UUIDModel{ID: req.ID},
 		TaskID:      req.TaskId,
 		WayID:       req.WayID,
 		WayType:     req.WayType,
@@ -179,7 +176,7 @@ func AddTasksIns(c *gin.Context) {
 }
 
 type UpdateMsgTaskInsEnableReq struct {
-	ID     string `json:"ins_id" validate:"required,len=36" label:"实例id"`
+	ID     string `json:"ins_id" validate:"required,len=12" label:"实例id"`
 	Enable int    `json:"status" validate:"" label:"实例开启状态"`
 }
 
