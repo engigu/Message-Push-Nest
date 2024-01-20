@@ -9,7 +9,7 @@
         <el-text class="refresh-time" v-if="refreshText" size="small">{{ refreshText }}</el-text>
         <el-input-number class="refresh-box" v-model="refreshSec" size="small" :step="2" :min="5"
           controls-position="right" />
-        <el-switch v-model="refreshSwitch" class="ml-2" width="80" inline-prompt active-text="开启刷新" inactive-text="关闭刷新"
+        <el-switch v-model="refreshSwitch" class="ml-2" width="80" inline-prompt active-text="自动刷新" inactive-text="自动刷新"
           @click="clickFreshSwitch" />
       </div>
 
