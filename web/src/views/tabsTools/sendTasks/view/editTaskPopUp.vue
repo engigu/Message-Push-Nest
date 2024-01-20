@@ -61,14 +61,14 @@
         <el-table :data="insTableData" empty-text="发信实例为空" style="width: 100%" max-height="300"
           :row-style="insRowStyle()">
           <el-table-column prop="way_name" label="渠道名" />
-          <el-table-column prop="way_type" label="渠道+内容类型" width="120px">
+          <el-table-column prop="way_type" label="渠道+内容类型" width="140px">
             <template #default="scope">
-              {{ scope.row.way_type }}+{{ scope.row.content_type }}
+              {{ CommonUtils.formatWayName(scope.row.way_type) }}+{{ scope.row.content_type }}
             </template>
           </el-table-column>
           <el-table-column prop="way_type" label="额外信息">
             <template #default="scope">
-              {{ formatExtraInfo(scope) }}
+              {{ CommonUtils.formatInsConfigDisplay(scope) }}
             </template>
           </el-table-column>
           <el-table-column label="状态" prop="status" width="60px">
@@ -188,9 +188,9 @@ export default defineComponent({
       }
     }
 
-    const formatExtraInfo = (scope) => {
-      return CommonUtils.formatInsConfigDisplay(scope);
-    }
+    // const formatExtraInfo = (scope) => {
+    //   return CommonUtils.formatInsConfigDisplay(scope);
+    // }
 
     const searchID = async () => {
       const rsp = await request.get('/sendways/get', { params: { id: state.searchWayID } });
@@ -242,8 +242,8 @@ export default defineComponent({
     }
 
     return {
-      ...toRefs(state), handleCancer, handleAddSubmit, handleEditTask, CONSTANT,
-      searchID, handleDelete, insRowStyle, formatExtraInfo, updateInsEnableStatus
+      ...toRefs(state), handleCancer, handleAddSubmit, handleEditTask, CONSTANT, CommonUtils,
+      searchID, handleDelete, insRowStyle, updateInsEnableStatus
     };
   },
 });

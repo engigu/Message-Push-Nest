@@ -1,5 +1,7 @@
 
 
+import { CONSTANT } from '@/constant'
+
 class CommonUtils {
 
   static formatInsConfigDisplay = (scope) => {
@@ -13,6 +15,10 @@ class CommonUtils {
     } else {
       return "暂无"
     }
+  }
+
+  static formatWayName = (type) => {
+    return CONSTANT.WAYS_DATA_MAP[type].label;
   }
 
 }

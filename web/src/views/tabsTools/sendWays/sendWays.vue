@@ -19,7 +19,7 @@
       <hr />
       <div ref="refContainer">
         <el-table :data="tableData" stripe empty-text="发信渠道为空" :row-style="rowStyle()">
-          <el-table-column label="ID" >
+          <el-table-column label="ID">
             <template #default="scope">
               {{ scope.row.id }}
               <el-icon>
@@ -28,7 +28,11 @@
             </template>
           </el-table-column>
           <el-table-column label="渠道名" prop="name" />
-          <el-table-column label="发信渠道" prop="type" />
+          <el-table-column label="发信渠道" prop="type">
+            <template #default="scope">
+              {{ CommonUtils.formatWayName(scope.row.type) }}
+            </template>
+          </el-table-column>
           <el-table-column label="创建时间" prop="created_on" />
           <el-table-column fixed="right" label="操作" width="100px">
             <template #default="scope">
@@ -63,6 +67,7 @@ import { CopyDocument } from '@element-plus/icons-vue'
 import { copyToClipboard } from '@/util/clipboard.js';
 import tableDeleteButton from '@/views/common/tableDeleteButton.vue'
 import { CONSTANT } from '@/constant'
+import { CommonUtils } from "@/util/commonUtils.js";
 
 export default {
   components: {
@@ -145,7 +150,7 @@ export default {
 
     return {
       ...toRefs(state), handleEdit, handleDelete,
-      clickAdd, rowStyle, handPageChange, filterFunc, copyToClipboard
+      clickAdd, rowStyle, handPageChange, filterFunc, copyToClipboard, CommonUtils
     };
   }
 }

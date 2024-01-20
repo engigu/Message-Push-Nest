@@ -59,14 +59,14 @@
         <el-table :data="insTableData" empty-text="发信实例为空" style="width: 100%" max-height="300"
           :row-style="insRowStyle()">
           <el-table-column prop="way_name" label="渠道名" />
-          <el-table-column prop="way_type" label="渠道+内容类型">
+          <el-table-column prop="way_type" label="渠道+内容类型" width="140px">
             <template #default="scope">
-              {{ scope.row.way_type }}+{{ scope.row.content_type }}
+              {{ CommonUtils.formatWayName(scope.row.way_type) }}+{{ scope.row.content_type }}
             </template>
           </el-table-column>
           <el-table-column prop="way_type" label="额外信息">
             <template #default="scope">
-              {{ formatExtraInfo(scope) }}
+              {{ CommonUtils.formatInsConfigDisplay(scope) }}
             </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="60px">
@@ -201,13 +201,13 @@ export default defineComponent({
       }
     }
 
-    const formatExtraInfo = (scope) => {
-      return CommonUtils.formatInsConfigDisplay(scope);
-    }
+    // const formatExtraInfo = (scope) => {
+    //   return CommonUtils.formatInsConfigDisplay(scope);
+    // }
 
     return {
       ...toRefs(state), handleCancer, handleSubmit,
-      searchID, formatExtraInfo, CONSTANT,
+      searchID, CONSTANT, CommonUtils,
       clickStore, insRowStyle
     };
   },
