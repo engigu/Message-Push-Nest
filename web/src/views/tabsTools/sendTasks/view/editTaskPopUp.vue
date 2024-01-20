@@ -71,18 +71,15 @@
               {{ CommonUtils.formatInsConfigDisplay(scope) }}
             </template>
           </el-table-column>
-          <el-table-column label="状态" prop="status" width="60px">
+          <el-table-column label="发送状态" prop="status" width="100px">
             <template #default="scope">
-              <el-tag v-if="scope.row.enable != 1" type="danger">暂停</el-tag>
-              <el-tag v-if="scope.row.enable == 1" type="success">开启</el-tag>
+              <el-switch v-model.bool="scope.row.enable" inline-prompt active-text="开启发送" inactive-text="关闭发送"
+                @click="updateInsEnableStatus(scope.row)" />
             </template>
           </el-table-column>
-          <el-table-column fixed="right" label="操作" width="100px">
+          <el-table-column fixed="right" label="操作" width="60px">
             <template #default="scope">
               <tableDeleteButton @customHandleDelete="handleDelete(scope.$index, scope.row)" />
-              <el-button link size="small" style="" type="primary" @click="updateInsEnableStatus(scope.row)">
-                {{ scope.row.enable == 1 ? '暂停' : '开启' }}
-              </el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -99,7 +96,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, watch, reactive, toRefs } from 'vue';
+import { defineComponent, onMounted, watch, reactive, toRefs, computed } from 'vue';
 import { _ } from 'lodash';
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { usePageState } from '@/store/page_sate.js';
@@ -141,16 +138,24 @@ export default defineComponent({
         resetPageInitData();
         state.currTaskInput.taskId = pageState.ShowDialogData[props.componentName].rowData.id;
         if (state.isShow) {
-          queryListData();
+          queryInsListData();
         }
       }
     });
 
-    const queryListData = async () => {
+    // 将实例的开启状态转换为布尔值，组件绑定需要布尔值
+    const dealInsEnableStatus = (data) => {
+      data.forEach(ins => {
+        ins.enable = ins.enable == 1;
+      });
+    }
+
+    const queryInsListData = async () => {
       let params = { id: state.currTaskInput.taskId };
       const rsp = await request.get('/sendtasks/ins/gettask', { params: params });
       state.insTableData = await rsp.data.data.ins_data;
       // state.total = await rsp.data.data.total;
+      dealInsEnableStatus(state.insTableData);
       state.currTaskInput.taskName = await rsp.data.data.name;
     }
 
@@ -188,10 +193,6 @@ export default defineComponent({
       }
     }
 
-    // const formatExtraInfo = (scope) => {
-    //   return CommonUtils.formatInsConfigDisplay(scope);
-    // }
-
     const searchID = async () => {
       const rsp = await request.get('/sendways/get', { params: { id: state.searchWayID } });
       let data = await rsp.data;
@@ -219,16 +220,17 @@ export default defineComponent({
       let postData = getFinalData();
       const rsp = await request.post('/sendtasks/ins/addone', postData);
       if (await rsp.data.code == 200) {
+        postData.enable = true;
         state.insTableData.push(postData);
       }
     }
 
     const updateInsEnableStatus = async (row) => {
-      let status = Number(!row.enable);
+      let status = row.enable ? 1 : 0;
       let postData = { ins_id: row.id, status: status };
       const rsp = await request.post('/sendtasks/ins/update_enable', postData);
       if (await rsp.data.code == 200) {
-        row.enable = status;
+        row.enable = Boolean(status);    //更新当前的状态值
         ElMessage({ message: await rsp.data.msg, type: 'success' });
       }
     }
