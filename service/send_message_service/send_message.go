@@ -68,13 +68,13 @@ func (sm *SendMessageService) Send() string {
 	sm.Status = SendSuccess
 	errStr := ""
 
+	sm.LogsAndStatusMark(fmt.Sprintf("发送标题：%s \n", sm.Title), sm.Status)
 	sm.LogsAndStatusMark(fmt.Sprintf("开始任务[%s]的发送", sm.TaskID), sm.Status)
 	sendTaskService := send_task_service.SendTaskService{
 		ID: sm.TaskID,
 	}
 	task, err := sendTaskService.GetTaskWithIns()
 	sm.LogsAndStatusMark(fmt.Sprintf("任务名称：%s", task.Name), sm.Status)
-	sm.LogsAndStatusMark(fmt.Sprintf("发送标题：%s \n", sm.Title), sm.Status)
 	if err != nil {
 		errStr = fmt.Sprintf("任务[%s]不存在！退出发送！", sm.TaskID)
 		sm.LogsAndStatusMark(errStr, SendFail)
