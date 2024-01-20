@@ -5,7 +5,6 @@
       <div class="search-input-sendways">
         <el-input v-model="search" size="small" placeholder="搜索" @change="filterFunc()" />
       </div>
-
       <div class="search-box">
         <el-button size="small" type="primary" @click="clickAdd">新增任务</el-button>
       </div>

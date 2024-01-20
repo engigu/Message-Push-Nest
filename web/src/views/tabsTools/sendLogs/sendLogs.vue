@@ -1,9 +1,18 @@
 <template>
   <div class="main-center-body">
     <div class="container">
+
       <div class="search-input-sendways">
         <el-input v-model="search" size="small" placeholder="根据任务名字搜索相应日志" @change="filterFunc()" />
       </div>
+      <div class="search-box">
+        <el-text class="refresh-time" v-if="refreshText" size="small">{{ refreshText }}</el-text>
+        <el-input-number class="refresh-box" v-model="refreshSec" size="small" :step="2" :min="5"
+          controls-position="right" />
+        <el-switch v-model="refreshSwitch" class="ml-2" width="80" inline-prompt active-text="开启刷新" inactive-text="关闭刷新"
+          @click="clickFreshSwitch" />
+      </div>
+
       <hr />
       <div ref="refContainer">
         <el-table :data="tableData" stripe empty-text="发信日志为空" :row-style="rowStyle()">
@@ -45,12 +54,13 @@
 </template>
 
 <script >
-import { reactive, toRefs, onMounted } from 'vue'
+import { reactive, toRefs, onMounted, watch, ref } from 'vue'
 import { request } from '../../../api/api'
 import { copyToClipboard } from '../../../util/clipboard.js';
 import { useRoute } from 'vue-router';
 import { CONSTANT } from '@/constant'
 import { usePageState } from '@/store/page_sate.js';
+import { CommonUtils } from "@/util/commonUtils.js";
 
 export default {
   components: {
@@ -60,6 +70,10 @@ export default {
     const router = useRoute();
     const state = reactive({
       search: '',
+      refreshText: '',
+      refreshSwitch: false,
+      refreshSec: 20,
+      refreshIntervalFuncList: [],
       optionValue: '',
       logText: '',
       drawer: false,
@@ -95,6 +109,23 @@ export default {
       }
     }
 
+    const clickFreshSwitch = () => {
+      if (state.refreshSwitch) {
+        let flag = setInterval(async function () {
+          await filterFunc();
+          state.refreshText = `自动刷新于：${CommonUtils.getCurrentTimeStr()}`;
+        }, state.refreshSec * 1000);
+        state.refreshIntervalFuncList.push(flag);
+      } else {
+        state.refreshIntervalFuncList.forEach(intervalId => {
+          clearInterval(intervalId);
+        });
+        state.refreshIntervalFuncList = [];
+        state.refreshText = '';
+      }
+    }
+
+
     const filterFunc = async () => {
       await queryListData(state.currPage, state.pageSize, state.search, state.optionValue);
 
@@ -113,7 +144,7 @@ export default {
     });
 
     return {
-      ...toRefs(state), handleDelete, TransHtml,
+      ...toRefs(state), handleDelete, TransHtml, clickFreshSwitch,
       rowStyle, handPageChange, filterFunc, copyToClipboard
     };
   }
@@ -138,10 +169,25 @@ hr {
   margin-top: -10vh;
 }
 
+.search-box {
+  float: right;
+  margin-top: -2px;
+}
+
+.refresh-box {
+  width: 80px;
+  margin-right: 5px;
+}
+
+.refresh-time {
+  margin-right: 10px;
+}
+
 .pagination-block {
   margin-top: 30px;
   display: flex;
   justify-content: flex-end;
+
 }
 
 .total-tip {
