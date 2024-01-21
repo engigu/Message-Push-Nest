@@ -174,7 +174,7 @@ func EditSendWay(c *gin.Context) {
 
 	err := sendWayService.Edit()
 	if err != nil {
-		appG.CResponse(http.StatusInternalServerError, "编辑渠道信息失败", nil)
+		appG.CResponse(http.StatusInternalServerError, fmt.Sprintf("编辑渠道信息失败！原因：%s", err), nil)
 		return
 	}
 

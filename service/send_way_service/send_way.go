@@ -53,18 +53,37 @@ func (sw *SendWay) GetByID() (interface{}, error) {
 	return models.GetWayByID(sw.ID)
 }
 
-func (sw *SendWay) Add() error {
+func (sw *SendWay) NameIsExist(method string) error {
 	way, err := models.GetWayByName(sw.Name)
 	if err != nil {
 		return err
 	}
-	if len(way.ID) > 0 {
-		return errors.New(fmt.Sprintf("已经存在同名的渠道名：%s", way.Name))
+	if method == "add" {
+		if len(way.ID) > 0 {
+			return errors.New(fmt.Sprintf("已经存在同名的渠道名：%s", way.Name))
+		}
+	} else {
+		// 只允许当前的重名
+		if len(way.ID) > 0 && way.ID != sw.ID {
+			return errors.New(fmt.Sprintf("已经存在同名的渠道名：%s", way.Name))
+		}
+	}
+	return nil
+}
+
+func (sw *SendWay) Add() error {
+	err := sw.NameIsExist("add")
+	if err != nil {
+		return err
 	}
 	return models.AddSendWay(sw.Name, sw.Auth, sw.Type, sw.CreatedBy, sw.ModifiedBy)
 }
 
 func (sw *SendWay) Edit() error {
+	err := sw.NameIsExist("edit")
+	if err != nil {
+		return err
+	}
 	data := make(map[string]interface{})
 	data["modified_by"] = sw.ModifiedBy
 	data["name"] = sw.Name

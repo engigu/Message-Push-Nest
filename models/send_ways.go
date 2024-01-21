@@ -95,7 +95,7 @@ func GetWayByID(id string) (SendWays, error) {
 func GetWayByName(name string) (SendWays, error) {
 	var way SendWays
 	err := db.Where("name = ? ", name).Find(&way).Error
-	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return way, err
 	}
 	return way, nil
