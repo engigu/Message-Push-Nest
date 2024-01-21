@@ -24,10 +24,8 @@
     <div class="ins-area">
 
       <div class="ins-add">
-        <el-input v-model="searchWayID" placeholder="请输入要添加的渠道id" size="small" @change="searchID"
-          class="searchInput"></el-input>
-        <el-button @click="searchID()" size="small" type="primary" style="margin-left: 20px;">查询</el-button>
-
+        <el-autocomplete v-model="currSearchInputText" size="small" :fetch-suggestions="querySearchWayAsync"
+          placeholder="请输入渠道名进行搜索" @select="handleSearchSelect" :clearable="true" value-key="name" />
         <div class="store-area" v-if="isShowAddBox">
 
           <div class="display-label">
@@ -96,7 +94,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, watch, reactive, toRefs, computed } from 'vue';
+import { defineComponent, onMounted, watch, reactive, toRefs } from 'vue';
 import { _ } from 'lodash';
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { usePageState } from '@/store/page_sate.js';
@@ -120,6 +118,8 @@ export default defineComponent({
     const pageState = usePageState();
     const state = reactive({
       insTableData: [],
+      currSearchWaysData: [],
+      currSearchInputText: '',
       isShow: false,
       isShowAddBox: false,
       searchWayID: '',
@@ -193,13 +193,36 @@ export default defineComponent({
       }
     }
 
-    const searchID = async () => {
-      const rsp = await request.get('/sendways/get', { params: { id: state.searchWayID } });
-      let data = await rsp.data;
-      state.isShowAddBox = Boolean(data.data);
-      if (data.data) {
-        state.currWayTmp = data.data;
+
+    // 匹配出当前搜索的渠道数据
+    const matchSearchData = (way_name) => {
+      let result = {};
+      state.currSearchWaysData.forEach(element => {
+        if (element.name == way_name) {
+          result = element;
+        }
+      });
+      return result;
+    }
+
+    const handleSearchSelect = async () => {
+      let currWay = matchSearchData(state.currSearchInputText)
+      state.isShowAddBox = Boolean(currWay);
+      if (currWay) {
+        state.currWayTmp = currWay;
+        // 初始化currInsInput
+        CONSTANT.WAYS_DATA_MAP[currWay.type].taskInsInputs.forEach(element => {
+          state.currInsInput[element.col] = ""
+        });
       }
+    }
+
+    const querySearchWayAsync = async (query, cb) => {
+      let params = { name: query };
+      const rsp = await request.get('/sendways/list', { params: params });
+      let tableData = await rsp.data.data.lists;
+      cb(tableData);
+      state.currSearchWaysData = tableData;
     }
 
     const getFinalData = () => {
@@ -221,7 +244,7 @@ export default defineComponent({
       const rsp = await request.post('/sendtasks/ins/addone', postData);
       if (await rsp.data.code == 200) {
         postData.enable = true;
-        state.insTableData.push(postData);
+        state.insTableData.unshift(postData);
       }
     }
 
@@ -245,7 +268,7 @@ export default defineComponent({
 
     return {
       ...toRefs(state), handleCancer, handleAddSubmit, handleEditTask, CONSTANT, CommonUtils,
-      searchID, handleDelete, insRowStyle, updateInsEnableStatus
+      handleDelete, insRowStyle, updateInsEnableStatus, handleSearchSelect, querySearchWayAsync
     };
   },
 });
