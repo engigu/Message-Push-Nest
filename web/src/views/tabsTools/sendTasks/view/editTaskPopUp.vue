@@ -279,6 +279,10 @@ export default defineComponent({
   white-space: pre-line !important;
 }
 
+:deep(.el-autocomplete) {
+  width: 200px;
+}
+
 .dashed {
   border-top: 2px dashed var(--el-border-color);
   margin-bottom: 20px;
