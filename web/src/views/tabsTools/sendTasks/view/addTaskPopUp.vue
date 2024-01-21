@@ -26,7 +26,7 @@
 
       <div class="ins-add">
         <el-autocomplete v-model="currSearchInputText" size="small" :fetch-suggestions="querySearchWayAsync"
-          placeholder="请输入渠道名进行搜索" @select="handleSearchSelect" />
+          placeholder="请输入渠道名进行搜索" @select="handleSearchSelect" :clearable="true" value-key="name" />
 
         <div class="store-area" v-if="isShowAddBox">
 
@@ -201,9 +201,6 @@ export default defineComponent({
       let params = { name: query };
       const rsp = await request.get('/sendways/list', { params: params });
       let tableData = await rsp.data.data.lists;
-      tableData.forEach(element => {
-        element.value = element.name
-      });
       cb(tableData);
       state.currSearchWaysData = tableData;
     }
