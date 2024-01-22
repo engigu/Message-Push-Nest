@@ -22,7 +22,7 @@
             <template #default="scope">
               <el-tooltip enterable placement="top">
                 <template #content>
-                  <div v-html="TransHtml(scope.row.log)"></div>
+                  <div v-html="formatLogDisplayHtml(scope)"></div>
                 </template>
                 <span class="log-overflow">{{ scope.row.log }}</span>
               </el-tooltip>
@@ -32,7 +32,7 @@
           <el-table-column label="详情/状态" prop="status" width="120px" fixed="right">
             <template #default="scope">
               <el-button link size="small" style="margin-right: 10px;" type="primary"
-                @click="drawer = true; logText = scope.row.log">日志</el-button>
+                @click="drawer = true; logText = formatLogDisplayHtml(scope)">日志</el-button>
               <el-tag v-if="scope.row.status == 0" type="danger">失败</el-tag>
               <el-tag v-if="scope.row.status == 1" type="success">成功</el-tag>
             </template>
@@ -41,7 +41,7 @@
       </div>
 
       <el-drawer v-model="drawer" :with-header="false">
-        <el-text v-html="TransHtml(logText)" size="small"></el-text>
+        <el-text v-html="logText" size="small"></el-text>
       </el-drawer>
 
       <div class="pagination-block">
@@ -97,6 +97,15 @@ export default {
       return ''
     }
 
+    const formatLogDisplayHtml = (scope) => {
+      let log = TransHtml(scope.row.log);
+      log += '<br />\n';
+      if (scope.row.caller_ip) {
+        log += `调用来源IP：${scope.row.caller_ip}`;
+      };
+      return log;
+    }
+
     const handPageChange = async (pageNum) => {
       state.currPage = pageNum;
       await queryListData(pageNum, state.pageSize);
@@ -145,7 +154,7 @@ export default {
 
     return {
       ...toRefs(state), handleDelete, TransHtml, clickFreshSwitch,
-      rowStyle, handPageChange, filterFunc, copyToClipboard
+      rowStyle, handPageChange, filterFunc, copyToClipboard, formatLogDisplayHtml
     };
   }
 }

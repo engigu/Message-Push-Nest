@@ -36,6 +36,7 @@ func DoSendMassage(c *gin.Context) {
 		Text:     req.Text,
 		HTML:     req.HTML,
 		MarkDown: req.MarkDown,
+		CallerIp: c.ClientIP(),
 	}
 	if req.Mode == "sync" {
 		// 同步发送

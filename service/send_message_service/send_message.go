@@ -32,6 +32,7 @@ type SendMessageService struct {
 	Text     string
 	HTML     string
 	MarkDown string
+	CallerIp string
 
 	Status    int
 	LogOutput []string
@@ -190,9 +191,10 @@ func (sm *SendMessageService) RecordSendLog() {
 		return
 	}
 	log := models.SendTasksLogs{
-		Log:    strings.Join(sm.LogOutput, "\n"),
-		TaskID: sm.TaskID,
-		Status: sm.Status,
+		Log:      strings.Join(sm.LogOutput, "\n"),
+		TaskID:   sm.TaskID,
+		Status:   sm.Status,
+		CallerIp: sm.CallerIp,
 	}
 	err := log.Add()
 	if err != nil {

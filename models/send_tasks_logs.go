@@ -6,10 +6,11 @@ import (
 )
 
 type SendTasksLogs struct {
-	ID     int    `gorm:"primary_key" json:"id" `
-	TaskID string `json:"task_id" gorm:"type:varchar(12) comment '任务id';default:'';index:task_id"`
-	Log    string `json:"log" gorm:"type:text comment '日志';"`
-	Status int    `json:"status" gorm:"type:int comment '状态';default:0;"`
+	ID       int    `gorm:"primary_key" json:"id" `
+	TaskID   string `json:"task_id" gorm:"type:varchar(12) comment '任务id';default:'';index:task_id"`
+	Log      string `json:"log" gorm:"type:text comment '日志';"`
+	Status   int    `json:"status" gorm:"type:int comment '状态';default:0;"`
+	CallerIp string `json:"caller_ip" gorm:"type:varchar(256) comment '发送者的ip';default:'';"`
 
 	CreatedOn  util.Time `json:"created_on" gorm:"type:timestamp comment '创建时间';default:current_timestamp;"`
 	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';"`
@@ -32,6 +33,7 @@ type LogsResult struct {
 	ModifiedOn util.Time `json:"modified_on"`
 	TaskName   string    `json:"task_name"`
 	Status     int       `json:"status"`
+	CallerIp   string    `json:"caller_ip"`
 }
 
 // GetSendLogs 获取所有日志记录
