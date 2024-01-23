@@ -48,11 +48,20 @@ export default {
         });
 
         onMounted(() => {
+            demoSiteSet();
             // 加载站点信息
             setTimeout(() => {
                 LocalStieConfigUtils.getLatestLocalConfig();
             }, 100)
         });
+
+        // 站点演示模式
+        const demoSiteSet = () => {
+            if (import.meta.env.VITE_RUN_MODE === 'demo') {
+                state.account = 'admin';
+                state.passwd = '123456';
+            }
+        }
 
         // 登录
         const clickLogin = async () => {

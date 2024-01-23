@@ -28,11 +28,16 @@ export default defineComponent({
         });
 
         const handleChange = async () => {
+            if (import.meta.env.VITE_RUN_MODE === 'demo') {
+                ElMessage({ message: '演示模式不会重置密码', type: 'success' });
+                return
+            }
+
             let postData = { old_passwd: state.oldPasswd, new_passwd: state.newPasswd };
             const rsp = await request.post('/settings/setpasswd', postData);
             if (await rsp.data.code == 200) {
                 let msg = await rsp.data.msg;
-                ElMessage({ message: msg, type: 'success' })
+                ElMessage({ message: msg, type: 'success' });
             }
         }
         return {
