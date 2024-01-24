@@ -2,7 +2,7 @@
   <div class="inex-title-bar" v-if="pageState.isLogin">
     <el-menu :collapse="isCollapse" breakpoint="768px" mode="horizontal" @select="handleSelect()"
       :default-active="currActivate()" :ellipsis="false" :menu-width="'auto'">
-      <el-menu-item index="0" :disabled="false">
+      <el-menu-item index="" :disabled="false">
         <img style="width: 60px" class="title-logo" :src="titleLogo" alt="Message logo" />
       </el-menu-item>
 
@@ -33,6 +33,7 @@ export default {
       titleLogo: '',
     });
     const menuData = reactive([
+      { id: '0', title: '数据统计', path: '/statistic' },
       { id: '1', title: '发信日志', path: '/sendlogs' },
       { id: '2', title: '发信任务', path: '/sendtasks' },
       { id: '3', title: '发信渠道', path: '/sendways' },
@@ -54,7 +55,7 @@ export default {
 
     const currActivate = () => {
       const cur_path = useRoute().path;
-      let result = '1';
+      let result = '0';
       menuData.forEach(element => {
         if (element.path == cur_path) {
           result = element.id;

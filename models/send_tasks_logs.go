@@ -101,3 +101,66 @@ func DeleteOutDateLogs(keepNum int) (int, error) {
 	affectedRows = int(result.RowsAffected)
 	return affectedRows, nil
 }
+
+type StatisticData struct {
+	TodaySuccNum   int `json:"today_succ_num"`
+	TodayFailedNum int `json:"today_failed_num"`
+	TodayTotalNum  int `json:"today_total_num"`
+
+	LatestSendData []LatestSendData `json:"latest_send_data"`
+	WayCateData    []WayCateData    `json:"way_cate_data"`
+}
+
+type LatestSendData struct {
+	Day string `json:"day"`
+	Num int    `json:"num"`
+}
+
+type WayCateData struct {
+	WayName  string `json:"way_name"`
+	CountNum int    `json:"count_num"`
+}
+
+// GetStatisticData 获取统计数据
+func GetStatisticData() (StatisticData, error) {
+	var statistic StatisticData
+	var latestData []LatestSendData
+	var wayCateData []WayCateData
+	logt := db.NewScope(SendTasksLogs{}).TableName()
+	inst := db.NewScope(SendTasksIns{}).TableName()
+	wayst := db.NewScope(SendWays{}).TableName()
+
+	// 今日统计数据
+	query := db.
+		Table(logt).
+		Select(`
+COUNT(*) AS today_total_num,
+SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
+SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) AS today_failed_num`).
+		Where("DATE(created_on) = CURDATE()")
+	query.First(&statistic)
+
+	// 最近30天数据
+	days := 30
+	queryData := db.
+		Table(logt).
+		Select(`
+    CAST(DATE(created_on) AS CHAR) AS day,
+    COUNT(*) AS num`).
+		Where(" created_on >= CURDATE() - INTERVAL ? DAY", days).
+		Group("DATE(created_on)").
+		Order("created_on")
+	queryData.Scan(&latestData)
+
+	// 消息实例分类数目
+	db.
+		Table(inst).
+		Select(fmt.Sprintf("%s.name as way_name, count(%s.id) as count_num", wayst, wayst)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", wayst, inst, wayst)).
+		Group(fmt.Sprintf("%s.id", wayst)).
+		Scan(&wayCateData)
+
+	statistic.LatestSendData = latestData
+	statistic.WayCateData = wayCateData
+	return statistic, nil
+}

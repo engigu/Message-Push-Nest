@@ -12,6 +12,12 @@ const router = createRouter({
       component: LoginInex
     },
     {
+      path: '/statistic',
+      name: 'statistic',
+      alias: '/',
+      component: () => import('../views/tabsTools/statistic/statistic.vue')
+    },
+    {
       path: '/sendways',
       name: 'sendWays',
       component: () => import('../views/tabsTools/sendWays/sendWays.vue')
@@ -23,7 +29,6 @@ const router = createRouter({
     },
     {
       path: '/sendlogs',
-      alias: '/',
       name: 'sendlogs',
       component: () => import('../views/tabsTools/sendLogs/sendLogs.vue')
     },

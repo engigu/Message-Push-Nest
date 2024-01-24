@@ -42,9 +42,7 @@
 import { defineComponent, reactive, toRefs, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
 import { QuestionFilled } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router';
 import { request } from '@/api/api'
-import { CONSTANT } from '@/constant'
 import { LocalStieConfigUtils } from '@/util/localSiteConfig'
 
 
