@@ -75,7 +75,7 @@ var LatestVersion = map[string]string{}
 //13. 支持更多的api接入示例
 //`
 
-var LatestVersionS = "v0.0.8"
+var LatestVersionS = "v0.0.9"
 var LatestVersionDesc = `
 1. 单应用打包
 2. 支持邮件发送
@@ -93,6 +93,7 @@ var LatestVersionDesc = `
 14. 支持发送实例的暂停与开启
 15. 支持企业微信消息发送
 16. 支持站点信息自定义
+17. 支持数据统计展示
 `
 
 func init() {
