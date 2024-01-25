@@ -193,7 +193,7 @@ func (sm *SendMessageService) RecordSendLog() {
 	log := models.SendTasksLogs{
 		Log:      strings.Join(sm.LogOutput, "\n"),
 		TaskID:   sm.TaskID,
-		Status:   sm.Status,
+		Status:   &sm.Status,
 		CallerIp: sm.CallerIp,
 	}
 	err := log.Add()

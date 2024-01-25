@@ -56,9 +56,9 @@
 //   CaretTop,
 //   Warning,
 // } from '@element-plus/icons-vue'
-import { reactive, toRefs, onMounted, onUnmounted } from 'vue'
+import { reactive, toRefs, onMounted, onUnmounted ,inject } from 'vue'
 import { request } from '@/api/api'
-import * as echarts from "echarts"
+// import * as echarts from "echarts"
 
 export default {
   setup() {
@@ -67,7 +67,9 @@ export default {
       dailyChart: {},
       sendCateChart: {},
     });
-    let echart = echarts;
+
+    const echart = inject('$echarts');
+    // let echart = echarts;
 
     const getStatisticData = async () => {
       const rsp = await request.get('/statistic');
