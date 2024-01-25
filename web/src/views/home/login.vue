@@ -73,7 +73,7 @@ export default {
                 pageState.setToken(rsp.data.token);
                 pageState.setIsLogin(true);
                 localStorage.setItem(CONSTANT.STORE_TOKEN_NAME, rsp.data.token);
-                router.push('/sendlogs', { replace: true });
+                router.push('/', { replace: true });
             }
         };
 
