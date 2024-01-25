@@ -136,7 +136,7 @@ func GetStatisticData() (StatisticData, error) {
 		Select(`
 COUNT(*) AS today_total_num,
 SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
-SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) AS today_failed_num`).
+SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
 		Where("DATE(created_on) = CURDATE()")
 	query.First(&statistic)
 

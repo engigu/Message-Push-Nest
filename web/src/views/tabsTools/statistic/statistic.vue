@@ -26,7 +26,7 @@
         </el-col>
         <el-col :span="8">
           <div class="statistic-card">
-            <el-statistic :value="data.today_failed_num">
+            <el-statistic :value="data.today_failed_num" :value-style="formatFailedNumStyle()">
               <template #title>
                 <div style="display: inline-flex; align-items: center">
                   今日发送失败数
@@ -77,8 +77,17 @@ export default {
       }
     }
 
+    const formatFailedNumStyle = () => {
+      let style = {};
+      if (state.data.today_failed_num) {
+        style['color'] = 'red';
+      }
+      return style;
+    }
+
     onMounted(async () => {
       await getStatisticData();
+      formatFailedNumStyle();
       initDailyChart();
       initSendCateChart();
     });
@@ -170,7 +179,7 @@ export default {
     }
 
     return {
-      ...toRefs(state)
+      ...toRefs(state), formatFailedNumStyle
     };
   }
 }
