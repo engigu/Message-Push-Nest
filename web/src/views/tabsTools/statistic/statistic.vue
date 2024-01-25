@@ -141,7 +141,7 @@ export default {
           trigger: 'axis'
         },
         title: {
-          subtext: '最近消息30天发送数据',
+          subtext: '最近30天发送消息数据',
           top: 0,
           textStyle: {
             color: '#333',
