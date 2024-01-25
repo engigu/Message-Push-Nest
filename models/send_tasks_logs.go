@@ -127,8 +127,11 @@ type StatisticData struct {
 }
 
 type LatestSendData struct {
-	Day string `json:"day"`
-	Num int    `json:"num"`
+	Day          string `json:"day"`
+	Num          int    `json:"num"`
+	SuccNum      int    `json:"succ_num"`
+	DaySuccNum   int    `json:"day_succ_num"`
+	DayFailedNum int    `json:"day_failed_num"`
 }
 
 type WayCateData struct {
@@ -161,6 +164,8 @@ SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_n
 		Table(logt).
 		Select(`
     CAST(DATE(created_on) AS CHAR) AS day,
+	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
+	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
     COUNT(*) AS num`).
 		Where(" created_on >= CURDATE() - INTERVAL ? DAY", days).
 		Group("DATE(created_on)").
