@@ -171,7 +171,7 @@ hr {
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
   max-width: 1000px;
   width: 100%;
-  margin-top: -10vh;
+  /* margin-top: -10vh; */
 }
 
 .el-table th,
@@ -191,7 +191,7 @@ hr {
 }
 
 .pagination-block {
-  margin-top: 30px;
+  margin-top: 15px;
   display: flex;
   justify-content: flex-end;
 }
