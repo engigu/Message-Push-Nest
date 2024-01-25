@@ -37,7 +37,7 @@ type LogsResult struct {
 }
 
 // GetSendLogs 获取所有日志记录
-func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps interface{}) ([]LogsResult, error) {
+func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map[string]interface{}) ([]LogsResult, error) {
 	var logs []LogsResult
 	logt := db.NewScope(SendTasksLogs{}).TableName()
 	taskt := db.NewScope(SendTasks{}).TableName()
@@ -47,6 +47,13 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps int
 		Select(fmt.Sprintf("%s.*, %s.name as task_name", logt, taskt)).
 		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
 
+	dayVal, ok := maps["day_created_on"]
+	if ok {
+		delete(maps, "day_created_on")
+		query = query.Where(fmt.Sprintf("DATE(%s.created_on) = ?", logt), dayVal)
+	}
+
+	query = query.Where(maps)
 	if name != "" {
 		query = query.Where(fmt.Sprintf("%s.name like ?", taskt), fmt.Sprintf("%%%s%%", name))
 	}
@@ -63,13 +70,21 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps int
 }
 
 // GetSendLogsTotal 获取所有日志总数
-func GetSendLogsTotal(name string, taskId string, maps interface{}) (int, error) {
+func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (int, error) {
 	var total int
 	logt := db.NewScope(SendTasksLogs{}).TableName()
 	taskt := db.NewScope(SendTasks{}).TableName()
 	query := db.
 		Table(logt).
 		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
+
+	dayVal, ok := maps["day_created_on"]
+	if ok {
+		delete(maps, "day_created_on")
+		query = query.Where(fmt.Sprintf("DATE(%s.created_on) = ?", logt), dayVal)
+	}
+
+	query = query.Where(maps)
 	if name != "" {
 		query = query.Where(fmt.Sprintf("%s.name like ?", taskt), fmt.Sprintf("%%%s%%", name))
 	}

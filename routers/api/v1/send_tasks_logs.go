@@ -13,6 +13,7 @@ func GetTaskSendLogsList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	name := c.Query("name")
 	taskId := c.Query("taskid")
+	query := c.Query("query")
 
 	offset, limit := util.GetPageSize(c)
 	logsService := send_logs_service.SendTaskLogsService{
@@ -20,6 +21,7 @@ func GetTaskSendLogsList(c *gin.Context) {
 		Name:     name,
 		PageNum:  offset,
 		PageSize: limit,
+		Query:    query,
 	}
 	ways, err := logsService.GetAll()
 	if err != nil {

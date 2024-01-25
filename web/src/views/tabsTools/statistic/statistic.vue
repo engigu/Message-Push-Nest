@@ -32,6 +32,11 @@
                   今日发送失败数
                 </div>
               </template>
+              <template #suffix>
+                <el-icon :size="14">
+                  <ArrowRight v-if="data.today_failed_num > 0" @click="clickErrorNumDetail()" />
+                </el-icon>
+              </template>
             </el-statistic>
 
           </div>
@@ -42,7 +47,7 @@
 
       <div class="echarts-box">
         <div id="daily-chart" style="width: 65%; height: 350px;"></div>
-        <div id="send-cate-chart" style="width: 35%; height: 300px;"></div>
+        <div id="send-cate-chart" style="width: 35%; height: 350px;"></div>
       </div>
 
     </div>
@@ -50,17 +55,23 @@
 </template>
   
 <script >
-// import {
-//   ArrowRight,
-//   CaretBottom,
-//   CaretTop,
-//   Warning,
-// } from '@element-plus/icons-vue'
-import { reactive, toRefs, onMounted, onUnmounted ,inject } from 'vue'
+import {
+  ArrowRight,
+  CaretBottom,
+  CaretTop,
+  Warning,
+} from '@element-plus/icons-vue'
+import { reactive, toRefs, onMounted, onUnmounted, inject } from 'vue'
 import { request } from '@/api/api'
+import { useRouter } from 'vue-router';
+import { CommonUtils } from "@/util/commonUtils.js";
 
 export default {
+  components: {
+    ArrowRight,
+  },
   setup() {
+    const router = useRouter();
     const state = reactive({
       data: {},
       dailyChart: {},
@@ -77,12 +88,20 @@ export default {
       }
     }
 
+    // 格式化发送失败的数字样式
     const formatFailedNumStyle = () => {
       let style = {};
       if (state.data.today_failed_num) {
         style['color'] = 'red';
       }
       return style;
+    }
+
+    const clickErrorNumDetail = () => {
+      let query = { status: 0, day_created_on: CommonUtils.getCurrentTimeStr().slice(0, 10) };
+      let queryStr = encodeURIComponent(JSON.stringify(query));
+      router.push('/sendlogs?query=' + queryStr, { replace: true });
+
     }
 
     onMounted(async () => {
@@ -179,7 +198,7 @@ export default {
     }
 
     return {
-      ...toRefs(state), formatFailedNumStyle
+      ...toRefs(state), formatFailedNumStyle, clickErrorNumDetail
     };
   }
 }

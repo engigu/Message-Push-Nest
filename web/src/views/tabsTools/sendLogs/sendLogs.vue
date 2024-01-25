@@ -134,14 +134,13 @@ export default {
       }
     }
 
-
     const filterFunc = async () => {
       await queryListData(state.currPage, state.pageSize, state.search, state.optionValue);
 
     }
 
-    const queryListData = async (page, size, name = '', taskid = '') => {
-      let params = { page: page, size: size, name: name, taskid: taskid };
+    const queryListData = async (page, size, name = '', taskid = '', query = '') => {
+      let params = { page: page, size: size, name: name, taskid: taskid, query: query };
       const rsp = await request.get('/sendlogs/list', { params: params });
       state.tableData = await rsp.data.data.lists;
       state.total = await rsp.data.data.total;
@@ -149,7 +148,7 @@ export default {
 
     onMounted(async () => {
       state.search = router.query.name;
-      await queryListData(1, state.pageSize, router.query.name, router.query.taskid);
+      await queryListData(1, state.pageSize, router.query.name, router.query.taskid, router.query.query);
     });
 
     return {
