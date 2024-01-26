@@ -78,6 +78,43 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 ```
 6. 启动项目，访问8000端口，初始账号为admin，密码为123456
 
+## 完整配置说明 ⚙️
+
+```ini
+[app]
+JwtSecret = message-nest
+; 暂时无用
+RuntimeRootPath = runtime/
+LogLevel = INFO
+
+; init table data, first run set enable
+; 首次运行打开这个，会自动初始化表和数据
+InitData = enable
+
+[server]
+; debug or release
+RunMode = release
+HttpPort = 8000
+ReadTimeout = 60
+WriteTimeout = 60
+; use embed html static file
+; 是否使用embed打包的静态资源
+; 如果运行release打包后的应用，请注释这个设置。如果取消这个注释，只会单独运行api服务，前端服务需要到web目录手动npm run dev, 进行启动
+; EmbedHtml = disable   
+
+[database]
+Type = mysql
+User = root
+Password = password
+Host = 123.1.1.1
+Name = db_name
+Port = 3306
+; 表前缀
+TablePrefix = message_
+; 是否打开sql打印
+; SqlDebug = enable
+```
+
 
 ## 贡献 🤝
 欢迎通过提交问题和提出改进建议。
