@@ -97,7 +97,7 @@ TablePrefix = message_
 ```shell
 # 第一次运行将app.ini中的app.InitData设置为enable，会自动进行表数据的初始化
 # 后续不需要开启这个配置
-# INFO登录启动回出现如下日志
+# INFO日志级别启动回出现如下日志
 
 [2024-01-13 13:40:09.075]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_auth
 [2024-01-13 13:40:11.778]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_send_tasks
@@ -219,6 +219,7 @@ LogLevel = INFO
 
 ; init table data, first run set enable
 ; 首次运行打开这个，会自动初始化表和数据
+; 项目升级需要打开这个进行检测新增表字段创建
 InitData = enable
 
 [server]
