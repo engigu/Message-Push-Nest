@@ -52,7 +52,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 自己常常写一些脚本需要消息推送，经常需要接入不同的消息发送，很不方便，于是就有了这个项目。
 
 ## 效果图 📺
-![image](https://raw.githubusercontent.com/engigu/resources/images/2024/01/25/fe21b48b69ed0672911adf63ca5ff511.gif)
+![image](https://raw.githubusercontent.com/engigu/resources/images/2024/01/26/593a06ac4d1db666acb8a9fb8719e734.gif)
 
 ## 使用方法 🚀
 
