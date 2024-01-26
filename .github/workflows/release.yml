@@ -43,6 +43,10 @@ jobs:
         run: ls dist/ -la
         working-directory: web/
 
+      - name: Git File Restore
+        run:  touch dist/.gitkeep
+        working-directory: web/
+
       # More assembly might be required: Docker logins, GPG, etc. It all depends
       # on your needs.
       - uses: goreleaser/goreleaser-action@v4
