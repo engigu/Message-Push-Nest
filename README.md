@@ -14,7 +14,6 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 - 🎨 **自定义性：** 可以根据需求定制消息推送策略，满足不同场景的个性化需求。
 - 🛠 **开放性：** 易于扩展和集成新的消息通知服务，以适应未来的变化。
 
-
 ## 进度 🔨
 
 项目还在不断更新中，欢迎大家提出各种建议。
@@ -22,15 +21,19 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 关于日志，考虑到目前多数服务以收集控制台输出为主，暂时不支持写出日志文件。
 
 2024.01.24
+
 - [x] 支持数据统计展示
 
 2024.01.20
+
 - [x] 添加日志查看自动刷新
 
 2024.01.07
+
 - [x] 支持站点信息自定义
 
 2024.01.03
+
 - [x] 支持企业微信
 
 
@@ -49,9 +52,11 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 - [ ] ....
 
 ## 项目来由 💡
+
 自己常常写一些脚本需要消息推送，经常需要接入不同的消息发送，很不方便，于是就有了这个项目。
 
 ## 效果图 📺
+
 ![image](https://raw.githubusercontent.com/engigu/resources/images/2024/01/26/593a06ac4d1db666acb8a9fb8719e734.gif)
 
 ## 使用方法 🚀
@@ -64,6 +69,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 3. 重命名conf/app.example.ini为conf/app.ini
 4. 修改app.ini对应的配置
 5. 将配置中`EmbedHtml = disable`, 进行注释，以单应用方式运行，完整配置参考如下：
+
 ```ini
 [app]
 JwtSecret = message-nest
@@ -93,7 +99,9 @@ Name = yourDbName
 TablePrefix = message_
 
 ```
-6. 启动项目会自动创建表和账号 
+
+6. 启动项目会自动创建表和账号
+
 ```shell
 # 第一次运行将app.ini中的app.InitData设置为enable，会自动进行表数据的初始化
 # 后续不需要开启这个配置
@@ -109,6 +117,7 @@ TablePrefix = message_
 [2024-01-13 13:40:46.751]  INFO [migrate.go:77 Setup] [Init Data]: All table data init done.
 
 ```
+
 7. 启动项目，访问8000端口，初始账号为admin，密码为123456
 
 </details>
@@ -149,6 +158,7 @@ TablePrefix = message_
   <summary> 3. 开发调试运行</summary>
 
 1. 重命名conf/app.example.ini为conf/app.ini， 关键配置如下
+
 ```ini
 [app]
 JwtSecret = message-nest
@@ -179,36 +189,43 @@ Name = yourDbName
 TablePrefix = message_
 
 ```
+
 2. 运行main.go，服务启动后会运行在8000端口
+
 ```shell
 go mod tidy
 go run main.go
 ```
+
 3. 启动前端页面，页面启动后会提示访问url，一般是`http://127.0.0.1:5173`
+
 ```shell
 cd web
 npm i
 nom run dev
 ```
+
 4. 访问`http://127.0.0.1:5173`，进行调试开发，接口会自动转发到go服务`http://localhost:8000`
 
 </details>
 
-
 #### 关于EmbedHtml配置的说明
 
->  这个配置可以理解为单应用模式（或者前后端分离）的开关
->  1. 取消这个配置的注释，表示前后端分离，表示go服务启动的时候只会有api服务，需要到web目录下，npm run dev启动前端项目。然后访问前端项目提示的端口服务，一般是127.0.0.1:5173。
-    或者使用npm run build，用Nginx部署前端。
-> 
-> 
-> 2. 注释这个配置，表示单应用，启动go服务，会把web/dist目录下文件作为前端静态资源。 
-    如果目录下没有静态资源文件，需要到web目录下，npm run build构建生成。
+> 这个配置可以理解为单应用模式（或者前后端分离）的开关
+>  1. 取消这个配置的注释，表示前后端分离，表示go服务启动的时候只会有api服务，需要到web目录下，npm run
+      dev启动前端项目。然后访问前端项目提示的端口服务，一般是127.0.0.1:5173。
+      或者使用npm run build，用Nginx部署前端。
+>
+>
+> 2. 注释这个配置，表示单应用，启动go服务，会把web/dist目录下文件作为前端静态资源。
+     如果目录下没有静态资源文件，需要到web目录下，npm run build构建生成。
 >
 > 两种方式各有优缺点，综合考虑下来，推荐直接使用release的打包执行文件，其中已经内置了页面静态资源，只用运行一个服务。
 
-
 ## 完整配置说明 ⚙️
+
+<details>
+  <summary>点击展开</summary>
 
 ```ini
 [app]
@@ -247,13 +264,67 @@ TablePrefix = message_
 ; SqlDebug = enable
 ```
 
+</details>
+
+## 页面操作指引 🎞️
+
+关于消息的添加，发送的整个步骤，是以顶部菜单栏栏从右想左进行操作。
+
+<details>
+  <summary>1. 新增发信渠道（添加消息的具体渠道）</summary>
+
+![image](screenshots/1-add-message-ways.png)
+
+参考各个渠道tab的说明进行设置保存
+
+注意现在的自定义webhook形式，只支持`POST`请求，采用的是替换配置的消息体中的占位符`TEXT`，进行发送消息
+
+</details>
+
+<details>
+  <summary>2. 新增发信任务</summary>
+
+![image](screenshots/2-add-message-task.png)
+
+1. 点击渠道输入框会弹出所有渠道选项
+2. 选择一个渠道会出现渠道的明细信息，并选择一种消息类型，进行暂存成为实例，点击确定才会进行最终的保存
+3. 添加任务的页面实际上，会分别添加任务，以及任务关联的渠道实例
+4. 关于任务与实例的说明：
+
+> 一个任务可以关联创建多个实例
+>
+>  选择不同的渠道，填写的实例信息也不一样
+>
+>  一个任务可以绑定一个实例，也可以绑定多个实例，多个实例意味着一个消息可以推送给多个消息渠道
+
+5. 关于实例的消息类型说明：
+
+> 消息的类型大体上可以分为text、html、markdown三种类型。每种渠道消息现在支持的类型有不同的限制。
+>
+>  在实际发送的时候，会优先选择发送api中传过来对应类型的消息，如果api中没有对应的类型，会直接取api中text消息。
+>
+>  api中text消息在发送的时候必须要传
+
+</details>
+
+<details>
+  <summary>3. 消息发送</summary>
+
+![image](screenshots/3-send-message.png)
+
+参考各种语言的接口进行调用
+
+</details>
 
 ## 贡献 🤝
+
 欢迎通过提交问题和提出改进建议。
 
 ## 致谢 🙏
+
 该项目汲取了[go-gin-example](https://github.com/eddycjy/go-gin-example)项目的灵感，展示了 Go 和 Gin 在实际应用中的强大和多才多艺。
 
 ## 许可证 📝
+
 [LICENSE](LICENSE)
 
