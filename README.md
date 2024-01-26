@@ -60,7 +60,36 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 2. 新建一个数据库
 3. 重命名conf/app.example.ini为conf/app.ini
 4. 修改app.ini对应的配置
-5. 将配置中`EmbedHtml = disable`, 进行注释，以单应用方式运行
+5. 将配置中`EmbedHtml = disable`, 进行注释，以单应用方式运行，完整配置参考如下：
+```ini
+[app]
+JwtSecret = message-nest
+LogLevel = INFO
+
+; 第一次运行务必打开，初始化数据
+InitData = enable
+
+[server]
+RunMode = release
+HttpPort = 8000
+ReadTimeout = 60
+WriteTimeout = 60
+; 注释EmbedHtml，启用单应用模式
+; EmbedHtml = disable
+
+[database]
+; 关闭SQL打印
+; SqlDebug = enable
+
+Type = mysql
+User = root
+Password = Aa123456
+Host = vm.server
+Port = 3308
+Name = yourDbName
+TablePrefix = message_
+
+```
 6. 启动项目会自动创建表和账号 
 ```shell
 # 第一次运行将app.ini中的app.InitData设置为enable，会自动进行表数据的初始化
