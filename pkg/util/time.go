@@ -53,3 +53,11 @@ func (t *Time) Scan(v interface{}) error {
 	}
 	return fmt.Errorf("can not convert %v to timestamp", v)
 }
+
+// GetNowTimeStr 获取当前的时间字符串
+func GetNowTimeStr() string {
+	currentTimeUTC := time.Now().UTC()
+	chinaTime := currentTimeUTC.Add(8 * time.Hour)
+	formattedTime := chinaTime.Format("2006-01-02 15:04:05")
+	return formattedTime
+}

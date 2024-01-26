@@ -147,6 +147,7 @@ func GetStatisticData() (StatisticData, error) {
 	logt := db.NewScope(SendTasksLogs{}).TableName()
 	inst := db.NewScope(SendTasksIns{}).TableName()
 	wayst := db.NewScope(SendWays{}).TableName()
+	currDay := util.GetNowTimeStr()[:10]
 
 	// 今日统计数据
 	query := db.
@@ -155,7 +156,7 @@ func GetStatisticData() (StatisticData, error) {
 COUNT(*) AS today_total_num,
 SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
 SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
-		Where("DATE(created_on) = CURDATE()")
+		Where("DATE(created_on) = ?", currDay)
 	query.First(&statistic)
 
 	// 最近30天数据
@@ -167,7 +168,7 @@ SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_n
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
     COUNT(*) AS num`).
-		Where(" created_on >= CURDATE() - INTERVAL ? DAY", days).
+		Where(" created_on >= DATE(?) - INTERVAL ? DAY", currDay, days).
 		Group("DATE(created_on)").
 		Order("created_on")
 	queryData.Scan(&latestData)

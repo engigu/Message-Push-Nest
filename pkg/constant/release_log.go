@@ -75,7 +75,7 @@ var LatestVersion = map[string]string{}
 //13. 支持更多的api接入示例
 //`
 
-var LatestVersionS = "v0.0.9"
+var LatestVersionS = "v0.1.0"
 var LatestVersionDesc = `
 1. 单应用打包
 2. 支持邮件发送

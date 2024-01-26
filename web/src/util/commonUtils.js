@@ -20,17 +20,23 @@ class CommonUtils {
   static formatWayName = (type) => {
     return CONSTANT.WAYS_DATA_MAP[type].label;
   }
-  
+
+  // 获取东八区时间字符串 
   static getCurrentTimeStr = () => {
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(currentDate.getDate()).padStart(2, '0');
-    const hours = String(currentDate.getHours()).padStart(2, '0');
-    const minutes = String(currentDate.getMinutes()).padStart(2, '0');
-    const seconds = String(currentDate.getSeconds()).padStart(2, '0');
-    const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    return formattedDate;
+    let time = new Date();
+    const timezoneOffset = 8;
+    const utc = time.getTime() + time.getTimezoneOffset() * 60000;
+    const chinaDate = new Date(utc + timezoneOffset * 60 * 60 * 1000);
+
+    const year = chinaDate.getFullYear();
+    const month = String(chinaDate.getMonth() + 1).padStart(2, '0');
+    const day = String(chinaDate.getDate()).padStart(2, '0');
+    const hour = String(chinaDate.getHours()).padStart(2, '0');
+    const minute = String(chinaDate.getMinutes()).padStart(2, '0');
+    const second = String(chinaDate.getSeconds()).padStart(2, '0');
+
+    const formattedDateTime = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+    return formattedDateTime;
   }
 
 }
