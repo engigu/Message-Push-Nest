@@ -230,7 +230,7 @@ WriteTimeout = 60
 ; use embed html static file
 ; 是否使用embed打包的静态资源
 ; 如果运行release打包后的应用，请注释这个设置。
-; 如果取消这个注释，只会单独运行api服务，前端服务需要到web目录手动npm run dev, 运行前端页面
+; 如果取消这个注释，只会单独运行api服务，前端页面需要到web目录手动npm run dev, 运行前端服务
 ; EmbedHtml = disable   
 
 [database]
