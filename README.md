@@ -202,7 +202,7 @@ go run main.go
 ```shell
 cd web
 npm i
-nom run dev
+npm run dev
 ```
 
 4. 访问`http://127.0.0.1:5173`，进行调试开发，接口会自动转发到go服务`http://localhost:8000`
