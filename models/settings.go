@@ -10,7 +10,7 @@ type Settings struct {
 
 	Section string `json:"section" gorm:"type:varchar(100) comment '实例类型';default:'';index:section"`
 	Key     string `json:"key" gorm:"type:varchar(100) comment '实例类型';default:'';"`
-	Value   string `json:"value" gorm:"type:text comment '实例类型';default:'';"`
+	Value   string `json:"value" gorm:"type:text comment '实例类型';"`
 }
 
 // AddOneSetting 添加一条设置
