@@ -45,9 +45,16 @@ func main() {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
+	startInfo := ""
+	if setting.ServerSetting.RunMode == "debug" {
+		startInfo = fmt.Sprintf("run mode: %s, start message server @ http://localhost%s", setting.ServerSetting.RunMode, endPoint)
+	} else {
+		startInfo = fmt.Sprintf("run mode: %s, start message server @ http://0.0.0.0%s", setting.ServerSetting.RunMode, endPoint)
+	}
+
 	logrus.WithFields(logrus.Fields{
 		"prefix": fmt.Sprintf("[PID:%d]", os.Getpid()),
-	}).Infof("start message server @ http://0.0.0.0%s", endPoint)
+	}).Infof(startInfo)
 
 	err := server.ListenAndServe()
 	if err != nil {
