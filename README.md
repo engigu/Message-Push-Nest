@@ -55,7 +55,10 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 ![image](https://raw.githubusercontent.com/engigu/resources/images/2024/01/26/593a06ac4d1db666acb8a9fb8719e734.gif)
 
 ## 使用方法 🚀
-#### 1.直接运行最新的release打包的可执行文件（推荐，不用部署前端页面）
+
+<details>
+  <summary>1. 直接运行最新的release打包的可执行文件（推荐，不用部署前端页面）</summary>
+
 1. 下载最新的系统版本对应的release， 解压
 2. 新建一个数据库
 3. 重命名conf/app.example.ini为conf/app.ini
@@ -108,7 +111,13 @@ TablePrefix = message_
 ```
 7. 启动项目，访问8000端口，初始账号为admin，密码为123456
 
-#### 2.前后端分离部署（待更新）
+</details>
+
+
+<details>
+  <summary>2. 前后端分离部署（待更新）</summary>
+</details>
+
 
 [//]: # (1. 前端项目构建)
 
@@ -136,7 +145,9 @@ TablePrefix = message_
 
 [//]: # (5. 配置Nginx，将后端接口转发)
 
-#### 3. 开发调试运行
+<details>
+  <summary> 3. 开发调试运行</summary>
+
 1. 重命名conf/app.example.ini为conf/app.ini， 关键配置如下
 ```ini
 [app]
@@ -180,6 +191,8 @@ npm i
 nom run dev
 ```
 4. 访问`http://127.0.0.1:5173`，进行调试开发，接口会自动转发到go服务`http://localhost:8000`
+
+</details>
 
 
 #### 关于EmbedHtml配置的说明
