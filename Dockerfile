@@ -1,9 +1,9 @@
-FROM golang:latest
+FROM ubuntu:latest
 
-ENV GOPROXY https://goproxy.cn,direct
+COPY ./ /app/
+
 WORKDIR /app
-COPY . /app
-RUN go build .
-
 EXPOSE 8000
-ENTRYPOINT ["./Message-Nest"]
+
+CMD ["/app/Message-Nest"]
+
