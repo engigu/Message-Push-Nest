@@ -22,6 +22,10 @@ builds:
 dockers:
   - image_templates: [ "docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64" ]
     dockerfile: Dockerfile
+    extra_files:
+      - LICENSE
+      - README.md
+      - conf/*
     use: buildx
     build_flag_templates:
       - --platform=linux/amd64
@@ -36,6 +40,10 @@ dockers:
   - image_templates: [ "docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8" ]
     goarch: arm64
     dockerfile: Dockerfile
+    extra_files:
+      - LICENSE
+      - README.md
+      - conf/*
     use: buildx
     build_flag_templates:
       - --platform=linux/arm64/v8
