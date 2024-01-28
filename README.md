@@ -249,7 +249,7 @@ Name = yourDbName
 TablePrefix = message_
 
 ```
-6. 使用使用命令启动，端口使用`-p`自定义
+6. 使用命令启动，端口使用`-p`自定义
 ```shell
 docker pull engigu/message-nest:latest
 # 测试运行
@@ -275,7 +275,7 @@ services:
     ports:
       - "8000:8000"
 ```
-3. 文件结构
+3. 文件目录结构
 ```shell
 .
 ├── conf
