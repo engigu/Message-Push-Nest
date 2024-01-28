@@ -347,7 +347,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - INIT_DATA=enable  # 首次运行需要初始化
+      - INIT_DATA=enable  # 首次运行需要初始化，初始化后可以不要去掉这个配置
       - MYSQL_HOST=192.168.64.133
       - MYSQL_PORT=3308
       - MYSQL_USER=root
