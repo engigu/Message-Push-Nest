@@ -351,7 +351,6 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - INIT_DATA=enable  # 首次运行需要初始化，初始化后可以不要去掉这个配置
       - MYSQL_HOST=192.168.64.133
       - MYSQL_PORT=3308
       - MYSQL_USER=root
@@ -361,8 +360,8 @@ services:
 ```
 
 ```shell
-# 测试运行
-docker-compose -up
+# 首次运行初始化数据
+docker run --rm -ti -p 8000:8000 -e INIT_DATA=enable  -e MYSQL_HOST=192.168.64.133  -e MYSQL_PORT=3308 -e MYSQL_USER=root -e MYSQL_PASSWORD=Aa123456 -e MYSQL_DB=test_11 -e MYSQL_TABLE_PREFIX=message_ engigu/message-nest:latest 
 
 # 正式运行
 docker-compose -up -d
