@@ -1,4 +1,5 @@
-FROM ubuntu:latest
+FROM debian:stable
+ENV TZ=Asia/Shanghai
 
 COPY ./ /app/
 

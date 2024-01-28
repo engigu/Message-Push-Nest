@@ -57,6 +57,7 @@ jobs:
 
       - name: Git File Restore
         run: git checkout .
+        working-directory: web/
 
       # More assembly might be required: Docker logins, GPG, etc. It all depends
       # on your needs.

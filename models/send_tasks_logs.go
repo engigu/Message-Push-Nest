@@ -153,10 +153,11 @@ func GetStatisticData() (StatisticData, error) {
 	query := db.
 		Table(logt).
 		Select(`
-COUNT(*) AS today_total_num,
-SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
-SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
+	COUNT(*) AS today_total_num,
+	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
+	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
 		Where("DATE(created_on) = ?", currDay)
+
 	query.First(&statistic)
 
 	// 最近30天数据
@@ -164,13 +165,14 @@ SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_n
 	queryData := db.
 		Table(logt).
 		Select(`
-    CAST(DATE(created_on) AS CHAR) AS day,
+	CAST(DATE(created_on) AS CHAR) AS day,
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
-    COUNT(*) AS num`).
+	COUNT(*) AS num`).
 		Where(" created_on >= DATE(?) - INTERVAL ? DAY", currDay, days).
-		Group("DATE(created_on)").
-		Order("created_on")
+		Group("day").
+		Order("day")
+
 	queryData.Scan(&latestData)
 
 	// 消息实例分类数目

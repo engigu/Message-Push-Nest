@@ -13,9 +13,6 @@ builds:
       - linux
       - windows
       - darwin
-    goarch:
-      - amd64
-      - arm64
     id: "{{ .Env.CUSTOM_PROJ_NAME }}"
     binary: "{{ .Env.CUSTOM_PROJ_NAME }}"
 
