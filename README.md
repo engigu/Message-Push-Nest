@@ -213,7 +213,7 @@ npm run dev
   <summary>4. docker/docker-compose部署（推荐）</summary>
 
 <details>
-  <summary>docker部署</summary>
+  <summary>docker挂载app.ini部署</summary>
 
 1. 新建一个数据库，准备一个conf文件夹
 2. 新增conf/app.ini
@@ -265,7 +265,7 @@ docker run -d -p 8000:8000 -v /your/path/conf:/app/conf engigu/message-nest:late
 </details>
 
 <details>
-  <summary>docker-compose部署</summary>
+  <summary>docker-compose挂载app.ini部署</summary>
 
 1. 准备app.ini，文件内容如上docker部署
 2. 准备docker-compose.yml，内容如下：
