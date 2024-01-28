@@ -35,7 +35,7 @@ func getMustEnvValue(key string) string {
 // printOptionValue 打印可选环境变量值
 func printOptionValue() {
 	for key, val := range optionValueMap {
-		log.Printf("[message-nest] current option env : %s, value: %s", key, val)
+		log.Printf("[message-nest] current option env: %s, value: %s", key, val)
 	}
 }
 

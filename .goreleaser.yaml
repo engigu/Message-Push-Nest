@@ -22,7 +22,6 @@ dockers:
     extra_files:
       - LICENSE
       - README.md
-      - conf/
     use: buildx
     build_flag_templates:
       - --platform=linux/amd64
@@ -40,7 +39,6 @@ dockers:
     extra_files:
       - LICENSE
       - README.md
-      - conf/
     use: buildx
     build_flag_templates:
       - --platform=linux/arm64/v8

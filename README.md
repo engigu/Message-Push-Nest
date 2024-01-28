@@ -210,9 +210,10 @@ npm run dev
 </details>
 
 <details>
-  <summary>4. docker/docker-compose部署</summary>
+  <summary>4. docker/docker-compose部署（推荐）</summary>
 
-docker部署
+<details>
+  <summary>docker部署</summary>
 
 1. 新建一个数据库，准备一个conf文件夹
 2. 新增conf/app.ini
@@ -249,7 +250,9 @@ Name = yourDbName
 TablePrefix = message_
 
 ```
+
 6. 使用命令启动，端口使用`-p`自定义
+
 ```shell
 docker pull engigu/message-nest:latest
 # 测试运行
@@ -257,11 +260,16 @@ docker run --rm -ti -p 8000:8000 -v /your/path/conf:/app/conf engigu/message-nes
 # 正式运行
 docker run -d -p 8000:8000 -v /your/path/conf:/app/conf engigu/message-nest:latest 
 ```
-7. 启动项目，访问8000端口，初始账号为admin，密码为123456
 
-docker-compose部署
+7. 启动项目，访问8000端口，初始账号为admin，密码为123456
+</details>
+
+<details>
+  <summary>docker-compose部署</summary>
+
 1. 准备app.ini，文件内容如上docker部署
 2. 准备docker-compose.yml，内容如下：
+
 ```yml
 version: "3.7"
 services:
@@ -275,7 +283,9 @@ services:
     ports:
       - "8000:8000"
 ```
+
 3. 文件目录结构
+
 ```shell
 .
 ├── conf
@@ -283,13 +293,78 @@ services:
 ├── docker-compose.yml
 
 ```
+
 4. 启动项目
+
 ```shell
 # 测试运行
 docker-compose up
 # 正式运行
 docker-compose up -d
 ```
+</details>
+
+<details>
+  <summary>docker/docker-compose环境变量部署（推荐）</summary>
+
+环境变量介绍
+
+```shell
+JWT_SECRET   jwt秘钥，可选，默认为message-nest
+LOG_LEVEL    日志等级，可选，默认为INFO，DEBUG/INFO/ERROR
+INIT_DATA    是否初始化数据，可选，默认关，第一次运行需要将该值设置为enable
+RUN_MODE     运行模式，可选，默认release，为debug将自动添加跨域
+
+MYSQL_HOST    mysql-host，必填
+MYSQL_PORT    mysql端口，必填
+MYSQL_USER    mysql用户名，必填
+MYSQL_PASSWORD    mysql密码，必填
+MYSQL_DB     mysql数据库名字，必填
+MYSQL_TABLE_PREFIX     mysql数据表前缀，必填
+SQL_DEBUG     是否打印SQL，可选，默认关，设置enable为开启
+```
+
+docker运行
+
+```shell
+# 首次运行初始化数据
+docker run --rm -ti -p 8000:8000 -e INIT_DATA=enable  -e MYSQL_HOST=192.168.64.133  -e MYSQL_PORT=3308 -e MYSQL_USER=root -e MYSQL_PASSWORD=Aa123456 -e MYSQL_DB=test_11 -e MYSQL_TABLE_PREFIX=message_ engigu/message-nest:latest 
+
+# 正式运行
+docker run -d  -p 8000:8000 -e INIT_DATA=enable  -e MYSQL_HOST=192.168.64.133  -e MYSQL_PORT=3308 -e MYSQL_USER=root -e MYSQL_PASSWORD=Aa123456 -e MYSQL_DB=test_11 -e MYSQL_TABLE_PREFIX=message_ engigu/message-nest:latest 
+```
+
+docker-compose运行
+
+```yml
+version: "3.7"
+services:
+
+  message-nest:
+    image: engigu/message-nest:latest
+    container_name: message-nest
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - INIT_DATA=enable  # 首次运行需要初始化
+      - MYSQL_HOST=192.168.64.133
+      - MYSQL_PORT=3308
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=Aa123456
+      - MYSQL_DB=test_11
+      - MYSQL_TABLE_PREFIX=message_
+```
+
+```shell
+# 测试运行
+docker-compose -up
+
+# 正式运行
+docker-compose -up -d
+```
+
+</details>
 
 </details>
 
@@ -399,7 +474,7 @@ TablePrefix = message_
 
 参考各种语言的接口进行调用
 
-</details>
+</details></details>
 
 ## 贡献 🤝
 
