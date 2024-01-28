@@ -325,6 +325,7 @@ InitData = enable
 
 [server]
 ; debug or release
+; debug模式下会自动添加跨域headers
 RunMode = release
 HttpPort = 8000
 ReadTimeout = 60
