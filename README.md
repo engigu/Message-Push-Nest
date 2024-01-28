@@ -315,13 +315,13 @@ LOG_LEVEL    日志等级，可选，默认为INFO，DEBUG/INFO/ERROR
 INIT_DATA    是否初始化数据，可选，默认关，第一次运行需要将该值设置为enable
 RUN_MODE     运行模式，可选，默认release，为debug将自动添加跨域
 
-MYSQL_HOST    mysql-host，必填
-MYSQL_PORT    mysql端口，必填
-MYSQL_USER    mysql用户名，必填
-MYSQL_PASSWORD    mysql密码，必填
-MYSQL_DB     mysql数据库名字，必填
+MYSQL_HOST             mysql-host，必填
+MYSQL_PORT             mysql端口，必填
+MYSQL_USER             mysql用户名，必填
+MYSQL_PASSWORD         mysql密码，必填
+MYSQL_DB               mysql数据库名字，必填
 MYSQL_TABLE_PREFIX     mysql数据表前缀，必填
-SQL_DEBUG     是否打印SQL，可选，默认关，设置enable为开启
+SQL_DEBUG              是否打印SQL，可选，默认关，设置enable为开启
 ```
 
 docker运行
