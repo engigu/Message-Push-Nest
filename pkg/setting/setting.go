@@ -71,6 +71,7 @@ func Setup() {
 
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
+
 }
 
 // mapTo map section

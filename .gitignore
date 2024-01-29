@@ -31,3 +31,5 @@ go.work
 /conf/app.ini
 /runtime
 .idea/
+.release_version
+
