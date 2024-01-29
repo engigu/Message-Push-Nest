@@ -260,12 +260,20 @@ TablePrefix = message_
 ```shell
 docker pull engigu/message-nest:latest
 # 测试运行
-docker run --rm -ti -p 8000:8000 -v /your/path/conf:/app/conf engigu/message-nest:latest 
+docker run --rm -ti \
+  -p 8000:8000 \
+  -v /your/path/conf:/app/conf \
+  engigu/message-nest:latest 
+  
 # 正式运行
-docker run -d -p 8000:8000 -v /your/path/conf:/app/conf engigu/message-nest:latest 
+docker run -d \
+  -p 8000:8000 \
+  -v /your/path/conf:/app/conf \
+  engigu/message-nest:latest 
 ```
 
 7. 启动项目，访问8000端口，初始账号为admin，密码为123456
+
 </details>
 
 <details>
@@ -306,36 +314,54 @@ docker-compose up
 # 正式运行
 docker-compose up -d
 ```
+
 </details>
 
 <details>
-  <summary>docker/docker-compose环境变量部署（推荐🍀🍀🍀🍀）</summary>
+  <summary>docker/docker-compose环境变量部署（推荐🍀🍀🍀🍀🍀）</summary>
 
 环境变量介绍
 
-```shell
-JWT_SECRET   jwt秘钥，可选，默认为message-nest
-LOG_LEVEL    日志等级，可选，默认为INFO，DEBUG/INFO/ERROR
-INIT_DATA    是否初始化数据，可选，默认关，第一次运行需要将该值设置为enable
-RUN_MODE     运行模式，可选，默认release，为debug将自动添加跨域
-
-MYSQL_HOST             mysql-host，必填
-MYSQL_PORT             mysql端口，必填
-MYSQL_USER             mysql用户名，必填
-MYSQL_PASSWORD         mysql密码，必填
-MYSQL_DB               mysql数据库名字，必填
-MYSQL_TABLE_PREFIX     mysql数据表前缀，必填
-SQL_DEBUG              是否打印SQL，可选，默认关，设置enable为开启
-```
+| 变量                 | 说明                                 | 
+|--------------------|------------------------------------|
+| JWT_SECRET         | jwt秘钥，可选，默认为message-nest           |
+| LOG_LEVEL          | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR   |
+| INIT_DATA          | 是否初始化数据，可选，默认关，第一次运行需要将该值设置为enable |
+| RUN_MODE           | 运行模式，可选，默认release，为debug将自动添加跨域    |
+|                    |                                    |
+| MYSQL_HOST         | mysql-host，必填                      |
+| MYSQL_PORT         | mysql端口，必填                         |
+| MYSQL_USER         | mysql用户名，必填                        |
+| MYSQL_PASSWORD     | mysql数据库名字，必填                      |
+| MYSQL_DB           | mysql数据库名字，必填                      |
+| MYSQL_TABLE_PREFIX | mysql数据表前缀，必填                      |
+| SQL_DEBUG          | 是否打印SQL，可选，默认关，设置enable为开启         |
 
 docker运行
 
 ```shell
-# 首次运行初始化数据
-docker run --rm -ti -p 8000:8000 -e INIT_DATA=enable  -e MYSQL_HOST=192.168.64.133  -e MYSQL_PORT=3308 -e MYSQL_USER=root -e MYSQL_PASSWORD=Aa123456 -e MYSQL_DB=test_11 -e MYSQL_TABLE_PREFIX=message_ engigu/message-nest:latest 
+# 首次运行指定INIT_DATA=enable初始化数据
+docker run --rm -ti \
+  -p 8000:8000 \
+  -e INIT_DATA=enable \
+  -e MYSQL_HOST=192.168.64.133 \
+  -e MYSQL_PORT=3308 \
+  -e MYSQL_USER=root \
+  -e MYSQL_PASSWORD=Aa123456 \
+  -e MYSQL_DB=test_11 \
+  -e MYSQL_TABLE_PREFIX=message_ \
+  engigu/message-nest:latest 
 
 # 正式运行
-docker run -d  -p 8000:8000 -e INIT_DATA=enable  -e MYSQL_HOST=192.168.64.133  -e MYSQL_PORT=3308 -e MYSQL_USER=root -e MYSQL_PASSWORD=Aa123456 -e MYSQL_DB=test_11 -e MYSQL_TABLE_PREFIX=message_ engigu/message-nest:latest 
+docker run -d  \
+  -p 8000:8000 \
+  -e MYSQL_HOST=192.168.64.133  \
+  -e MYSQL_PORT=3308 \
+  -e MYSQL_USER=root \
+  -e MYSQL_PASSWORD=Aa123456 \
+  -e MYSQL_DB=test_11 \
+  -e MYSQL_TABLE_PREFIX=message_ \
+  engigu/message-nest:latest 
 ```
 
 docker-compose运行
@@ -360,9 +386,18 @@ services:
 ```
 
 ```shell
-# 首次运行初始化数据
-docker run --rm -ti -p 8000:8000 -e INIT_DATA=enable  -e MYSQL_HOST=192.168.64.133  -e MYSQL_PORT=3308 -e MYSQL_USER=root -e MYSQL_PASSWORD=Aa123456 -e MYSQL_DB=test_11 -e MYSQL_TABLE_PREFIX=message_ engigu/message-nest:latest 
-
+# 首次运行指定INIT_DATA=enable初始化数据
+docker run --rm -ti \
+  -p 8000:8000 \
+  -e INIT_DATA=enable \
+  -e MYSQL_HOST=192.168.64.133 \
+  -e MYSQL_PORT=3308 \
+  -e MYSQL_USER=root \
+  -e MYSQL_PASSWORD=Aa123456 \
+  -e MYSQL_DB=test_11 \
+  -e MYSQL_TABLE_PREFIX=message_ \
+  engigu/message-nest:latest 
+  
 # 正式运行
 docker-compose -up -d
 ```
