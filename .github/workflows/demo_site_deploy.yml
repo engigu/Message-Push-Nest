@@ -35,6 +35,13 @@ jobs:
         run: ls dist/ -la
         working-directory: web/
 
+      - name: Get Release version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+
+      - name: Update Local Version File
+        run: echo ${{ steps.get_version.outputs.VERSION }} > .release_version
+
       - name: Install Go modules
         run: go mod tidy
 
