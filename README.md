@@ -66,7 +66,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 ## 使用方法 🚀
 
 <details>
-  <summary>1. 直接运行最新的release打包的可执行文件（推荐，不用部署前端页面）</summary>
+  <summary>1. 直接运行最新的release打包的可执行文件（推荐，不用部署前端页面🍀🍀）</summary>
 
 1. 下载最新的系统版本对应的release， 解压
 2. 新建一个数据库
@@ -214,7 +214,7 @@ npm run dev
 </details>
 
 <details>
-  <summary>4. docker/docker-compose部署（推荐）</summary>
+  <summary>4. docker/docker-compose部署（推荐🍀🍀🍀）</summary>
 
 <details>
   <summary>docker挂载app.ini部署</summary>
@@ -309,7 +309,7 @@ docker-compose up -d
 </details>
 
 <details>
-  <summary>docker/docker-compose环境变量部署（推荐）</summary>
+  <summary>docker/docker-compose环境变量部署（推荐🍀🍀🍀🍀）</summary>
 
 环境变量介绍
 
