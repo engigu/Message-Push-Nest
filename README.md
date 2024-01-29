@@ -332,7 +332,7 @@ docker-compose up -d
 | MYSQL_HOST         | mysql-host，必填                      |
 | MYSQL_PORT         | mysql端口，必填                         |
 | MYSQL_USER         | mysql用户名，必填                        |
-| MYSQL_PASSWORD     | mysql数据库名字，必填                      |
+| MYSQL_PASSWORD     | mysql数据库密码，必填                      |
 | MYSQL_DB           | mysql数据库名字，必填                      |
 | MYSQL_TABLE_PREFIX | mysql数据表前缀，必填                      |
 | SQL_DEBUG          | 是否打印SQL，可选，默认关，设置enable为开启         |
