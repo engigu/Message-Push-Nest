@@ -40,7 +40,7 @@ func DoSendMassage(c *gin.Context) {
 		MarkDown: req.MarkDown,
 		CallerIp: c.ClientIP(),
 		DefaultLogger: logrus.WithFields(logrus.Fields{
-			"prefix": "[Message Instance]",
+			//"prefix": "[Message Instance]",
 		}),
 	}
 	task, err := msgService.SendPreCheck()
