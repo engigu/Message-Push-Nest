@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"message-nest/migrate"
 	"message-nest/models"
+	"message-nest/pkg/constant"
 	"message-nest/pkg/logging"
 	"message-nest/pkg/setting"
 	"message-nest/routers"
@@ -18,9 +19,13 @@ import (
 var (
 	//go:embed web/dist/*
 	f embed.FS
+
+	//go:embed .release*
+	rf embed.FS
 )
 
 func init() {
+	constant.InitReleaseInfo(rf)
 	setting.Setup()
 	logging.Setup()
 	migrate.Setup()

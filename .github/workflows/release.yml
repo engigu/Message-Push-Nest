@@ -59,6 +59,13 @@ jobs:
         run: git checkout .
         working-directory: web/
 
+      - name: Get Release version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+
+      - name: Update Local Version File
+        run: echo ${{ steps.get_version.outputs.VERSION }} > .release_version
+
       # More assembly might be required: Docker logins, GPG, etc. It all depends
       # on your needs.
       - uses: goreleaser/goreleaser-action@v5
