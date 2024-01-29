@@ -1,7 +1,9 @@
 package v1
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"message-nest/pkg/app"
 	"message-nest/pkg/e"
 	"message-nest/service/send_message_service"
@@ -37,18 +39,26 @@ func DoSendMassage(c *gin.Context) {
 		HTML:     req.HTML,
 		MarkDown: req.MarkDown,
 		CallerIp: c.ClientIP(),
+		DefaultLogger: logrus.WithFields(logrus.Fields{
+			"prefix": "[Message Instance]",
+		}),
+	}
+	task, err := msgService.SendPreCheck()
+	if err != nil {
+		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("发送检查不通过：%s", err), nil)
+		return
 	}
 	if req.Mode == "sync" {
 		// 同步发送
-		err := msgService.Send()
-		if err != "" {
+		_, err := msgService.Send(task)
+		if err != nil {
 			appG.CResponse(http.StatusBadRequest, "发送失败！", nil)
 			return
 		}
 		appG.CResponse(http.StatusOK, "发送成功！", nil)
 	} else {
 		// 异步发送
-		msgService.AsyncSend()
+		msgService.AsyncSend(task)
 		appG.CResponse(http.StatusOK, "提交成功！", nil)
 	}
 }

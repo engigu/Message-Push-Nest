@@ -15,7 +15,12 @@ var ClearLogsTaskId cron.EntryID
 // ClearLogs 清除日志的定时任务
 func ClearLogs() {
 	var errStr string
-	sm := send_message_service.SendMessageService{TaskID: constant.CleanLogsTaskId}
+	sm := send_message_service.SendMessageService{
+		TaskID: constant.CleanLogsTaskId,
+		DefaultLogger: logrus.WithFields(logrus.Fields{
+			"prefix": "[Cron Clear Logs]",
+		}),
+	}
 	sm.Status = send_message_service.SendSuccess
 
 	sm.LogsAndStatusMark("开始清除日志", sm.Status)
