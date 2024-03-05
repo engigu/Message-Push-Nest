@@ -541,6 +541,11 @@ TablePrefix = message_
 
 该项目汲取了[go-gin-example](https://github.com/eddycjy/go-gin-example)项目的灵感，展示了 Go 和 Gin 在实际应用中的强大和多才多艺。
 
+## Star History ⭐
+
+[![Star History Chart](https://api.star-history.com/svg?repos=engigu/Message-Push-Nest&type=Date)](https://star-history.com/#engigu/Message-Push-Nest&Date)
+
+
 ## 许可证 📝
 
 [LICENSE](LICENSE)
