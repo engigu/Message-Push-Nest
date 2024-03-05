@@ -49,6 +49,13 @@ type WayDetailCustom struct {
 	Body    string `json:"body" validate:"max=2000" label:"自定义的请求体"`
 }
 
+// WeChatOFAccount 微信公众号
+type WeChatOFAccount struct {
+	AppID     string `json:"appID" validate:"required,max=200" label:"微信公众号id"`
+	APPSecret string `json:"appsecret" validate:"max=2000" label:"微信公众号秘钥"`
+	TempID    string `json:"tempid" validate:"max=2000" label:"模板消息id"`
+}
+
 func (sw *SendWay) GetByID() (interface{}, error) {
 	return models.GetWayByID(sw.ID)
 }
@@ -155,6 +162,14 @@ func (sw *SendWay) ValidateDiffWay() (string, interface{}) {
 		}
 		_, Msg := app.CommonPlaygroundValid(custom)
 		return Msg, custom
+	} else if sw.Type == "WeChatOFAccount" {
+		var wca WeChatOFAccount
+		err := json.Unmarshal([]byte(sw.Auth), &wca)
+		if err != nil {
+			return "微信公众号反序列化失败！", empty
+		}
+		_, Msg := app.CommonPlaygroundValid(wca)
+		return Msg, wca
 	}
 	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), empty
 }
@@ -192,18 +207,13 @@ func (sw *SendWay) TestSendWay(msgObj interface{}) (string, string) {
 		}
 		return "", string(res)
 	}
-	customAuth, ok := msgObj.(WayDetailCustom)
+	_, ok = msgObj.(WeChatOFAccount)
 	if ok {
-		var cli = message.CustomWebhook{}
-		data, _ := json.Marshal(testMsg)
-		dataStr := string(data)
-		dataStr = strings.Trim(dataStr, "\"")
-		bodyStr := strings.Replace(customAuth.Body, "TEXT", dataStr, -1)
-		res, err := cli.Request(customAuth.Webhook, bodyStr)
-		if err != nil {
-			return fmt.Sprintf("发送失败：%s", err), string(res)
-		}
-		return "", string(res)
+		//var cli = message.WeChatOFAccount{
+		//	AppID:     wca.AppID,
+		//	AppSecret: wca.APPSecret,
+		//}
+		return "微信公众号模板消息不用测试运行，请直接添加", ""
 	}
 	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), ""
 }

@@ -15,7 +15,11 @@ type SendTasksIns struct {
 // InsEmailConfig 实例里面的邮箱config
 type InsEmailConfig struct {
 	ToAccount string `json:"to_account" validate:"required,email" label:"收件邮箱"`
-	//Title     string `json:"title" validate:"required,max=150" label:"邮箱标题"`
+}
+
+// InsWeChatAccountConfig 实例里面的邮箱config
+type InsWeChatAccountConfig struct {
+	ToAccount string `json:"to_account" validate:"required" label:"收件微信Openid"`
 }
 
 // InsEmailConfig 实例里面的邮箱config

@@ -28,6 +28,7 @@ type SendMessageService struct {
 	Title    string
 	Text     string
 	HTML     string
+	URL      string
 	MarkDown string
 	CallerIp string
 
@@ -180,6 +181,15 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 		if ok {
 			cs := CustomService{}
 			res, errMsg := cs.SendCustomMessage(customAuth, ins.SendTasksIns, typeC, sm.Title, content)
+			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
+			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+			continue
+		}
+		// 微信公众号模板消息的实例发送
+		wca, ok := msgObj.(send_way_service.WeChatOFAccount)
+		if ok {
+			cs := WeChatOfAccountService{}
+			res, errMsg := cs.SendWeChatOfAccountMessage(wca, ins.SendTasksIns, typeC, sm.Title, content, sm.URL)
 			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
 			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 			continue

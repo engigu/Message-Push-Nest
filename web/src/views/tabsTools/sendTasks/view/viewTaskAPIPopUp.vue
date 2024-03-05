@@ -6,7 +6,9 @@
         <template #content>
           一个任务可能关联多个不同渠道的实例
           <br />
-          实例的内容类型大体上可以可以分为text、html、markdown
+          实例的内容类型大体上可以可以分为text、html、markdown          
+          <br />
+          微信测试公众号需要额外传递url字段，可以跳转到消息的详情地址
           <br />
           发送的消息会优先选择相应的类型消息进行发送，如果没有，将使用传的text消息进行发送
           <br />
@@ -84,6 +86,9 @@ export default defineComponent({
       let viewOptions = {}
       insTableData.forEach(element => {
         viewOptions[element.content_type] = 1;
+        if (element.way_type == "WeChatOFAccount") {
+          viewOptions['url'] = 1;
+        }
       });
       return viewOptions
     }

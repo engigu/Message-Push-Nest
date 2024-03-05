@@ -48,6 +48,15 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		_, Msg := app.CommonPlaygroundValid(Config)
 		return Msg, Config
 	}
+	if ins.WayType == "WeChatOFAccount" {
+		var Config models.InsWeChatAccountConfig
+		err := json.Unmarshal([]byte(ins.Config), &Config)
+		if err != nil {
+			return "微信公众号发送配置反序列化失败！", empty
+		}
+		_, Msg := app.CommonPlaygroundValid(Config)
+		return Msg, Config
+	}
 	return "未知的渠道的config校验", empty
 }
 

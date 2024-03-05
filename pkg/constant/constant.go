@@ -30,3 +30,5 @@ const AboutSectionName = "about"
 
 // 限制goroutine的最大数量
 var MaxSendTaskSemaphoreChan = make(chan string, 2048)
+
+// 内存缓存存放所有的微信公共号的缓存实例

@@ -16,6 +16,9 @@ class ApiStrGenerate {
         if (options.markdown) {
             data.markdown = '**Hello World!**';
         }
+        if (options.url) {
+            data.url = 'https://github.com';
+        }
         let dataStr = JSON.stringify(data, null, 4);
         return dataStr
     }

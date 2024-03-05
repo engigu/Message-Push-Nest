@@ -84,6 +84,25 @@ const CONSTANT = {
             taskInsInputs: [
             ],
         },
+        {
+            type: 'WeChatOFAccount',
+            label: '微信测试公众号模板消息',
+            inputs: [
+                { subLabel: 'appID', value: '', col: 'appID', desc: "公众号appid" },
+                { subLabel: 'appsecret', value: '', col: 'appsecret', desc: "公众号appsecret" },
+                { subLabel: '模板id', value: '', col: 'tempid', desc: "模板消息id" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "公众号消息说明", desc: "微信测试公众号模板消息发送，token使用内存缓存，<br />秘钥请访问 https://mp.weixin.qq.com/debug/cgi-bin/sandboxinfo?action=showinfo&t=sandbox/index"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+                { value: '', col: 'to_account', desc: "要发送的OpenId（登录微信公众号后台查看）" },
+            ],
+        },
     ],
     API_VIEW_DATA: [
         { label: "curl", class: "language-shell line-numbers", code: "", func: ApiStrGenerate.getCurlString },
