@@ -18,8 +18,8 @@ type auth struct {
 }
 
 type ReqAuth struct {
-	Username string `json:"username" validate:"required,max=36" label:"用户名"`
-	Password string `json:"passwd" validate:"required,max=36" label:"密码"`
+	Username string `json:"username" validate:"required,max=50" label:"用户名"`
+	Password string `json:"passwd" validate:"required,max=50" label:"密码"`
 }
 
 func GetAuth(c *gin.Context) {
