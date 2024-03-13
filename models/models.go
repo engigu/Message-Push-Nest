@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	_ "github.com/glebarez/sqlite"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"log"
@@ -13,7 +14,7 @@ import (
 var db *gorm.DB
 
 type IDModel struct {
-	ID int `gorm:"type:int(11) AUTO_INCREMENT comment 'id';primary_key" json:"id"`
+	ID int `gorm:"type:int(11) AUTOINCREMENT comment 'id';primary_key" json:"id"`
 
 	CreatedBy  string    `json:"created_by" gorm:"type:varchar(100) comment '创建人';default:'';"`
 	ModifiedBy string    `json:"modified_by" gorm:"type:varchar(100) comment '修改人';default:'';"`
@@ -33,13 +34,17 @@ type UUIDModel struct {
 // Setup initializes the database instance
 func Setup() *gorm.DB {
 	var err error
-	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		setting.DatabaseSetting.User,
-		setting.DatabaseSetting.Password,
-		setting.DatabaseSetting.Host,
-		setting.DatabaseSetting.Port,
-		setting.DatabaseSetting.Name)
-	db, err = gorm.Open(setting.DatabaseSetting.Type, connStr)
+	if setting.DatabaseSetting.Type == "sqlite" {
+		db, err = gorm.Open("sqlite", "message-nest.db")
+	} else {
+		connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+			setting.DatabaseSetting.User,
+			setting.DatabaseSetting.Password,
+			setting.DatabaseSetting.Host,
+			setting.DatabaseSetting.Port,
+			setting.DatabaseSetting.Name)
+		db, err = gorm.Open(setting.DatabaseSetting.Type, connStr)
+	}
 
 	if err != nil {
 		log.Fatalf("models.Setup err: %v", err)

@@ -6,7 +6,7 @@ import (
 )
 
 type Auth struct {
-	ID       int    `json:"id" gorm:"type:int(11) AUTO_INCREMENT comment 'id';primary_key" json:"id"`
+	ID       int    `json:"id" gorm:"type:int(11) AUTOINCREMENT comment 'id';primary_key" json:"id"`
 	Username string `json:"username" gorm:"type:varchar(100) comment '用户名';default:'';"`
 	Password string `json:"password" gorm:"type:varchar(100) comment '密码';default:'';"`
 }

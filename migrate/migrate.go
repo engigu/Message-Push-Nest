@@ -50,6 +50,7 @@ func Setup() {
 		}
 	}(db)
 
+	println("xxxxxxxxxxxx", setting.AppSetting.InitData)
 	if setting.AppSetting.InitData != "enable" {
 		return
 	}

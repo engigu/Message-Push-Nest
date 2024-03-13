@@ -39,6 +39,12 @@ func printOptionValue() {
 	}
 }
 
+// initSQLiteDBFile 初始化sqlite文件
+func initSQLiteDBFile() {
+	// 创建文件夹
+
+}
+
 // loadConfigFromEnv 从环境变量加载配置
 func loadConfigFromEnv() {
 	AppSetting.JwtSecret = getOptionEnvValue("JWT_SECRET", "message-nest")
@@ -50,14 +56,18 @@ func loadConfigFromEnv() {
 	ServerSetting.ReadTimeout = 60
 	ServerSetting.WriteTimeout = 60
 
-	DatabaseSetting.Type = "mysql"
-	DatabaseSetting.Host = getMustEnvValue("MYSQL_HOST")
-	DatabaseSetting.Port = com.StrTo(getMustEnvValue("MYSQL_PORT")).MustInt()
-	DatabaseSetting.User = getMustEnvValue("MYSQL_USER")
-	DatabaseSetting.Password = getMustEnvValue("MYSQL_PASSWORD")
-	DatabaseSetting.Name = getMustEnvValue("MYSQL_DB")
-	DatabaseSetting.TablePrefix = getMustEnvValue("MYSQL_TABLE_PREFIX")
-	DatabaseSetting.SqlDebug = getOptionEnvValue("SQL_DEBUG", "disable")
-
+	//DatabaseSetting.Type = getOptionEnvValue("DB_TYPE", "mysql")
+	DatabaseSetting.Type = "sqlite"
+	if DatabaseSetting.Type == "mysql" {
+		DatabaseSetting.Host = getMustEnvValue("MYSQL_HOST")
+		DatabaseSetting.Port = com.StrTo(getMustEnvValue("MYSQL_PORT")).MustInt()
+		DatabaseSetting.User = getMustEnvValue("MYSQL_USER")
+		DatabaseSetting.Password = getMustEnvValue("MYSQL_PASSWORD")
+		DatabaseSetting.Name = getMustEnvValue("MYSQL_DB")
+		DatabaseSetting.TablePrefix = getMustEnvValue("MYSQL_TABLE_PREFIX")
+		DatabaseSetting.SqlDebug = getOptionEnvValue("SQL_DEBUG", "disable")
+	} else if DatabaseSetting.Type == "sqlite" {
+		AppSetting.InitData = "enable"
+	}
 	printOptionValue()
 }
