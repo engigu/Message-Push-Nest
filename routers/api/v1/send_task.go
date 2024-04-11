@@ -134,3 +134,26 @@ func EditMsgSendTask(c *gin.Context) {
 
 	appG.CResponse(http.StatusOK, "编辑发信任务成功！", nil)
 }
+
+// GetMsgSendTask 获取消息任务
+func GetMsgSendTask(c *gin.Context) {
+	appG := app.Gin{C: c}
+	id := c.Query("id")
+
+	if id == "" {
+		appG.CResponse(http.StatusBadRequest, "任务id为空！", nil)
+		return
+	}
+
+	sendTaskService := send_task_service.SendTaskService{
+		ID: id,
+	}
+
+	task, err := sendTaskService.GetByID()
+	if err != nil {
+		appG.CResponse(http.StatusBadRequest, "获取到的任务信息为空！", nil)
+		return
+	}
+
+	appG.CResponse(http.StatusOK, "获取任务信息成功", task)
+}

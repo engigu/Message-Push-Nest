@@ -46,7 +46,7 @@ func AddTask(task ScheduledTask) cron.EntryID {
 		logrus.Errorf("注册定时任务失败, job: %s, 原因：%s", jobName, err)
 	} else {
 		TaskList[taskId] = &task
-		logrus.Infof("注册定时任务成功, job: %s, entryID: %d, cron: %s", jobName, taskId, task.Schedule)
+		//logrus.Infof("注册定时任务成功, job: %s, entryID: %d, cron: %s", jobName, taskId, task.Schedule)
 	}
 	return taskId
 }

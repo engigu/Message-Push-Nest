@@ -28,6 +28,11 @@ const router = createRouter({
       component: () => import('../views/tabsTools/sendTasks/sendTasks.vue')
     },
     {
+      path: '/sendmessages',
+      name: 'sendmessages',
+      component: () => import('../views/tabsTools/sendMessage/sensMessage.vue')
+    },
+    {
       path: '/sendlogs',
       name: 'sendlogs',
       component: () => import('../views/tabsTools/sendLogs/sendLogs.vue')

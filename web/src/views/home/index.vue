@@ -35,9 +35,10 @@ export default {
     const menuData = reactive([
       { id: '0', title: '数据统计', path: '/statistic' },
       { id: '1', title: '发信日志', path: '/sendlogs' },
-      { id: '2', title: '发信任务', path: '/sendtasks' },
-      { id: '3', title: '发信渠道', path: '/sendways' },
-      { id: '4', title: '设置', path: '/settings' },
+      { id: '2', title: '定时发信', path: '/sendmessages' },
+      { id: '3', title: '发信任务', path: '/sendtasks' },
+      { id: '4', title: '发信渠道', path: '/sendways' },
+      { id: '5', title: '设置', path: '/settings' },
     ]);
 
     const checkIsLogin = () => {

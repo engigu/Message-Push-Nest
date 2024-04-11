@@ -1,5 +1,7 @@
 package constant
 
+import "github.com/robfig/cron/v3"
+
 const CleanLogsTaskId = "T-IM1GBswSRY"
 const SiteSettingSectionName = "site_config"
 
@@ -31,4 +33,5 @@ const AboutSectionName = "about"
 // 限制goroutine的最大数量
 var MaxSendTaskSemaphoreChan = make(chan string, 2048)
 
-// 内存缓存存放所有的微信公共号的缓存实例
+// cron消息任务内存缓存map
+var CronMsgIdMapMemoryCache = make(map[string]cron.EntryID)
