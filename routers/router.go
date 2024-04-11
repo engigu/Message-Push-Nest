@@ -62,6 +62,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 		apiV1.POST("/sendtasks/add", v1.AddMsgSendTask)
 		apiV1.POST("/sendtasks/delete", v1.DeleteMsgSendTask)
 		apiV1.POST("/sendtasks/edit", v1.EditMsgSendTask)
+		apiV1.GET("/sendtasks/get", v1.GetMsgSendTask)
 
 		// sendtasks/ins
 		apiV1.POST("/sendtasks/ins/addmany", v1.AddManyTasksIns)
@@ -83,6 +84,12 @@ func InitRouter(f embed.FS) *gin.Engine {
 
 		// statistic
 		apiV1.GET("/statistic", v1.GetStatisticData)
+
+		// cronMessage
+		apiV1.POST("/sendmessages/addone", v1.AddCronMsgTask)
+		apiV1.GET("/sendmessages/list", v1.GetCronMsgList)
+		apiV1.POST("/sendmessages/delete", v1.DeleteCronMsgTask)
+		apiV1.POST("/sendmessages/edit", v1.EditCronMsgTask)
 
 	}
 

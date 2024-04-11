@@ -11,6 +11,7 @@ import (
 	"message-nest/pkg/logging"
 	"message-nest/pkg/setting"
 	"message-nest/routers"
+	"message-nest/service/cron_msg_service"
 	"message-nest/service/cron_service"
 	"net/http"
 	"os"
@@ -34,6 +35,7 @@ func init() {
 
 func main() {
 	cron_service.StartLogsCronRun()
+	cron_msg_service.StartUpMsgCronTask()
 
 	gin.SetMode(setting.ServerSetting.RunMode)
 	routersInit := routers.InitRouter(f)

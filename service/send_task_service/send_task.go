@@ -51,3 +51,7 @@ func (st *SendTaskService) getMaps() map[string]interface{} {
 	maps := make(map[string]interface{})
 	return maps
 }
+
+func (st *SendTaskService) GetByID() (interface{}, error) {
+	return models.GetTaskByID(st.ID)
+}

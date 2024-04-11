@@ -174,3 +174,12 @@ func EditSendTask(id string, data interface{}) error {
 
 	return nil
 }
+
+func GetTaskByID(id string) (SendTasks, error) {
+	var task SendTasks
+	err := db.Where("id = ? ", id).Find(&task).Error
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		return task, err
+	}
+	return task, nil
+}
