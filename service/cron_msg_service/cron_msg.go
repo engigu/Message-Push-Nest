@@ -1,8 +1,16 @@
 package cron_msg_service
 
 import (
+	"github.com/robfig/cron/v3"
 	"message-nest/models"
+	"time"
 )
+
+type CronMsgResult struct {
+	models.CronMessages
+
+	NextTime string `json:"next_time"`
+}
 
 type CronMsgService struct {
 	ID string
@@ -38,12 +46,24 @@ func (st *CronMsgService) Count() (int, error) {
 	return models.GetCronMessagesTotal(st.Name, st.getMaps())
 }
 
-func (st *CronMsgService) GetAll() ([]models.CronMessages, error) {
+func (st *CronMsgService) GetAll() ([]CronMsgResult, error) {
 	msgs, err := models.GetCronMessages(st.PageNum, st.PageSize, st.Name, st.getMaps())
 	if err != nil {
 		return nil, err
 	}
-	return msgs, nil
+	return st.FillNextExecTime(msgs), nil
+}
+
+func (st *CronMsgService) FillNextExecTime(msgs []models.CronMessages) []CronMsgResult {
+	var result []CronMsgResult
+	for _, msg := range msgs {
+		r := CronMsgResult{
+			CronMessages: msg,
+			NextTime:     GetCronNextTime(msg.Cron),
+		}
+		result = append(result, r)
+	}
+	return result
 }
 
 func (st *CronMsgService) getMaps() map[string]interface{} {
@@ -53,4 +73,15 @@ func (st *CronMsgService) getMaps() map[string]interface{} {
 
 func (st *CronMsgService) Delete() error {
 	return models.DeleteCronMsg(st.ID)
+}
+
+// GetCronNextTime 获取下次的执行时间
+func GetCronNextTime(cronExpr string) string {
+	specParser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional | cron.Descriptor)
+	schedule, err := specParser.Parse(cronExpr)
+	if err != nil {
+		return ""
+	}
+	nextTime := schedule.Next(time.Now()).Format("2006-01-02 15:04:05")
+	return nextTime
 }

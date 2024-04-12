@@ -13,17 +13,25 @@
 
       <div ref="refContainer">
         <el-table :data="tableData" stripe empty-text="定时发信为空" :row-style="rowStyle()">
-          <el-table-column label="消息ID" prop="id" />
+          <el-table-column label="消息ID" prop="id"/>
           <el-table-column label="关联ID" prop="task_id" />
-          <el-table-column label="消息名" prop="name" />
-          <el-table-column label="Cron" prop="cron" />
-          <el-table-column label="消息内容" prop="content" />
-          <el-table-column label="创建时间" prop="created_on" />
+          <el-table-column label="消息名" prop="name"  show-overflow-tooltip/>
+          <el-table-column label="Crontab" prop="cron" />
+          <el-table-column label="下次执行" prop="next_time" show-overflow-tooltip/>
+          <!-- <el-table-column label="Crontab">
+            <template #default="scope">
+          {{ scope.row.cron }}
+          <br/>
+          <el-text class="mx-1" type="primary" size="small"> next: {{ scope.row.next_time }}</el-text>
+         
+            </template>
+          </el-table-column> -->
+          <el-table-column label="消息内容" prop="content" show-overflow-tooltip />
+          <el-table-column label="创建时间" prop="created_on" show-overflow-tooltip/>
           <el-table-column fixed="right" label="操作" width="190px">
             <template #default="scope">
 
               <div>
-                <!-- <el-button link size="small" type="primary" @click="handleViewAPI(scope.$index, scope.row)">接口</el-button> -->
                 <el-button link size="small" type="primary"
                   @click="handleViewLogs(scope.$index, scope.row)">日志</el-button>
                 <el-button link size="small" type="primary" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>

@@ -36,7 +36,7 @@
           <el-input v-model="currTaskInput.title" placeholder="请输入消息标题" size="small" class="msg-input"></el-input>
           <el-input type="textarea" :rows="5" v-model="currTaskInput.content" placeholder="请输入消息内容" size="small"
             class="msg-input"></el-input>
-          <el-input v-model="currTaskInput.cron" placeholder="请输入定时cron表达式" size="small" class="msg-input"></el-input>
+          <el-input v-model="currTaskInput.cron" placeholder="请输入定时crontab表达式(linux形式)" size="small" class="msg-input"></el-input>
           <el-input v-model="currTaskInput.url" placeholder="请输入消息详情url(可选)" size="small" class="msg-input"></el-input>
 
         </div>
@@ -121,6 +121,7 @@ export default defineComponent({
       state.currInsInput = {};
       state.currTaskTmp = {};
       state.searchway_id = '';
+      state.currSearchInputText = '';
       state.isShowAddBox = false;
       state.currTaskInput = {
         name: '',
