@@ -2,15 +2,15 @@ package models
 
 import (
 	"errors"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Settings struct {
 	IDModel
 
-	Section string `json:"section" gorm:"type:varchar(100) comment '实例类型';default:'';index:section"`
-	Key     string `json:"key" gorm:"type:varchar(100) comment '实例类型';default:'';"`
-	Value   string `json:"value" gorm:"type:text comment '实例类型';"`
+	Section string `json:"section" gorm:"type:varchar(100) ;default:'';index"`
+	Key     string `json:"key" gorm:"type:varchar(100) ;default:'';"`
+	Value   string `json:"value" gorm:"type:text ;"`
 }
 
 // AddOneSetting 添加一条设置
@@ -22,7 +22,7 @@ func AddOneSetting(setting Settings) error {
 }
 
 // EditSetting 编辑设置
-func EditSetting(id int, data interface{}) error {
+func EditSetting(id uint, data interface{}) error {
 	if err := db.Model(&Settings{}).Where("id = ? ", id).Updates(data).Error; err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func GetSettingByKey(section string, key string) (Settings, error) {
 
 func GetSettingBySection(section string) ([]Settings, error) {
 	var settings []Settings
-	err := db.Table(db.NewScope(Settings{}).TableName()).Where("`section` = ? ", section).Scan(&settings).Error
+	err := db.Table(GetSchema(Settings{})).Where("`section` = ? ", section).Scan(&settings).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return settings, err
 	}

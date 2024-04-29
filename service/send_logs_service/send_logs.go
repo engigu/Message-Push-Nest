@@ -17,7 +17,7 @@ type SendTaskLogsService struct {
 	PageSize int
 }
 
-func (st *SendTaskLogsService) Count() (int, error) {
+func (st *SendTaskLogsService) Count() (int64, error) {
 	return models.GetSendLogsTotal(st.Name, st.TaskId, st.getMaps())
 }
 

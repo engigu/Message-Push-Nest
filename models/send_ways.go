@@ -3,16 +3,16 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"message-nest/pkg/util"
 )
 
 type SendWays struct {
 	UUIDModel
 
-	Name string `json:"name" gorm:"type:varchar(100) comment '渠道名称';default:'';"`
-	Type string `json:"type" gorm:"type:varchar(100) comment '渠道类型';default:'';index:type"`
-	Auth string `json:"auth" gorm:"type:varchar(2048) comment '认证信息';default:'';"`
+	Name string `json:"name" gorm:"type:varchar(100) ;default:'';"`
+	Type string `json:"type" gorm:"type:varchar(100) ;default:'';index"`
+	Auth string `json:"auth" gorm:"type:varchar(2048) ;default:'';"`
 }
 
 func GenerateWayUniqueID() string {
@@ -63,10 +63,10 @@ func GetSendWays(pageNum int, pageSize int, name string, type_ string, maps inte
 	return ways, nil
 }
 
-func GetSendWaysTotal(name string, type_ string, maps interface{}) (int, error) {
+func GetSendWaysTotal(name string, type_ string, maps interface{}) (int64, error) {
 	var (
 		err   error
-		total int
+		total int64
 	)
 	query := db.Model(&SendWays{}).Where(maps)
 	if name != "" {
@@ -85,7 +85,7 @@ func GetSendWaysTotal(name string, type_ string, maps interface{}) (int, error) 
 
 func GetWayByID(id string) (SendWays, error) {
 	var way SendWays
-	err := db.Where("id = ? ", id).Find(&way).Error
+	err := db.Where("id = ? ", id).Take(&way).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return way, err
 	}

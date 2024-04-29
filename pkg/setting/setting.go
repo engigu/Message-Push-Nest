@@ -72,6 +72,8 @@ func Setup() {
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
 
+	log.Printf("[message-nest] DB type: %s", DatabaseSetting.Type)
+
 }
 
 // mapTo map section

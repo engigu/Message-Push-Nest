@@ -2,13 +2,13 @@ package models
 
 import (
 	"errors"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type Auth struct {
-	ID       int    `json:"id" gorm:"type:int(11) AUTO_INCREMENT comment 'id';primary_key" json:"id"`
-	Username string `json:"username" gorm:"type:varchar(100) comment '用户名';default:'';"`
-	Password string `json:"password" gorm:"type:varchar(100) comment '密码';default:'';"`
+	ID       int    `json:"id" gorm:"autoIncrement;type:integer ;primaryKey" json:"id"`
+	Username string `json:"username" gorm:"type:varchar(100);default:'';"`
+	Password string `json:"password" gorm:"type:varchar(100);default:'';"`
 }
 
 // CheckAuth 检查用户信息

@@ -42,7 +42,7 @@ func (st *CronMsgService) GetByID() (models.CronMessages, error) {
 	return models.GetCronMsgByID(st.ID)
 }
 
-func (st *CronMsgService) Count() (int, error) {
+func (st *CronMsgService) Count() (int64, error) {
 	return models.GetCronMessagesTotal(st.Name, st.getMaps())
 }
 

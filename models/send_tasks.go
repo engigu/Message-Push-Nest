@@ -3,14 +3,14 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"message-nest/pkg/util"
 )
 
 type SendTasks struct {
 	UUIDModel
 
-	Name string `json:"name" gorm:"type:varchar(100) comment '任务名称';default:'';"`
+	Name string `json:"name" gorm:"type:varchar(100) ;default:'';"`
 }
 
 func GenerateTaskUniqueID() string {
@@ -20,7 +20,7 @@ func GenerateTaskUniqueID() string {
 
 // AddSendTaskWithID 添加实例的时候添加任务
 func AddSendTaskWithID(name string, id string, createdBy string) error {
-	err := db.Where("id = ?", id).Find(&SendTasks{}).Error
+	err := db.Where("id = ?", id).Take(&SendTasks{}).Error
 	if err == nil {
 		return nil
 	}
@@ -77,10 +77,10 @@ func GetSendTasks(pageNum int, pageSize int, name string, maps interface{}) ([]S
 }
 
 // GetSendTasksTotal 获取所有任务总数
-func GetSendTasksTotal(name string, maps interface{}) (int, error) {
+func GetSendTasksTotal(name string, maps interface{}) (int64, error) {
 	var (
 		err   error
-		total int
+		total int64
 	)
 	query := db.Model(&SendTasks{}).Where(maps)
 	if name != "" {
@@ -108,8 +108,9 @@ type TaskIns struct {
 
 // GetTasksIns 获取所有任务下所有的实例
 func GetTasksIns(id string) (TaskIns, error) {
-	insTable := db.NewScope(SendTasksIns{}).TableName()
-	waysTable := db.NewScope(SendWays{}).TableName()
+	//insTable := GetSchema(SendTasksIns{})
+	insTable := GetSchema(SendTasksIns{})
+	waysTable := GetSchema(SendWays{})
 	var (
 		task       SendTasks
 		taskIns    []SendTasksInsRes
@@ -136,8 +137,8 @@ func GetTasksIns(id string) (TaskIns, error) {
 
 // FindTaskByWayId 通过way_id找到关联的任务
 func FindTaskByWayId(wayId string) []SendTasks {
-	insTable := db.NewScope(SendTasksIns{}).TableName()
-	taskTable := db.NewScope(SendTasks{}).TableName()
+	insTable := GetSchema(SendTasksIns{})
+	taskTable := GetSchema(SendTasks{})
 	var (
 		tasks []SendTasks
 	)
@@ -177,7 +178,7 @@ func EditSendTask(id string, data interface{}) error {
 
 func GetTaskByID(id string) (SendTasks, error) {
 	var task SendTasks
-	err := db.Where("id = ? ", id).Find(&task).Error
+	err := db.Where("id = ? ", id).Take(&task).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return task, err
 	}

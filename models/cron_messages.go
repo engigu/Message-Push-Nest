@@ -3,21 +3,21 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 	"message-nest/pkg/util"
 )
 
 type CronMessages struct {
 	UUIDModel
 
-	Name    string `json:"name" gorm:"type:varchar(200) comment '关联的消息名称';default:'';"`
-	TaskID  string `json:"task_id" gorm:"type:varchar(36) comment '关联的消息ID';default:'';"`
-	Cron    string `json:"cron" gorm:"type:varchar(4096) comment '定时表达式';default:'';"`
-	Title   string `json:"title" gorm:"type:varchar(1000) comment '消息名称';default:'';"`
-	Content string `json:"content" gorm:"type:varchar(4096) comment '消息内容';default:'';"`
-	//MarkDown string `json:"markdown" gorm:"type:varchar(4096) comment 'markdown内容';default:'';"`
-	Url    string `json:"url" gorm:"type:varchar(4096) comment 'url地址';default:'';"`
-	Enable int    `json:"enable" gorm:"type:int comment '开启、暂停状态';default:1;"`
+	Name    string `json:"name" gorm:"type:varchar(200) ;default:'';"`
+	TaskID  string `json:"task_id" gorm:"type:varchar(36) ;default:'';"`
+	Cron    string `json:"cron" gorm:"type:varchar(4096) ;default:'';"`
+	Title   string `json:"title" gorm:"type:varchar(1000) ;default:'';"`
+	Content string `json:"content" gorm:"type:varchar(4096) ;default:'';"`
+	//MarkDown string `json:"markdown" gorm:"type:varchar(4096) ;default:'';"`
+	Url    string `json:"url" gorm:"type:varchar(4096) ;default:'';"`
+	Enable int    `json:"enable" gorm:"type:int ;default:1;"`
 }
 
 func GenerateMsgUniqueID() string {
@@ -77,10 +77,10 @@ func GetCronMessages(pageNum int, pageSize int, name string, maps interface{}) (
 }
 
 // GetCronMessagesTotal 获取所有任务总数
-func GetCronMessagesTotal(name string, maps interface{}) (int, error) {
+func GetCronMessagesTotal(name string, maps interface{}) (int64, error) {
 	var (
 		err   error
-		total int
+		total int64
 	)
 	query := db.Model(&CronMessages{}).Where(maps)
 	if name != "" {
@@ -110,7 +110,7 @@ func EditCronMsg(id string, data interface{}) error {
 
 func GetCronMsgByID(id string) (CronMessages, error) {
 	var msg CronMessages
-	err := db.Where("id = ? ", id).Find(&msg).Error
+	err := db.Where("id = ? ", id).Take(&msg).Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return msg, err
 	}

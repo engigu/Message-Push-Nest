@@ -95,7 +95,7 @@ func (st *SendTaskInsService) Update(data map[string]interface{}) error {
 	return models.UpdateMsgTaskIns(st.ID, data)
 }
 
-func (st *SendTaskInsService) Count() (int, error) {
+func (st *SendTaskInsService) Count() (int64, error) {
 	return models.GetSendTasksTotal(st.Name, st.getMaps())
 }
 

@@ -35,7 +35,7 @@ func (st *SendTaskService) GetTaskWithIns() (models.TaskIns, error) {
 	return models.GetTasksIns(st.ID)
 }
 
-func (st *SendTaskService) Count() (int, error) {
+func (st *SendTaskService) Count() (int64, error) {
 	return models.GetSendTasksTotal(st.Name, st.getMaps())
 }
 

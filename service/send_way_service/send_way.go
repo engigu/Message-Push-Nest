@@ -110,7 +110,7 @@ func (sw *SendWay) Delete() error {
 	return models.DeleteMsgWay(sw.ID)
 }
 
-func (sw *SendWay) Count() (int, error) {
+func (sw *SendWay) Count() (int64, error) {
 	return models.GetSendWaysTotal(sw.Name, sw.Type, sw.getMaps())
 }
 

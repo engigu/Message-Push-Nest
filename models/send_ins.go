@@ -3,13 +3,13 @@ package models
 type SendTasksIns struct {
 	UUIDModel
 
-	TaskID      string `json:"task_id"  gorm:"type:varchar(12) comment '任务id';default:'';index:task_id"`
-	WayID       string `json:"way_id" gorm:"type:varchar(12) comment '渠道id';default:'';index:way_id"`
-	WayType     string `json:"way_type" gorm:"type:varchar(100) comment '渠道类型';default:'';index:way_type"`
-	ContentType string `json:"content_type" gorm:"type:varchar(100) comment '实例类型';default:'';index:content_type"`
-	Config      string `json:"config" gorm:"type:text comment '实例配置';"`
-	Extra       string `json:"extra" gorm:"type:text comment '额外信息';"`
-	Enable      int    `json:"enable" gorm:"type:int comment '开启、暂停状态';default:1;"`
+	TaskID      string `json:"task_id"  gorm:"type:varchar(12) ;default:'';index"`
+	WayID       string `json:"way_id" gorm:"type:varchar(12) ;default:'';index"`
+	WayType     string `json:"way_type" gorm:"type:varchar(100) ;default:'';index"`
+	ContentType string `json:"content_type" gorm:"type:varchar(100) ;default:'';index"`
+	Config      string `json:"config" gorm:"type:text ;"`
+	Extra       string `json:"extra" gorm:"type:text ;"`
+	Enable      int    `json:"enable" gorm:"type:int ;default:1;"`
 }
 
 // InsEmailConfig 实例里面的邮箱config
@@ -39,7 +39,7 @@ func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()
 	for _, ins := range taskIns {
 		// 存在就跳过这条ins记录
-		err := db.Where("id = ?", ins.ID).Find(&SendTasksIns{}).Error
+		err := db.Where("id = ?", ins.ID).Take(&SendTasksIns{}).Error
 		if err == nil {
 			continue
 		}

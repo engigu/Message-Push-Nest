@@ -20,6 +20,10 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 关于日志，考虑到目前多数服务以收集控制台输出为主，暂时不支持写出日志文件。
 
+2024.04.29
+
+- [x] 支持sqlite部署，支持不同版本mysql
+
 2024.04.11
 
 - [x] 支持自定义的定时消息发送
@@ -102,6 +106,7 @@ WriteTimeout = 60
 ; 关闭SQL打印
 ; SqlDebug = enable
 
+; Type = sqlite
 Type = mysql
 User = root
 Password = Aa123456
@@ -176,9 +181,6 @@ TablePrefix = message_
 JwtSecret = message-nest
 LogLevel = INFO
 
-; 第一次运行务必打开，初始化数据
-InitData = enable
-
 [server]
 ; RunMode务必设置成debug，会自动添加跨域
 RunMode = debug
@@ -192,6 +194,7 @@ EmbedHtml = disable
 ; 开启SQL打印
 SqlDebug = enable
 
+; Type = sqlite
 Type = mysql
 User = root
 Password = Aa123456
@@ -237,9 +240,6 @@ npm run dev
 JwtSecret = message-nest
 LogLevel = INFO
 
-; 第一次运行务必打开，初始化数据
-InitData = enable
-
 [server]
 RunMode = release
 ; docker模式下端口配置文件中只能为8000
@@ -253,6 +253,7 @@ WriteTimeout = 60
 ; 关闭SQL打印
 ; SqlDebug = enable
 
+; Type = sqlite
 Type = mysql
 User = root
 Password = Aa123456
@@ -326,41 +327,32 @@ docker-compose up -d
 </details>
 
 <details>
-  <summary>docker/docker-compose环境变量部署（推荐🍀🍀🍀🍀🍀）</summary>
+  <summary>docker/docker-compose环境变量部署（推荐🍀🍀🍀🍀🍀🍀🍀）</summary>
 
 环境变量介绍
 
-| 变量                 | 说明                                 | 
-|--------------------|------------------------------------|
-| JWT_SECRET         | jwt秘钥，可选，默认为message-nest           |
-| LOG_LEVEL          | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR   |
-| INIT_DATA          | 是否初始化数据，可选，默认关，第一次运行需要将该值设置为enable |
-| RUN_MODE           | 运行模式，可选，默认release，为debug将自动添加跨域    |
-|                    |                                    |
-| MYSQL_HOST         | mysql-host，必填                      |
-| MYSQL_PORT         | mysql端口，必填                         |
-| MYSQL_USER         | mysql用户名，必填                        |
-| MYSQL_PASSWORD     | mysql数据库密码，必填                      |
-| MYSQL_DB           | mysql数据库名字，必填                      |
-| MYSQL_TABLE_PREFIX | mysql数据表前缀，必填                      |
-| SQL_DEBUG          | 是否打印SQL，可选，默认关，设置enable为开启         |
+| 变量                 | 说明                                                 | 
+|--------------------|----------------------------------------------------|
+| JWT_SECRET         | jwt秘钥，可选，默认为message-nest                           |
+| LOG_LEVEL          | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR                   |
+| RUN_MODE           | 运行模式，可选，默认release，为debug将自动添加跨域                    |
+|                    |                                                    |
+| DB_TYPE            | 数据库类型，sqlite/mysql。默认为sqlite,存储路径为conf/database.db |
+|                    |                                                    |
+| MYSQL_HOST         | mysql-host，DB_TYPE=mysql必填                         |
+| MYSQL_PORT         | mysql端口，DB_TYPE=mysql必填                            |
+| MYSQL_USER         | mysql用户名，DB_TYPE=mysql必填                           |
+| MYSQL_PASSWORD     | mysql数据库密码，DB_TYPE=mysql必填                         |
+| MYSQL_DB           | mysql数据库名字，DB_TYPE=mysql必填                         |
+| MYSQL_TABLE_PREFIX | mysql数据表前缀，DB_TYPE=mysql必填                         |
+|                    |                                                    |
+| SQL_DEBUG          | 是否打印SQL，可选，默认关，设置enable为开启                         |
 
 docker运行
 
 ```shell
-# 首次运行指定INIT_DATA=enable初始化数据
-docker run --rm -ti \
-  -p 8000:8000 \
-  -e INIT_DATA=enable \
-  -e MYSQL_HOST=192.168.64.133 \
-  -e MYSQL_PORT=3308 \
-  -e MYSQL_USER=root \
-  -e MYSQL_PASSWORD=Aa123456 \
-  -e MYSQL_DB=test_11 \
-  -e MYSQL_TABLE_PREFIX=message_ \
-  engigu/message-nest:latest 
 
-# 正式运行
+# 正式运行（mysql）
 docker run -d  \
   -p 8000:8000 \
   -e MYSQL_HOST=192.168.64.133  \
@@ -370,9 +362,15 @@ docker run -d  \
   -e MYSQL_DB=test_11 \
   -e MYSQL_TABLE_PREFIX=message_ \
   engigu/message-nest:latest 
+
+# 正式运行（sqlite）
+docker run -d  \
+  -p 8000:8000 \
+  -v you/path/database.db=conf/database.db  \
+  engigu/message-nest:latest 
 ```
 
-docker-compose运行
+docker-compose运行(mysql)
 
 ```yml
 version: "3.7"
@@ -393,19 +391,23 @@ services:
       - MYSQL_TABLE_PREFIX=message_
 ```
 
+docker-compose运行(sqlite)
+
+```yml
+version: "3.7"
+services:
+
+  message-nest:
+    image: engigu/message-nest:latest
+    container_name: message-nest
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - you/path/database.db:conf/database.db
+```
+
 ```shell
-# 首次运行指定INIT_DATA=enable初始化数据
-docker run --rm -ti \
-  -p 8000:8000 \
-  -e INIT_DATA=enable \
-  -e MYSQL_HOST=192.168.64.133 \
-  -e MYSQL_PORT=3308 \
-  -e MYSQL_USER=root \
-  -e MYSQL_PASSWORD=Aa123456 \
-  -e MYSQL_DB=test_11 \
-  -e MYSQL_TABLE_PREFIX=message_ \
-  engigu/message-nest:latest 
-  
 # 正式运行
 docker-compose -up -d
 ```
@@ -425,21 +427,6 @@ docker-compose -up -d
      如果目录下没有静态资源文件，需要到web目录下，npm run build构建生成。
 >
 > 两种方式各有优缺点，综合考虑下来，推荐直接使用release的打包执行文件（或者docker环境变量进行部署），其中已经内置了页面静态资源，只用运行一个服务。
-
-#### 关于InitData配置的说明
-
-> 从功能上开启`InitData=enable`是使用gorm的model进行migrate表字段更改，是将代码中的定义的表结构自动完成sql语句进行表结构的维护。
-> 
-> 1. 为什么这么设计，不直接使用完整的建表sql？我想了很久，我觉得migrate目前能够满足现在的需求，而且不用手动维护sql的变动。
->
-> 2. 为什么初始化要单独加一个配置开关`InitData=enable`，而不是使用一个标识进行判断？ 目前现在确实只需要判断是否初始化标识就可以满足，但是后面如果项目更新添加了新字段，
->    就不再适用了。也就是说这个配置设计上既可以完成初始化，也可以完成的后面的字段升级。
-> 
-> 3. 我一直指定`InitData=enable`运行项目有没影响，会不会数据错、丢失？ 不会。一直指定`InitData=enable`，只是每次服务启动多一步会检查，
->    检查表字段变动。并且只是新增的表字段会进行添加，已经存在的字段不会进行变更，所以不用担心数据问题。
->
-> 只要初始化指定`InitData=enable`进行了初始化，后续如果项目不升级，后面指不指定`InitData=enable`都没关系。
-
 
 ## 完整配置说明 ⚙️
 
@@ -547,7 +534,6 @@ TablePrefix = message_
 ## Star History ⭐
 
 [![Star History Chart](https://api.star-history.com/svg?repos=engigu/Message-Push-Nest&type=Date)](https://star-history.com/#engigu/Message-Push-Nest&Date)
-
 
 ## 许可证 📝
 

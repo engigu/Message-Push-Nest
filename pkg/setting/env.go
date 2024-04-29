@@ -50,7 +50,8 @@ func loadConfigFromEnv() {
 	ServerSetting.ReadTimeout = 60
 	ServerSetting.WriteTimeout = 60
 
-	DatabaseSetting.Type = "mysql"
+	DatabaseSetting.Type = getOptionEnvValue("DB_TYPE", "sqlite")
+
 	DatabaseSetting.Host = getMustEnvValue("MYSQL_HOST")
 	DatabaseSetting.Port = com.StrTo(getMustEnvValue("MYSQL_PORT")).MustInt()
 	DatabaseSetting.User = getMustEnvValue("MYSQL_USER")

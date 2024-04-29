@@ -3,17 +3,18 @@ package models
 import (
 	"fmt"
 	"message-nest/pkg/util"
+	//"time"
 )
 
 type SendTasksLogs struct {
-	ID       int    `gorm:"primary_key" json:"id" `
-	TaskID   string `json:"task_id" gorm:"type:varchar(12) comment '任务id';default:'';index:task_id"`
-	Log      string `json:"log" gorm:"type:text comment '日志';"`
-	Status   *int   `json:"status" gorm:"type:int comment '状态';default:0;"`
-	CallerIp string `json:"caller_ip" gorm:"type:varchar(256) comment '发送者的ip';default:'';"`
+	ID       int    `gorm:"primaryKey" json:"id" `
+	TaskID   string `json:"task_id" gorm:"type:varchar(12) ;default:'';index:task_id"`
+	Log      string `json:"log" gorm:"type:text ;"`
+	Status   *int   `json:"status" gorm:"type:int ;default:0;"`
+	CallerIp string `json:"caller_ip" gorm:"type:varchar(256) ;default:'';"`
 
-	CreatedOn  util.Time `json:"created_on" gorm:"type:timestamp comment '创建时间';default:current_timestamp;"`
-	ModifiedOn util.Time `json:"modified_on" gorm:"type:timestamp comment '更新时间';"`
+	CreatedAt util.Time `json:"created_on" gorm:"column:created_on;autoCreateTime "`
+	UpdatedAt util.Time `json:"modified_on" gorm:"column:modified_on;autoUpdateTime ;"`
 }
 
 // Add 添加日志记录
@@ -39,8 +40,8 @@ type LogsResult struct {
 // GetSendLogs 获取所有日志记录
 func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map[string]interface{}) ([]LogsResult, error) {
 	var logs []LogsResult
-	logt := db.NewScope(SendTasksLogs{}).TableName()
-	taskt := db.NewScope(SendTasks{}).TableName()
+	logt := GetSchema(SendTasksLogs{})
+	taskt := GetSchema(SendTasks{})
 
 	query := db.
 		Table(logt).
@@ -70,10 +71,10 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map
 }
 
 // GetSendLogsTotal 获取所有日志总数
-func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (int, error) {
-	var total int
-	logt := db.NewScope(SendTasksLogs{}).TableName()
-	taskt := db.NewScope(SendTasks{}).TableName()
+func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (int64, error) {
+	var total int64
+	logt := GetSchema(SendTasksLogs{})
+	taskt := GetSchema(SendTasks{})
 	query := db.
 		Table(logt).
 		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
@@ -98,7 +99,7 @@ func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (
 // GetSendLogsTotal 获取所有日志总数
 func DeleteOutDateLogs(keepNum int) (int, error) {
 	var affectedRows int
-	logt := db.NewScope(SendTasksLogs{}).TableName()
+	logt := GetSchema(SendTasksLogs{})
 	sql := fmt.Sprintf(`DELETE FROM %s
 			WHERE id NOT IN (
 				SELECT id FROM (
@@ -122,8 +123,8 @@ type StatisticData struct {
 	TodayFailedNum int `json:"today_failed_num"`
 	TodayTotalNum  int `json:"today_total_num"`
 
-	LatestSendData []LatestSendData `json:"latest_send_data"`
-	WayCateData    []WayCateData    `json:"way_cate_data"`
+	LatestSendData []LatestSendData `json:"latest_send_data" gorm:"many2many:latest_send_data;"`
+	WayCateData    []WayCateData    `json:"way_cate_data" gorm:"many2many:way_cate_data;"`
 }
 
 type LatestSendData struct {
@@ -144,9 +145,9 @@ func GetStatisticData() (StatisticData, error) {
 	var statistic StatisticData
 	var latestData []LatestSendData
 	var wayCateData []WayCateData
-	logt := db.NewScope(SendTasksLogs{}).TableName()
-	inst := db.NewScope(SendTasksIns{}).TableName()
-	wayst := db.NewScope(SendWays{}).TableName()
+	logt := GetSchema(SendTasksLogs{})
+	inst := GetSchema(SendTasksIns{})
+	wayst := GetSchema(SendWays{})
 	currDay := util.GetNowTimeStr()[:10]
 
 	// 今日统计数据
@@ -158,10 +159,15 @@ func GetStatisticData() (StatisticData, error) {
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
 		Where("DATE(created_on) = ?", currDay)
 
-	query.First(&statistic)
+	query.Take(&statistic)
 
 	// 最近30天数据
 	days := 30
+	now := util.GetNowTime()
+	past := now.AddDate(0, 0, -days)
+	pastDate := past.Format("2006-01-02")
+	next := now.AddDate(0, 0, 1)
+	nextDate := next.Format("2006-01-02")
 	queryData := db.
 		Table(logt).
 		Select(`
@@ -169,7 +175,7 @@ func GetStatisticData() (StatisticData, error) {
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
 	COUNT(*) AS num`).
-		Where(" created_on >= DATE(?) - INTERVAL ? DAY", currDay, days).
+		Where(fmt.Sprintf(" created_on >= '%s' and created_on <= '%s' ", pastDate, nextDate)).
 		Group("day").
 		Order("day")
 

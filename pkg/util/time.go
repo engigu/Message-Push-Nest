@@ -56,8 +56,14 @@ func (t *Time) Scan(v interface{}) error {
 
 // GetNowTimeStr 获取当前的时间字符串
 func GetNowTimeStr() string {
-	currentTimeUTC := time.Now().UTC()
-	chinaTime := currentTimeUTC.Add(8 * time.Hour)
+	chinaTime := GetNowTime()
 	formattedTime := chinaTime.Format("2006-01-02 15:04:05")
 	return formattedTime
+}
+
+// GetNowTimeStr 获取当前的时间字符串
+func GetNowTime() time.Time {
+	currentTimeUTC := time.Now().UTC()
+	chinaTime := currentTimeUTC.Add(8 * time.Hour)
+	return chinaTime
 }

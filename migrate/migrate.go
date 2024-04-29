@@ -3,10 +3,9 @@ package migrate
 import (
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	"message-nest/models"
-	"message-nest/pkg/setting"
 	"message-nest/service/settings_service"
 )
 
@@ -43,16 +42,16 @@ func InitAuthTableData() {
 
 func Setup() {
 	db := models.Setup()
-	defer func(db *gorm.DB) {
-		err := db.Close()
-		if err != nil {
+	//defer func(db *gorm.DB) {
+	//	err := db.Close()
+	//	if err != nil {
+	//
+	//	}
+	//}(db)
 
-		}
-	}(db)
-
-	if setting.AppSetting.InitData != "enable" {
-		return
-	}
+	//if setting.AppSetting.InitData != "enable" {
+	//	return
+	//}
 
 	entry := logrus.WithFields(logrus.Fields{
 		"prefix": "[Init Data]",
@@ -69,9 +68,13 @@ func Setup() {
 	}
 
 	for _, table := range tables {
-		tableName := db.NewScope(table).TableName()
+		//tableName := db.NewScope(table).TableName()
+		tableName := models.GetSchema(table)
 		entry.Infof("Migrate table: %s", tableName)
-		db.AutoMigrate(table)
+		err := db.AutoMigrate(table)
+		if err != nil {
+			entry.Infof("Migrate table erorr: %s", err.Error())
+		}
 	}
 
 	entry.Infof("Init Account data...")

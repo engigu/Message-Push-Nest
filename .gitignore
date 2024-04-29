@@ -32,4 +32,4 @@ go.work
 /runtime
 .idea/
 .release_version
-
+conf/database.db
