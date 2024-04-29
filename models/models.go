@@ -43,7 +43,8 @@ func Setup() *gorm.DB {
 
 	config := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
-			TablePrefix: setting.DatabaseSetting.TablePrefix,
+			TablePrefix:   setting.DatabaseSetting.TablePrefix,
+			SingularTable: true,
 		},
 	}
 
@@ -61,7 +62,6 @@ func Setup() *gorm.DB {
 	if setting.DatabaseSetting.SqlDebug == "enable" {
 		db = db.Debug()
 	}
-
 	return db
 }
 
