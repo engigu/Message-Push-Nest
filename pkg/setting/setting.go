@@ -49,10 +49,22 @@ func fileExists(filePath string) bool {
 	return !os.IsNotExist(err)
 }
 
+func createConfFolder() {
+	// 检查目录是否存在
+	dir := "conf/"
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return
+		}
+	}
+}
+
 // Setup initialize the configuration instance
 func Setup() {
 	var err error
 	intPath := "conf/app.ini"
+	createConfFolder()
 
 	if fileExists(intPath) {
 		log.Printf("[message-nest] start server from %s.", intPath)
@@ -71,8 +83,6 @@ func Setup() {
 
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
-
-	log.Printf("[message-nest] DB type: %s", DatabaseSetting.Type)
 
 }
 

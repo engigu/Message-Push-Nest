@@ -43,7 +43,6 @@ func printOptionValue() {
 func loadConfigFromEnv() {
 	AppSetting.JwtSecret = getOptionEnvValue("JWT_SECRET", "message-nest")
 	AppSetting.LogLevel = getOptionEnvValue("LOG_LEVEL", "INFO")
-	AppSetting.InitData = getOptionEnvValue("INIT_DATA", "")
 
 	ServerSetting.RunMode = getOptionEnvValue("RUN_MODE", "release")
 	ServerSetting.HttpPort = 8000
@@ -52,13 +51,15 @@ func loadConfigFromEnv() {
 
 	DatabaseSetting.Type = getOptionEnvValue("DB_TYPE", "sqlite")
 
-	DatabaseSetting.Host = getMustEnvValue("MYSQL_HOST")
-	DatabaseSetting.Port = com.StrTo(getMustEnvValue("MYSQL_PORT")).MustInt()
-	DatabaseSetting.User = getMustEnvValue("MYSQL_USER")
-	DatabaseSetting.Password = getMustEnvValue("MYSQL_PASSWORD")
-	DatabaseSetting.Name = getMustEnvValue("MYSQL_DB")
-	DatabaseSetting.TablePrefix = getMustEnvValue("MYSQL_TABLE_PREFIX")
-	DatabaseSetting.SqlDebug = getOptionEnvValue("SQL_DEBUG", "disable")
+	if DatabaseSetting.Type == "mysql" {
+		DatabaseSetting.Host = getMustEnvValue("MYSQL_HOST")
+		DatabaseSetting.Port = com.StrTo(getMustEnvValue("MYSQL_PORT")).MustInt()
+		DatabaseSetting.User = getMustEnvValue("MYSQL_USER")
+		DatabaseSetting.Password = getMustEnvValue("MYSQL_PASSWORD")
+		DatabaseSetting.Name = getMustEnvValue("MYSQL_DB")
+	}
 
+	DatabaseSetting.TablePrefix = getOptionEnvValue("MYSQL_TABLE_PREFIX", "message_")
+	DatabaseSetting.SqlDebug = getOptionEnvValue("SQL_DEBUG", "disable")
 	printOptionValue()
 }
