@@ -225,7 +225,7 @@ npm run dev
 </details>
 
 <details>
-  <summary>4. docker/docker-compose部署（推荐🍀🍀🍀）</summary>
+  <summary>4. docker/docker-compose部署（推荐指数🍀🍀🍀🍀🍀）</summary>
 
 <details>
   <summary>docker挂载app.ini部署</summary>
@@ -327,7 +327,7 @@ docker-compose up -d
 </details>
 
 <details>
-  <summary>docker/docker-compose环境变量部署（推荐🍀🍀🍀🍀🍀🍀🍀）</summary>
+  <summary>docker/docker-compose环境变量部署（推荐指数🍀🍀🍀🍀🍀🍀🍀🍀🍀）</summary>
 
 环境变量介绍
 
@@ -361,12 +361,14 @@ docker run -d  \
   -e MYSQL_PASSWORD=Aa123456 \
   -e MYSQL_DB=test_11 \
   -e MYSQL_TABLE_PREFIX=message_ \
+  --name message-nest  \
   engigu/message-nest:latest 
 
 # 正式运行（sqlite）
 docker run -d  \
   -p 8000:8000 \
   -v you/path/database.db=conf/database.db  \
+  --name message-nest  \
   engigu/message-nest:latest 
 ```
 

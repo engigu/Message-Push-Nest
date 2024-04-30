@@ -20,8 +20,9 @@ func GenerateTaskUniqueID() string {
 
 // AddSendTaskWithID 添加实例的时候添加任务
 func AddSendTaskWithID(name string, id string, createdBy string) error {
-	err := db.Where("id = ?", id).Find(&SendTasks{}).Error
-	if err == nil {
+	var etask SendTasks
+	db.Where("id = ?", id).Take(&etask)
+	if len(etask.ID) > 0 {
 		return nil
 	}
 	task := SendTasks{
