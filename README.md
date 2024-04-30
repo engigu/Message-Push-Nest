@@ -91,9 +91,6 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 JwtSecret = message-nest
 LogLevel = INFO
 
-; 第一次运行务必打开，初始化数据
-InitData = enable
-
 [server]
 RunMode = release
 HttpPort = 8000
@@ -120,8 +117,6 @@ TablePrefix = message_
 6. 启动项目会自动创建表和账号
 
 ```shell
-# 第一次运行将app.ini中的app.InitData设置为enable，会自动进行表数据的初始化
-# 后续不需要开启这个配置
 # INFO日志级别启动回出现如下日志
 
 [2024-01-13 13:40:09.075]  INFO [migrate.go:70 Setup] [Init Data]: Migrate table: message_auth
@@ -441,11 +436,6 @@ JwtSecret = message-nest
 ; 暂时无用
 RuntimeRootPath = runtime/
 LogLevel = INFO
-
-; init table data, first run set enable
-; 首次运行打开这个，会自动初始化表和数据
-; 项目升级需要打开这个进行检测新增表字段创建
-InitData = enable
 
 [server]
 ; debug or release
