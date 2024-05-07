@@ -451,16 +451,23 @@ WriteTimeout = 60
 ; EmbedHtml = disable   
 
 [database]
+; 配置使用sqlite
+;Type = sqlite
+
+; 配置使用mysql
 Type = mysql
 User = root
 Password = password
 Host = 123.1.1.1
 Name = db_name
 Port = 3306
+
+; 其他配置
 ; 表前缀
 TablePrefix = message_
 ; 是否打开sql打印
 ; SqlDebug = enable
+
 ```
 
 </details>
