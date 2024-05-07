@@ -475,6 +475,162 @@ TablePrefix = message_
 
 </details>
 
+## 客户端调用示例 💻️
+
+<details>
+  <summary>CURL</summary>
+
+```shell
+curl -X POST --location 'http://127.0.0.1:5173/api/v1/message/send' \
+        --header 'Content-Type: application/json' \
+        --data '{
+    "task_id": "T-JiXpO8EO7u",
+    "title": "message title",
+    "text": "Hello World!"
+}'
+```
+</details>
+
+<details>
+  <summary>Python</summary>
+
+```python
+import requests
+
+headers = {
+    'Content-Type': 'application/json',
+}
+json_data = {
+    "task_id": "T-JiXpO8EO7u",
+    "title": "message title",
+    "text": "Hello World!"
+}
+response = requests.post('http://127.0.0.1:5173/api/v1/message/send', headers=headers, json=json_data)
+
+print("response:", response.json())
+
+```
+</details>
+
+<details>
+  <summary>Go</summary>
+
+```golang
+package main
+
+import (
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"strings"
+)
+
+func main() {
+	client := &http.Client{}
+	var data = strings.NewReader(`{
+    "task_id": "T-JiXpO8EO7u",
+    "title": "message title",
+    "text": "Hello World!"
+}`)
+	req, err := http.NewRequest("POST", "http://127.0.0.1:5173/api/v1/message/send", data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	bodyText, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s\n", bodyText)
+}
+
+```
+</details>
+
+<details>
+  <summary>Java</summary>
+
+```java
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpRequest.BodyPublishers;
+import java.net.http.HttpResponse;
+
+HttpClient client = HttpClient.newBuilder()
+    .followRedirects(HttpClient.Redirect.NORMAL)
+    .build();
+
+HttpRequest request = HttpRequest.newBuilder()
+    .uri(URI.create("http://127.0.0.1:5173/api/v1/message/send"))
+    .POST(BodyPublishers.ofString("{\n    \"task_id\": \"T-JiXpO8EO7u\",\n    \"title\": \"message title\",\n    \"text\": \"Hello World!\"\n}"))
+    .setHeader("Content-Type", "application/json")
+    .build();
+
+HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+```
+</details>
+
+<details>
+  <summary>Node</summary>
+
+```nodejs
+var request = require('request');
+
+var headers = {
+    'Content-Type': 'application/json'
+};
+
+var dataString = "{\n    \"task_id\": \"T-JiXpO8EO7u\",\n    \"title\": \"message title\",\n    \"text\": \"Hello World!\"\n}";
+
+var options = {
+    url: 'http://127.0.0.1:5173/api/v1/message/send',
+    method: 'POST',
+    headers: headers,
+    body: dataString
+};
+
+function callback(error, response, body) {
+    if (!error && response.statusCode == 200) {
+        console.log(body);
+    }
+}
+
+request(options, callback);
+```
+</details>
+
+<details>
+  <summary>PHP</summary>
+
+```php
+<?php
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'http://127.0.0.1:5173/api/v1/message/send');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, "{\n    \"task_id\": \"T-JiXpO8EO7u\",\n    \"title\": \"message title\",\n    \"text\": \"Hello World!\"\n}");
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+$response = curl_exec($ch);
+
+curl_close($ch);
+        
+```
+</details>
+
+
 ## 页面操作指引 🎞️
 
 关于消息的添加，发送的整个步骤，是以顶部菜单栏从右向左进行操作。
