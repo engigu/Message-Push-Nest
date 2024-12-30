@@ -62,7 +62,7 @@ func CronMsgSendF(msg models.CronMessages) {
 		Title:    msg.Title,
 		Text:     msg.Content,
 		URL:      msg.Url,
-		CallerIp: "corn",
+		CallerIp: "cron",
 		DefaultLogger: logrus.WithFields(logrus.Fields{
 			"prefix": "[Cron Message]",
 		}),
