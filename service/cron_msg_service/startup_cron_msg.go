@@ -47,12 +47,12 @@ func AddCronMsgToCronServer(msg models.CronMessages) {
 		},
 	})
 	constant.CronMsgIdMapMemoryCache[msg.ID] = taskId
-	logrus.Infof("新增定时消息成功，消息id: %s， 当前任务总数：%d", msg.ID, len(constant.CronMsgIdMapMemoryCache))
+	logrus.Infof("新增定时消息成功，消息id: %s，消息名: %s，当前任务总数：%d", msg.ID, msg.Name, len(constant.CronMsgIdMapMemoryCache))
 }
 
 // 执行任务的构造函数
 func CronMsgSendF(msg models.CronMessages) {
-	logrus.Infof("开始只能执行定时消息发送任务: %s ， 消息名: %s", msg.ID, msg.Name)
+	logrus.Infof("开始只能执行定时消息发送任务: %s，消息名: %s", msg.ID, msg.Name)
 	task, err := models.GetTaskByID(msg.TaskID)
 	if err != nil {
 		logrus.Infof("消息任务不存在: %s ", msg.TaskID)
@@ -63,7 +63,7 @@ func CronMsgSendF(msg models.CronMessages) {
 		Title:    msg.Title,
 		Text:     msg.Content,
 		URL:      msg.Url,
-		CallerIp: "cron",
+		CallerIp: "cron task",
 		DefaultLogger: logrus.WithFields(logrus.Fields{
 			"prefix": "[Cron Message]",
 		}),
@@ -88,7 +88,7 @@ func UpdateCronMsgToCronServer(msg models.CronMessages) {
 		// 注册新的定时任务
 		AddCronMsgToCronServer(msg)
 	}
-	logrus.Infof("完成定时消息的定时更新，消息id: %s， 当前任务总数：%d", msg.ID, len(constant.CronMsgIdMapMemoryCache))
+	logrus.Infof("完成定时消息的定时更新，消息id: %s，当前任务总数：%d", msg.ID, len(constant.CronMsgIdMapMemoryCache))
 }
 
 // RemoveCronMsgToCronServer 删除定时任务中心的任务
@@ -98,7 +98,7 @@ func RemoveCronMsgToCronServer(msg models.CronMessages) {
 		delete(constant.CronMsgIdMapMemoryCache, msg.ID)
 		cron_service.RemoveTask(entryId)
 	}
-	logrus.Infof("删除定时消息完成，消息id: %s， 剩余任务总数：%d", msg.ID, len(constant.CronMsgIdMapMemoryCache))
+	logrus.Infof("删除定时消息完成，消息id: %s，剩余任务总数：%d", msg.ID, len(constant.CronMsgIdMapMemoryCache))
 }
 
 // StartUpMsgCronTask 启动注册定时任务
