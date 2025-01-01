@@ -28,9 +28,9 @@ const router = createRouter({
       component: () => import('../views/tabsTools/sendTasks/sendTasks.vue')
     },
     {
-      path: '/sendmessages',
-      name: 'sendmessages',
-      component: () => import('../views/tabsTools/sendMessage/sensMessage.vue')
+      path: '/cronmessages',
+      name: 'cronmessages',
+      component: () => import('../views/tabsTools/cronMessage/cronMessage.vue')
     },
     {
       path: '/sendlogs',
