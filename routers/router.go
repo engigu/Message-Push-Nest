@@ -86,10 +86,10 @@ func InitRouter(f embed.FS) *gin.Engine {
 		apiV1.GET("/statistic", v1.GetStatisticData)
 
 		// cronMessage
-		apiV1.POST("/sendmessages/addone", v1.AddCronMsgTask)
-		apiV1.GET("/sendmessages/list", v1.GetCronMsgList)
-		apiV1.POST("/sendmessages/delete", v1.DeleteCronMsgTask)
-		apiV1.POST("/sendmessages/edit", v1.EditCronMsgTask)
+		apiV1.POST("/cronmessages/addone", v1.AddCronMsgTask)
+		apiV1.GET("/cronmessages/list", v1.GetCronMsgList)
+		apiV1.POST("/cronmessages/delete", v1.DeleteCronMsgTask)
+		apiV1.POST("/cronmessages/edit", v1.EditCronMsgTask)
 
 	}
 
