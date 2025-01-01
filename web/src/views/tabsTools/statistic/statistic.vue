@@ -1,8 +1,8 @@
 <template>
   <div class="main-center-body">
     <div class="container">
-      <el-row :gutter="16">
-        <el-col :span="6">
+      <el-row :gutter="18">
+        <el-col :span="4">
           <div class="statistic-card">
             <el-statistic :value="data.message_total_num">
               <template #title>
@@ -13,7 +13,18 @@
             </el-statistic>
           </div>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="5">
+          <div class="statistic-card">
+            <el-statistic :value="data.hosted_message_total_num">
+              <template #title>
+                <div style="display: inline-flex; align-items: center">
+                  托管消息数
+                </div>
+              </template>
+            </el-statistic>
+          </div>
+        </el-col>
+        <el-col :span="5">
           <div class="statistic-card">
             <el-statistic :value="data.today_total_num">
               <template #title>
@@ -24,7 +35,7 @@
             </el-statistic>
           </div>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="5">
           <div class="statistic-card">
             <el-statistic :value="data.today_succ_num">
               <template #title>
@@ -35,7 +46,7 @@
             </el-statistic>
           </div>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="5">
           <div class="statistic-card">
             <el-statistic :value="data.today_failed_num" :value-style="formatFailedNumStyle()">
               <template #title>

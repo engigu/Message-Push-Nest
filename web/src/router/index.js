@@ -41,6 +41,11 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: () => import('../views/tabsTools/settings/settings.vue')
+    },   
+    {
+      path: '/hostedMessage',
+      name: 'hostedmessage',
+      component: () => import('../views/tabsTools/hostedMessage/hostedMessage.vue')
     },
     {
       path: '/:catchAll(.*)',

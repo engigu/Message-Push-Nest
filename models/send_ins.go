@@ -34,6 +34,10 @@ type InsQyWeiXinConfig struct {
 type InsCustomConfig struct {
 }
 
+// InsMessageNestConfig 实例里面的托管消息config
+type InsMessageNestConfig struct {
+}
+
 // ManyAddTaskIns 批量添加实例
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()

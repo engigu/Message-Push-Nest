@@ -97,7 +97,7 @@ func GetMsgSendWayList(c *gin.Context) {
 type AddMsgSendWayReq struct {
 	Name string `json:"name" validate:"required,max=100,min=1" label:"渠道名"`
 	Type string `json:"type" validate:"required,max=100,min=1" label:"渠道类型"`
-	Auth string `json:"auth" validate:"required,max=2048,min=6" label:"渠道认证方式"`
+	Auth string `json:"auth" label:"渠道认证方式"`
 }
 
 // AddMsgSendWay 添加发送渠道

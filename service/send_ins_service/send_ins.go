@@ -39,6 +39,10 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		var Config models.InsQyWeiXinConfig
 		return "", Config
 	}
+	if ins.WayType == "MessageNest" {
+		var Config models.InsQyWeiXinConfig
+		return "", Config
+	}
 	if ins.WayType == "Custom" {
 		var Config models.InsCustomConfig
 		err := json.Unmarshal([]byte(ins.Config), &Config)

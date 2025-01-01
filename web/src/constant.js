@@ -69,7 +69,7 @@ const CONSTANT = {
         },
         {
             type: 'Custom',
-            label: '自定义',
+            label: '自定义推送',
             inputs: [
                 { subLabel: 'webhook地址', value: '', col: 'webhook', desc: "自定义webhook地址" },
                 { subLabel: '请求体', value: '', col: 'body', desc: "请求体, text内容请使用 TEXT 进行占位\n例如：{\"message\": \"TEXT\", \"foo\": \"bar\"}", isTextArea: true },
@@ -101,6 +101,21 @@ const CONSTANT = {
             ],
             taskInsInputs: [
                 { value: '', col: 'to_account', desc: "要发送的OpenId（登录微信公众号后台查看）" },
+            ],
+        },
+        {
+            type: 'MessageNest',
+            label: '自托管消息',
+            inputs: [
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "自托管消息说明", desc: "站点本身会作为消息接收站点，接收、展示推送过来的消息。"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
             ],
         },
     ],

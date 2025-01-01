@@ -194,6 +194,15 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 			continue
 		}
+		// 托管消息的实例发送
+		mnt, ok := msgObj.(send_way_service.MessageNest)
+		if ok {
+			cs := HostMessageService{}
+			res, errMsg := cs.SendHostMessage(mnt, ins.SendTasksIns, typeC, sm.Title, content)
+			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
+			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+			continue
+		}
 		sm.LogsAndStatusMark(fmt.Sprintf("发送失败：未知渠道的发信实例: %s\n", ins.ID), SendFail)
 
 	}

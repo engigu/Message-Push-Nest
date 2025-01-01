@@ -65,6 +65,7 @@ func Setup() {
 		&models.SendTasksIns{},
 		&models.Settings{},
 		&models.CronMessages{},
+		&models.HostedMessage{},
 	}
 
 	for _, table := range tables {

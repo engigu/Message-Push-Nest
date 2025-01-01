@@ -56,6 +56,10 @@ type WeChatOFAccount struct {
 	TempID    string `json:"tempid" validate:"max=2000" label:"模板消息id"`
 }
 
+// MessageNest 自托管消息
+type MessageNest struct {
+}
+
 func (sw *SendWay) GetByID() (interface{}, error) {
 	return models.GetWayByID(sw.ID)
 }
@@ -170,6 +174,14 @@ func (sw *SendWay) ValidateDiffWay() (string, interface{}) {
 		}
 		_, Msg := app.CommonPlaygroundValid(wca)
 		return Msg, wca
+	} else if sw.Type == "MessageNest" {
+		var wca MessageNest
+		err := json.Unmarshal([]byte(sw.Auth), &wca)
+		if err != nil {
+			return "自托管消息反序列化失败！", empty
+		}
+		_, Msg := app.CommonPlaygroundValid(wca)
+		return Msg, wca
 	}
 	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), empty
 }
@@ -209,11 +221,11 @@ func (sw *SendWay) TestSendWay(msgObj interface{}) (string, string) {
 	}
 	_, ok = msgObj.(WeChatOFAccount)
 	if ok {
-		//var cli = message.WeChatOFAccount{
-		//	AppID:     wca.AppID,
-		//	AppSecret: wca.APPSecret,
-		//}
 		return "微信公众号模板消息不用测试运行，请直接添加", ""
+	}
+	_, ok = msgObj.(MessageNest)
+	if ok {
+		return "自托管消息不用测试运行，请直接添加", ""
 	}
 	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), ""
 }
