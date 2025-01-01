@@ -46,7 +46,8 @@
 
       </div>
       <div class="pagination-block">
-        <el-pagination layout="prev, pager, next" :total="total" :page-size="pageSize" @current-change="handPageChange" />
+        <el-pagination layout="prev, pager, next" :total="total" :page-size="pageSize"
+          @current-change="handPageChange" />
         <el-text class="total-tip" size="small">每页{{ pageSize }}条，共{{ total }}条</el-text>
       </div>
 
@@ -57,7 +58,7 @@
   </div>
 </template>
 
-<script >
+<script>
 import { reactive, toRefs, onMounted } from 'vue'
 import addWayComponent from './view/addWayPopUp.vue'
 import editWayComponent from './view/editWayPopUp.vue'
@@ -68,6 +69,7 @@ import { copyToClipboard } from '@/util/clipboard.js';
 import tableDeleteButton from '@/views/common/tableDeleteButton.vue'
 import { CONSTANT } from '@/constant'
 import { CommonUtils } from "@/util/commonUtils.js";
+import { fr } from 'element-plus/es/locales.mjs';
 
 export default {
   components: {
@@ -95,11 +97,18 @@ export default {
         { 'col': 'type', 'label': '发信渠道' },
         { 'col': 'created_on', 'label': '创建时间' },
       ],
-      options: [
-        { label: '邮箱', value: 'Email' },
-        { label: '钉钉', value: 'Dtalk' }
-      ]
+      options: []
     });
+
+    // 解析map到筛选options
+    const getOptions = () => {
+      let result = [];
+      Object.keys(CONSTANT.WAYS_DATA_MAP).forEach(key => {
+        let val = CONSTANT.WAYS_DATA_MAP[key];
+        result.push({ label: val.label, value: val.type })
+      });
+      return result;
+    };
 
     const handleEdit = (index, row) => {
       let name = state.editWayComponentName;
@@ -146,6 +155,7 @@ export default {
 
     onMounted(async () => {
       await queryListData(1, state.pageSize);
+      state.options = getOptions();
     });
 
     return {
