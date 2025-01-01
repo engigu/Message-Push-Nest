@@ -119,9 +119,10 @@ func DeleteOutDateLogs(keepNum int) (int, error) {
 }
 
 type StatisticData struct {
-	TodaySuccNum   int `json:"today_succ_num"`
-	TodayFailedNum int `json:"today_failed_num"`
-	TodayTotalNum  int `json:"today_total_num"`
+	TodaySuccNum    int `json:"today_succ_num"`
+	TodayFailedNum  int `json:"today_failed_num"`
+	TodayTotalNum   int `json:"today_total_num"`
+	MessageTotalNum int `json:"message_total_num"`
 
 	LatestSendData []LatestSendData `json:"latest_send_data" gorm:"many2many:latest_send_data;"`
 	WayCateData    []WayCateData    `json:"way_cate_data" gorm:"many2many:way_cate_data;"`
@@ -160,6 +161,10 @@ func GetStatisticData() (StatisticData, error) {
 		Where("DATE(created_on) = ?", currDay)
 
 	query.Take(&statistic)
+
+	// 	全部消息统计数据
+	totalQuery := db.Table(logt).Select(`COUNT(*) AS message_total_num`)
+	totalQuery.Take(&statistic)
 
 	// 最近30天数据
 	days := 30

@@ -2,7 +2,18 @@
   <div class="main-center-body">
     <div class="container">
       <el-row :gutter="16">
-        <el-col :span="8">
+        <el-col :span="6">
+          <div class="statistic-card">
+            <el-statistic :value="data.message_total_num">
+              <template #title>
+                <div style="display: inline-flex; align-items: center">
+                  当前消息留存数
+                </div>
+              </template>
+            </el-statistic>
+          </div>
+        </el-col>
+        <el-col :span="6">
           <div class="statistic-card">
             <el-statistic :value="data.today_total_num">
               <template #title>
@@ -13,7 +24,7 @@
             </el-statistic>
           </div>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="6">
           <div class="statistic-card">
             <el-statistic :value="data.today_succ_num">
               <template #title>
@@ -24,7 +35,7 @@
             </el-statistic>
           </div>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="6">
           <div class="statistic-card">
             <el-statistic :value="data.today_failed_num" :value-style="formatFailedNumStyle()">
               <template #title>
@@ -38,7 +49,6 @@
                 </el-icon>
               </template>
             </el-statistic>
-
           </div>
         </el-col>
       </el-row>
@@ -53,8 +63,8 @@
     </div>
   </div>
 </template>
-  
-<script >
+
+<script>
 import {
   ArrowRight,
   CaretBottom,
@@ -228,7 +238,7 @@ export default {
   }
 }
 </script>
-  
+
 <style scoped>
 .container {
   max-width: 1000px;
@@ -260,4 +270,3 @@ export default {
   color: var(--el-color-error);
 }
 </style>
-  
