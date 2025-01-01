@@ -58,7 +58,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 ## 效果图 📺
 
-![image](https://raw.githubusercontent.com/engigu/resources/images/2024/01/26/593a06ac4d1db666acb8a9fb8719e734.gif)
+![CPT2501011259-1496x739](https://github.com/user-attachments/assets/739cee2f-19cd-459a-a744-1999aeecbcd7)
 
 ## 使用方法 🚀
 
