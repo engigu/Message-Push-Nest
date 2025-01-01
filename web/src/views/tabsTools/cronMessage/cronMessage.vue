@@ -16,7 +16,7 @@
           <el-table-column label="消息ID" prop="id"/>
           <el-table-column label="关联ID" prop="task_id" />
           <el-table-column label="消息名" prop="name"  show-overflow-tooltip/>
-          <el-table-column label="Crontab" prop="cron" />
+          <el-table-column label="定时表达式" prop="cron" />
           <el-table-column label="下次执行" prop="next_time" show-overflow-tooltip/>
           <!-- <el-table-column label="Crontab">
             <template #default="scope">
@@ -99,7 +99,7 @@ export default {
     }
 
     const handleDelete = async (index, row) => {
-      const rsp = await request.post('/sendmessages/delete', { id: row.id });
+      const rsp = await request.post('/cronmessages/delete', { id: row.id });
       if (rsp.status == 200) {
         state.tableData.splice(index, 1);
       }
@@ -131,7 +131,7 @@ export default {
 
     const queryListData = async (page, size, name = '') => {
       let params = { page: page, size: size, name: name };
-      const rsp = await request.get('/sendmessages/list', { params: params });
+      const rsp = await request.get('/cronmessages/list', { params: params });
       state.tableData = await rsp.data.data.lists;
       dealInsEnableStatus(state.tableData)
       state.total = await rsp.data.data.total;
@@ -146,7 +146,7 @@ export default {
     // 开启暂停定时任务
     const updateEnableStatus = async (data) => {
       data.enable = !Boolean(data.enable) ? 0 : 1
-      const rsp = await request.post('/sendmessages/edit', data);
+      const rsp = await request.post('/cronmessages/edit', data);
       if (await rsp.data.code == 200) {
         ElMessage({ message: await rsp.data.msg, type: 'success' });
         data.enable = Boolean(data.enable)

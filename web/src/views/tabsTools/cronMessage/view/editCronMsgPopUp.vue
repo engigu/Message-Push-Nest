@@ -2,17 +2,8 @@
   <el-dialog v-model="isShow" width="400px" :close-on-press-escape="false" :before-close="() => { }"
     :show-close="false">
     <template #header="">
-      <el-text class="mx-1">添加定时消息发送</el-text>
-      <el-tooltip placement="top">
-        <template #content>
-          可以定制一些定时消息通知，完成一些简单的提醒事件
-          <br />
-          ** 需要基于已经创建的发信任务进行绑定
-        </template>
-        <el-icon>
-          <QuestionFilled />
-        </el-icon>
-      </el-tooltip>
+      <el-text class="mx-1">编辑发信任务</el-text>
+
     </template>
 
     <div class="add-top">
@@ -23,7 +14,7 @@
 
       <div class="ins-add">
         <el-autocomplete v-model="currSearchInputText" size="small" :fetch-suggestions="querySearchWayAsync"
-          placeholder="请输入消息名进行搜索" @select="handleSearchSelect" :clearable="true" value-key="name" />
+          placeholder="请输入任务名进行搜索" @select="handleSearchSelect" :clearable="true" value-key="name" />
 
         <div class="store-area" v-if="isShowAddBox">
 
@@ -37,7 +28,9 @@
           <el-input type="textarea" :rows="5" v-model="currTaskInput.content" placeholder="请输入消息内容" size="small"
             class="msg-input"></el-input>
           <el-input v-model="currTaskInput.cron" placeholder="请输入定时crontab表达式(linux形式)" size="small" class="msg-input"></el-input>
+          <el-text v-if="currTaskInput.cron" class="mx-1" size="small">下次执行：{{ parseCron(currTaskInput.cron) }}</el-text>
           <el-input v-model="currTaskInput.url" placeholder="请输入消息详情url(可选)" size="small" class="msg-input"></el-input>
+
 
         </div>
       </div>
@@ -47,11 +40,8 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="handleCancer()" size="small">取消</el-button>
-        <!-- <el-button type="primary" size="small" @click="cliclSendNow()">
-          立即发送
-        </el-button> -->
-        <el-button type="primary" size="small" @click="handleSubmit()">
-          确定添加
+        <el-button type="primary" size="small" @click="handleEditCronMsg()">
+          确定修改
         </el-button>
       </span>
     </template>
@@ -65,14 +55,16 @@ import { _ } from 'lodash';
 import { QuestionFilled } from '@element-plus/icons-vue'
 import { usePageState } from '@/store/page_sate.js';
 import { request } from '@/api/api'
+import tableDeleteButton from '@/views/common/tableDeleteButton.vue'
+import { ElMessage } from 'element-plus'
 import { CONSTANT } from '@/constant'
 import { CommonUtils } from "@/util/commonUtils.js";
-import { generateBizUniqueID } from "@/util/uuid.js";
-import { ElMessage } from 'element-plus'
+import { parseCron } from "@/util/cron.js";
 
 export default defineComponent({
   components: {
     QuestionFilled,
+    tableDeleteButton,
   },
   props: {
     componentName: String
@@ -85,28 +77,45 @@ export default defineComponent({
       currSearchInputText: '',
       isShow: false,
       isShowAddBox: false,
-      searchway_id: '',
+      searchWayID: '',
+      currInsInputContentType: '',
       currTaskTmp: {},
       currInsInput: {},
-      currInsInputContentType: 'text',
       currTaskInput: {
         name: '',
         title: '',
         content: '',
         cron: '',
         url: '',
-        id: generateBizUniqueID('C'),
       },
       sysKeptTaskIds: [CONSTANT.LOG_TASK_ID],
-
     });
 
     watch(pageState.ShowDialogData, (newValue, oldValue) => {
       if (newValue[props.componentName]) {
-        state.isShow = pageState.ShowDialogData[props.componentName].isShow;
-        resetPageInitData();
+        let data = pageState.ShowDialogData[props.componentName];
+        state.isShow = data.isShow;
+        state.currTaskInput.taskId = data.rowData.id;
+        if (data && state.isShow && !state.currSearchInputText) {
+          state.currTaskInput = data.rowData;
+          InitOpenSeletValue(state.currTaskInput)
+        }
       }
     });
+
+    const InitOpenSeletValue = async (data) => {
+      // 填充编辑框数据
+      let task_id = data.task_id;
+      const rsp = await request.get('/sendtasks/get', { params: { id: task_id } });
+      let rsp_data = await rsp.data;
+      state.isShowAddBox = true;
+      state.currSearchInputText = rsp_data.data.name;
+      state.currTaskTmp = {
+        id: rsp_data.data.id,
+        name: rsp_data.data.name,
+        created_on: rsp_data.data.created_on,
+      };
+    }
 
     const handleCancer = () => {
       if (pageState.ShowDialogData[props.componentName]) {
@@ -117,23 +126,19 @@ export default defineComponent({
     // 页面每次弹出，重置数据
     const resetPageInitData = () => {
       state.insTableData = [];
-      state.currInsInputContentType = 'text';
       state.currInsInput = {};
       state.currTaskTmp = {};
-      state.searchway_id = '';
-      state.currSearchInputText = '';
+      state.currInsInput = {};
+      state.searchWayID = '';
+      state.currInsInputContentType = '';
       state.isShowAddBox = false;
       state.currTaskInput = {
-        name: '',
-        id: generateBizUniqueID('C'),
+        taskName: '',
+        // taskId: uuidv4(),
       }
     }
 
-    const cliclSendNow = () => {
-      console.log('cliclSendNow');
-    }
-
-    // 匹配出当前搜索的消息数据
+    // 匹配出当前搜索的任务数据
     const matchSearchData = (way_name) => {
       let result = {};
       state.currSearchWaysData.forEach(element => {
@@ -167,24 +172,35 @@ export default defineComponent({
     }
 
     const getFinalData = () => {
-      state.currTaskInput.task_id = state.currTaskTmp.id;
-      return state.currTaskInput
+      let postData = {
+        name: state.currTaskInput.name,
+        title: state.currTaskInput.title,
+        content: state.currTaskInput.content,
+        cron: state.currTaskInput.cron,
+        url: state.currTaskInput.url,
+        id: state.currTaskInput.id,
+        enable: state.currTaskInput.enable ? 1 : 0,
+        task_id: state.currTaskTmp.id,
+      };
+      return postData
     }
 
-    const handleSubmit = async () => {
+    const handleEditCronMsg = async () => {
       let postData = getFinalData();
-      const rsp = await request.post('/sendmessages/addone', postData);
+      console.log('postdata', postData);
+      const rsp = await request.post('/sendmessages/edit', postData);
       if (await rsp.data.code == 200) {
         ElMessage({ message: await rsp.data.msg, type: 'success' });
-        handleCancer();
-        window.location.reload();
+        setTimeout(() => {
+          handleCancer();
+          window.location.reload();
+        }, 1000)
       }
     }
 
     return {
-      ...toRefs(state), handleCancer, handleSubmit, querySearchWayAsync,
-      handleSearchSelect, CONSTANT, CommonUtils,
-      cliclSendNow
+      ...toRefs(state), handleCancer, CONSTANT, CommonUtils,parseCron,
+      handleSearchSelect, querySearchWayAsync, handleEditCronMsg
     };
   },
 });
