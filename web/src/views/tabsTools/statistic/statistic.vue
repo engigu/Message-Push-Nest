@@ -1,8 +1,8 @@
 <template>
   <div class="main-center-body">
     <div class="container">
-      <el-row :gutter="18">
-        <el-col :span="4">
+      <el-row >
+        <el-col :span="5">
           <div class="statistic-card">
             <el-statistic :value="data.message_total_num">
               <template #title>
@@ -46,7 +46,7 @@
             </el-statistic>
           </div>
         </el-col>
-        <el-col :span="5">
+        <el-col :span="4">
           <div class="statistic-card">
             <el-statistic :value="data.today_failed_num" :value-style="formatFailedNumStyle()">
               <template #title>
