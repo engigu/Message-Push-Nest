@@ -176,7 +176,7 @@ export default defineComponent({
 
     const handleSubmit = async () => {
       let postData = getFinalData();
-      const rsp = await request.post('/sendmessages/addone', postData);
+      const rsp = await request.post('/cronmessages/addone', postData);
       if (await rsp.data.code == 200) {
         ElMessage({ message: await rsp.data.msg, type: 'success' });
         handleCancer();

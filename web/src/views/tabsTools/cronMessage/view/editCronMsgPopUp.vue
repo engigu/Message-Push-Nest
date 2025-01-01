@@ -27,8 +27,9 @@
           <el-input v-model="currTaskInput.title" placeholder="请输入消息标题" size="small" class="msg-input"></el-input>
           <el-input type="textarea" :rows="5" v-model="currTaskInput.content" placeholder="请输入消息内容" size="small"
             class="msg-input"></el-input>
-          <el-input v-model="currTaskInput.cron" placeholder="请输入定时crontab表达式(linux形式)" size="small" class="msg-input"></el-input>
-          <el-text v-if="currTaskInput.cron" class="mx-1" size="small">下次执行：{{ parseCron(currTaskInput.cron) }}</el-text>
+          <el-input v-model="currTaskInput.cron" placeholder="请输入定时crontab表达式(linux形式)" size="small"
+            class="msg-input"></el-input>
+          <el-text v-if="currTaskInput.cron" size="small">下次执行：{{ parseCron(currTaskInput.cron)}}</el-text>
           <el-input v-model="currTaskInput.url" placeholder="请输入消息详情url(可选)" size="small" class="msg-input"></el-input>
 
 
@@ -96,7 +97,7 @@ export default defineComponent({
         let data = pageState.ShowDialogData[props.componentName];
         state.isShow = data.isShow;
         state.currTaskInput.taskId = data.rowData.id;
-        if (data && state.isShow && !state.currSearchInputText) {
+        if (data && state.isShow) {
           state.currTaskInput = data.rowData;
           InitOpenSeletValue(state.currTaskInput)
         }
@@ -120,21 +121,6 @@ export default defineComponent({
     const handleCancer = () => {
       if (pageState.ShowDialogData[props.componentName]) {
         pageState.ShowDialogData[props.componentName].isShow = false;
-      }
-    }
-
-    // 页面每次弹出，重置数据
-    const resetPageInitData = () => {
-      state.insTableData = [];
-      state.currInsInput = {};
-      state.currTaskTmp = {};
-      state.currInsInput = {};
-      state.searchWayID = '';
-      state.currInsInputContentType = '';
-      state.isShowAddBox = false;
-      state.currTaskInput = {
-        taskName: '',
-        // taskId: uuidv4(),
       }
     }
 
@@ -187,8 +173,8 @@ export default defineComponent({
 
     const handleEditCronMsg = async () => {
       let postData = getFinalData();
-      console.log('postdata', postData);
-      const rsp = await request.post('/sendmessages/edit', postData);
+      // console.log('postdata', postData);
+      const rsp = await request.post('/cronmessages/edit', postData);
       if (await rsp.data.code == 200) {
         ElMessage({ message: await rsp.data.msg, type: 'success' });
         setTimeout(() => {
@@ -199,7 +185,7 @@ export default defineComponent({
     }
 
     return {
-      ...toRefs(state), handleCancer, CONSTANT, CommonUtils,parseCron,
+      ...toRefs(state), handleCancer, CONSTANT, CommonUtils, parseCron,
       handleSearchSelect, querySearchWayAsync, handleEditCronMsg
     };
   },
