@@ -7,7 +7,7 @@
             <el-statistic :value="data.message_total_num">
               <template #title>
                 <div style="display: inline-flex; align-items: center">
-                  当前消息留存数
+                  当前推送记录留存数
                 </div>
               </template>
             </el-statistic>
