@@ -1,6 +1,7 @@
 package cron_msg_service
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"message-nest/models"
 	"message-nest/pkg/constant"
@@ -63,7 +64,7 @@ func CronMsgSendF(msg models.CronMessages) {
 		Title:    msg.Title,
 		Text:     msg.Content,
 		URL:      msg.Url,
-		CallerIp: "cron task",
+		CallerIp: fmt.Sprintf("[CrondTask] [%s] ID: %s", task.Name, task.ID),
 		DefaultLogger: logrus.WithFields(logrus.Fields{
 			"prefix": "[Cron Message]",
 		}),
