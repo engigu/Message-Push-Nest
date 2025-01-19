@@ -5,16 +5,14 @@
             <div class="tips">
                 <el-text size="small">版本功能更新说明</el-text>
                 <el-icon>
-                    <QuestionFilled @click="drawer = true; logText = TransHtml(desc)" />
+                    <QuestionFilled @click="drawer = true; logText = desc" />
                 </el-icon>
             </div>
         </div>
     </div>
-
     <el-drawer v-model="drawer" :with-header="false">
         <el-text v-html="logText" size="small"></el-text>
     </el-drawer>
-
 </template>
 
 <script>
@@ -53,19 +51,12 @@ export default defineComponent({
             }
         }
 
-        const TransHtml = (raw) => {
-            if (raw) {
-                return raw.replace(/\n/g, '<br />')
-            }
-            return ''
-        }
-
         onMounted(() => {
             getAbout();
         })
 
         return {
-            ...toRefs(state), handleChange, TransHtml
+            ...toRefs(state), handleChange
         }
     }
 
