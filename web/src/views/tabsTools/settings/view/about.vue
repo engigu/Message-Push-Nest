@@ -3,20 +3,20 @@
         <el-text size="small">当前版本：{{ version }}</el-text>
         <div class="buttom">
             <div class="tips">
-                <el-text size="small">版本功能说明</el-text>
-                <el-tooltip v-if="desc" placement="top">
-                    <template #content>
-                      <div v-html="desc"></div>
-                    </template>
-                    <el-icon>
-                        <QuestionFilled />
-                    </el-icon>
-                </el-tooltip>
+                <el-text size="small">版本功能更新说明</el-text>
+                <el-icon>
+                    <QuestionFilled @click="drawer = true; logText = TransHtml(desc)" />
+                </el-icon>
             </div>
         </div>
     </div>
+
+    <el-drawer v-model="drawer" :with-header="false">
+        <el-text v-html="logText" size="small"></el-text>
+    </el-drawer>
+
 </template>
-  
+
 <script>
 import { defineComponent, reactive, toRefs, onMounted } from 'vue';
 import { ElMessage } from 'element-plus'
@@ -31,6 +31,7 @@ export default defineComponent({
         const state = reactive({
             version: '',
             desc: '',
+            drawer: false
         });
 
         const handleChange = async () => {
@@ -52,18 +53,25 @@ export default defineComponent({
             }
         }
 
+        const TransHtml = (raw) => {
+            if (raw) {
+                return raw.replace(/\n/g, '<br />')
+            }
+            return ''
+        }
+
         onMounted(() => {
             getAbout();
         })
 
         return {
-            ...toRefs(state), handleChange
+            ...toRefs(state), handleChange, TransHtml
         }
     }
 
 });
 </script>
-  
+
 <style scoped>
 :deep(.el-input .el-input__wrapper) {
     margin-top: 10px;
