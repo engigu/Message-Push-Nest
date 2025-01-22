@@ -13,9 +13,12 @@ builds:
       - linux
       - windows
       - darwin
+      - freebsd
+      - openbsd
     goarch:
       - amd64
       - arm64
+      - mips64
     id: "{{ .Env.CUSTOM_PROJ_NAME }}"
     binary: "{{ .Env.CUSTOM_PROJ_NAME }}"
 
