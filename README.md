@@ -8,7 +8,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 演示站点(演示站点的服务器比较烂，见谅) [demo](https://message-nest-demo-site.qwapi.eu.org/)
 
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fengigu%2FMessage-Push-Nest&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+[![Hits](https://hits.sh/github.com/engigu/Message-Push-Nest.svg?view=today-total)](https://hits.sh/github.com/engigu/Message-Push-Nest/)
 
 ## 特色 ✨
 
