@@ -55,7 +55,7 @@ func Setup() *gorm.DB {
 		}
 		db, err = gorm.Open(mysql.Open(connStr), config)
 	case "tidb":
-		connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4",
+		connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=true",
 			setting.DatabaseSetting.User,
 			setting.DatabaseSetting.Password,
 			setting.DatabaseSetting.Host,
