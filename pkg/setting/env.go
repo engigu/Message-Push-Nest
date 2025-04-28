@@ -50,6 +50,7 @@ func loadConfigFromEnv() {
 	ServerSetting.WriteTimeout = 60
 
 	DatabaseSetting.Type = getOptionEnvValue("DB_TYPE", "sqlite")
+	DatabaseSetting.Ssl = getOptionEnvValue("SSL", "false")
 
 	if DatabaseSetting.Type == "mysql" {
 		DatabaseSetting.Host = getMustEnvValue("MYSQL_HOST")

@@ -38,6 +38,7 @@ type Database struct {
 	Name        string
 	TablePrefix string
 	SqlDebug    string
+	Ssl         string
 }
 
 var DatabaseSetting = &Database{}

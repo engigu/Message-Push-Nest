@@ -34,12 +34,6 @@ type UUIDModel struct {
 // Setup initializes the database instance
 func Setup() *gorm.DB {
 	var err error
-	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		setting.DatabaseSetting.User,
-		setting.DatabaseSetting.Password,
-		setting.DatabaseSetting.Host,
-		setting.DatabaseSetting.Port,
-		setting.DatabaseSetting.Name)
 
 	config := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -50,6 +44,26 @@ func Setup() *gorm.DB {
 
 	switch setting.DatabaseSetting.Type {
 	case "mysql":
+		connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+			setting.DatabaseSetting.User,
+			setting.DatabaseSetting.Password,
+			setting.DatabaseSetting.Host,
+			setting.DatabaseSetting.Port,
+			setting.DatabaseSetting.Name)
+		if setting.DatabaseSetting.Ssl != "false" {
+			connStr += fmt.Sprintf("&tls=%s", setting.DatabaseSetting.Ssl)
+		}
+		db, err = gorm.Open(mysql.Open(connStr), config)
+	case "tidb":
+		connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4",
+			setting.DatabaseSetting.User,
+			setting.DatabaseSetting.Password,
+			setting.DatabaseSetting.Host,
+			setting.DatabaseSetting.Port,
+			setting.DatabaseSetting.Name)
+		if setting.DatabaseSetting.Ssl != "false" {
+			connStr += fmt.Sprintf("&tls=%s", setting.DatabaseSetting.Ssl)
+		}
 		db, err = gorm.Open(mysql.Open(connStr), config)
 	case "sqlite":
 		db, err = gorm.Open(sqlite.Open("conf/database.db"), config)

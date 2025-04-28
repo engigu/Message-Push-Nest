@@ -24,8 +24,12 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 ## 功能更新日志
 
+- **2025.04.28**
+    - 支持tidb作为存储，支持数据库ssl配置
+    - docker运行指定环境变量SSL=true
+    - ini配置文件运行指定环境变量Ssl=true
 - **2025.01.01**
-    - 支持自托管消息，现在可以将站点作为消息的接受，登录站点查看消息
+  - 支持自托管消息，现在可以将站点作为消息的接受，登录站点查看消息
 - **2024.04.29**
     - 支持 SQLite 部署
     - 支持MySQL 5.x  8.x
@@ -330,6 +334,7 @@ docker-compose up -d
 | MYSQL_PASSWORD     | mysql数据库密码，DB_TYPE=mysql必填                         |
 | MYSQL_DB           | mysql数据库名字，DB_TYPE=mysql必填                         |
 | MYSQL_TABLE_PREFIX | mysql数据表前缀，DB_TYPE=mysql必填                         |
+| SSL                | 是否开启SSL                                            |
 |                    |                                                    |
 | SQL_DEBUG          | 是否打印SQL，可选，默认关，设置enable为开启                         |
 
