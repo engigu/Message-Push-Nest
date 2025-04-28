@@ -446,22 +446,20 @@ WriteTimeout = 60
 ; EmbedHtml = disable   
 
 [database]
-; 配置使用sqlite
-;Type = sqlite
-
-; 配置使用mysql
+; 配置使用什么数据库，支持：mysql、sqlite、tidb
 Type = mysql
 User = root
 Password = password
 Host = 123.1.1.1
 Name = db_name
 Port = 3306
-
-; 其他配置
+; -- 其他配置
 ; 表前缀
 TablePrefix = message_
-; 是否打开sql打印
+; -- 是否打开sql打印
 ; SqlDebug = enable
+; 数据库连接是否开启ssl, value: [false | true]
+Ssl = true
 
 ```
 
