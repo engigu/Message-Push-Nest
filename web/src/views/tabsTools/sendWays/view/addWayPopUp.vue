@@ -22,7 +22,7 @@
         <el-button @click="handleCancer()" size="small">取消</el-button>
         <testSendButton @customhandleSubmit="handleTest()" />
         <el-button type="primary" size="small" @click="handleSubmit()">
-          确定添加
+          确定
         </el-button>
       </span>
     </template>
