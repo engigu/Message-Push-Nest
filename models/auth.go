@@ -27,7 +27,7 @@ func CheckAuth(username, password string) (bool, error) {
 }
 
 // EditUser 编辑用户信息
-func EditUser(username string, data interface{}) error {
+func EditUser(username string, data map[string]interface{}) error {
 	if err := db.Model(&Auth{}).Where("username = ? ", username).Updates(data).Error; err != nil {
 		return err
 	}
