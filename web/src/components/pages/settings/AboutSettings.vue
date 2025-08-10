@@ -112,13 +112,13 @@ export default {
                   查看更新日志
                 </Button>
               </SheetTrigger>
-              <SheetContent class="w-[600px] sm:w-[800px]">
+              <SheetContent class="lg:w-[900px] ">
                 <SheetHeader>
                   <SheetTitle>版本更新日志</SheetTitle>
                 </SheetHeader>
                 <div class="mt-6">
                   <div class="bg-card text-card-foreground rounded-xl border shadow-sm p-6">
-                    <div class="space-y-2 max-h-[70vh] overflow-y-auto">
+                    <div class="space-y-2 max-h-[80vh] overflow-y-auto">
                       <div v-for="(line, index) in state.versionLog.split('\n').reverse().filter(line => line.trim())" :key="index" 
                            class="flex items-start gap-3 p-3 rounded-lg border bg-background hover:bg-accent/50 transition-colors">
                         <div class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>

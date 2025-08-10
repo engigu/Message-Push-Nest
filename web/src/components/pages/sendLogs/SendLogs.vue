@@ -199,8 +199,8 @@ onMounted(async () => {
     />
 
     <!-- 日志详情Sheet -->
-    <Sheet v-model:open="isSheetOpen" class="w-[700px] sm:w-[1000px] lg:w-[1200px]">
-      <SheetContent class="w-[700px] sm:w-[1000px] lg:w-[1200px]">
+    <Sheet v-model:open="isSheetOpen" class="lg:w-[900px] ">
+      <SheetContent class="lg:w-[900px]">
         <SheetHeader>
           <SheetTitle>{{ selectedTaskName }} - 发信日志详情</SheetTitle>
         </SheetHeader>

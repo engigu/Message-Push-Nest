@@ -160,7 +160,7 @@ onMounted(async () => {
 
     <!-- 消息详情Sheet -->
     <Sheet v-model:open="isSheetOpen">
-      <SheetContent class="w-[700px] sm:w-[1000px] lg:w-[1200px]">
+      <SheetContent class="lg:w-[800px] ">
         <SheetHeader>
           <SheetTitle>{{ selectedTaskName }} - 托管消息详情</SheetTitle>
         </SheetHeader>
