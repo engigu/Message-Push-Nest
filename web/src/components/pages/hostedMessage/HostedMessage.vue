@@ -160,12 +160,12 @@ onMounted(async () => {
 
     <!-- 消息详情Sheet -->
     <Sheet v-model:open="isSheetOpen">
-      <SheetContent class="w-[600px] sm:w-[900px] lg:w-[1000px]">
+      <SheetContent class="w-[700px] sm:w-[1000px] lg:w-[1200px]">
         <SheetHeader>
           <SheetTitle>{{ selectedTaskName }} - 托管消息详情</SheetTitle>
         </SheetHeader>
-        <div class="mt-6">
-          <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="mt-4">
+          <div class="bg-gray-50 p-4 rounded-lg max-h-[82vh] overflow-y-auto break-words">
             <pre class="whitespace-pre-wrap text-sm font-mono">{{ selectedLog }}</pre>
           </div>
         </div>
