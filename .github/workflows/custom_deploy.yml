@@ -28,7 +28,7 @@ jobs:
         working-directory: web/
 
       - name: Run npm build
-        run: export NODE_ENV=prod && npm run build
+        run:  echo "BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV && export NODE_ENV=prod && npm run build
         working-directory: web/
 
       - name: Check build static

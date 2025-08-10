@@ -7,7 +7,7 @@
     "dev": "vite",
     "demo": "vite --mode demo",
     "build:demo": "vite build --mode demo",
-    "build": "vue-tsc -b && vite build --define:__BUILD_TIME__='\"'$(date -u +\"%Y-%m-%dT%H:%M:%SZ\")'\"'",
+    "build": "vue-tsc -b && vite build ",
     "preview": "vite preview"
   },
   "dependencies": {
