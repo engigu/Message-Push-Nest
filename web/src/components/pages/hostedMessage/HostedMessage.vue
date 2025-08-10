@@ -120,7 +120,7 @@ onMounted(async () => {
           <TableHead>消息标题</TableHead>
           <TableHead>消息内容</TableHead>
           <TableHead>创建时间</TableHead>
-          <TableHead class="text-center">详情/状态</TableHead>
+          <TableHead class="text-center">详情</TableHead>
         </TableRow>
       </TableHeader>
 
@@ -150,9 +150,9 @@ onMounted(async () => {
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openMessageSheet(message)">查看</Button>
             <!-- <Button size="sm" variant="destructive">删除</Button> -->
-            <Badge :class="message.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
-              {{ getStatusText(message.status) }}
-            </Badge>
+            <!-- <Badge :class="message.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
+              {{ getStatusText(message.status) }} -->
+            <!-- </Badge> -->
           </TableCell>
         </TableRow>
       </TableBody>
