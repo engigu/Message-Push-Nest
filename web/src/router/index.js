@@ -4,7 +4,7 @@ import { CONSTANT } from '../constant'
 
 const router = createRouter({
   // 使用 HTML5 History 模式，确保 URL 变化反映在浏览器地址栏中
-  history: createWebHistory(import.meta.env.BASE_URL || '/'),
+  history: createWebHistory(),
   routes: [
     {
       path: '/login',

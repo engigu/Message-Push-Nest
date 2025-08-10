@@ -106,7 +106,7 @@ const renderLineChart = () => {
     },
     markers: {
       size: 6,
-      colors: ['#10b981', '#ef4444'],
+      colors: ['#3b82f6', '#10b981', '#ef4444'],
       strokeColors: '#fff',
       strokeWidth: 2,
       hover: {
@@ -144,14 +144,14 @@ const renderLineChart = () => {
         }
       }
     },
-    colors: ['#10b981', '#ef4444'], // 绿色表示成功，红色表示失败
+    colors: ['#3b82f6', '#10b981', '#ef4444'], // 蓝色表示总数，绿色表示成功，红色表示失败
     fill: {
       type: 'gradient',
       gradient: {
         shade: 'light',
         type: 'vertical',
         shadeIntensity: 0.5,
-        gradientToColors: ['#34d399', '#f87171'],
+        gradientToColors: ['#60a5fa', '#34d399', '#f87171'],
         inverseColors: false,
         opacityFrom: 0.8,
         opacityTo: 0.1,
@@ -391,7 +391,7 @@ onMounted(() => {
     <Card class="w-full lg:col-span-7">
       <CardHeader>
         <CardTitle>消息发送趋势</CardTitle>
-        <CardDescription>最近30天的发送成功率和失败率统计</CardDescription>
+        <CardDescription>最近30天的发送情况统计</CardDescription>
       </CardHeader>
       <CardContent>
         <div id="sales-chart" class="w-full h-[350px]"></div>
