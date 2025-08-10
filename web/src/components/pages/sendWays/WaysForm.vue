@@ -212,8 +212,6 @@ const getFinalData = () => {
 
 // 测试连接
 const handleTest = async () => {
-  if (!validateFormData()) { return }
-
   let postData = getFinalData()
   const rsp = await request.post('/sendways/test', postData)
   if (await rsp.data.code == 200) {

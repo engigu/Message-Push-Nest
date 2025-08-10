@@ -262,10 +262,7 @@ const renderLineChart = () => {
     }]
   }
   const chart = new ApexCharts(document.querySelector("#sales-chart"), options)
-  console.log(1111);
-
   chart.render();
-  console.log(chart);
 
 }
 
