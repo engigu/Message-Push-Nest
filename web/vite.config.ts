@@ -22,7 +22,8 @@ export default defineConfig(() => {
       },
     },
     define: {
-      __BUILD_TIME__: JSON.stringify(process.env.BUILD_TIME || new Date().toISOString())
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+      'globalThis.__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
     },
   }
 })

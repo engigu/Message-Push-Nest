@@ -22,8 +22,7 @@ const state = reactive({
   techStack: ['Golang','Vue 3', 'TypeScript', 'Vite', 'Tailwind CSS', 'Shadcn/ui'],
   githubUrl: 'https://github.com/engigu/Message-Push-Nest',
   copyright: '保留所有权利.',
-  versionLog: '',
-  buildTime: ''
+  versionLog: ''
 })
 
 // 获取关于页面配置
@@ -52,7 +51,6 @@ const buildTime = computed(() => {
 
 onMounted(() => {
   getAboutConfig()
-  state.buildTime = buildTime.value
 })
 </script>
 
@@ -100,7 +98,7 @@ export default {
               </div> -->
               <div class="flex justify-between">
                 <span class="text-gray-600">构建时间:</span>
-                <span>{{ state.buildTime.includes('开发模式') ? state.buildTime : new Date(state.buildTime).toLocaleString('zh-CN') }}</span>
+                <span>{{ buildTime.includes('开发模式') ? buildTime : new Date(buildTime).toLocaleString('zh-CN') }}</span>
               </div>
             </div>
           </div>
