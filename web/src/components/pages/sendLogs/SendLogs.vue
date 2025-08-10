@@ -175,7 +175,7 @@ onMounted(async () => {
         
         <!-- 数据行 -->
         <TableRow v-for="task in state.tableData" :key="task.id">
-          <TableCell>{{ task.task_id }}</TableCell>
+          <TableCell>{{ task.id }}</TableCell>
           <TableCell>{{ task.task_name }}</TableCell>
           <TableCell class="max-w-xs truncate" :title="formatLogDisplayHtml(task)">{{ task.log }}</TableCell>
           <TableCell>{{ task.created_on }}</TableCell>
