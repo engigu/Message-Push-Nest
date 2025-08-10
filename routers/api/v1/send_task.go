@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"message-nest/pkg/e"
 	"net/http"
 
@@ -124,11 +125,13 @@ func EditMsgSendTask(c *gin.Context) {
 		ID: req.ID,
 	}
 
-	var data = map[string]string{}
-	data["name"] = req.TaskName
+	var data = map[string]interface{}{
+		"name": req.TaskName,
+	}
+
 	err := MsgSendTaskService.Edit(data)
 	if err != nil {
-		appG.CResponse(http.StatusBadRequest, "编辑发信任务失败！", nil)
+		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("编辑发信任务失败！%s", err), nil)
 		return
 	}
 

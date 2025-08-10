@@ -22,8 +22,9 @@ func (us *UserSettings) EditUserPasswd() error {
 	if !ok {
 		return errors.New("旧密码校验失败！")
 	}
-	var user = make(map[string]string)
-	user["password"] = us.NewPassword
+	var user = map[string]interface{}{
+		"password": us.NewPassword,
+	}
 	return models.EditUser(us.UserName, user)
 }
 

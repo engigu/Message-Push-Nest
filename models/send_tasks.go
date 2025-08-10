@@ -169,7 +169,7 @@ func DeleteMsgTask(id string) error {
 	return nil
 }
 
-func EditSendTask(id string, data interface{}) error {
+func EditSendTask(id string, data map[string]interface{}) error {
 	if err := db.Model(&SendTasks{}).Where("id = ? ", id).Updates(data).Error; err != nil {
 		return err
 	}

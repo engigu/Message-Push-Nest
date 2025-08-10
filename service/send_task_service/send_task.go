@@ -27,7 +27,7 @@ func (st *SendTaskService) Delete() error {
 	return models.DeleteMsgTask(st.ID)
 }
 
-func (st *SendTaskService) Edit(data map[string]string) error {
+func (st *SendTaskService) Edit(data map[string]interface{}) error {
 	return models.EditSendTask(st.ID, data)
 }
 
