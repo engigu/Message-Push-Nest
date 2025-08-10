@@ -7,6 +7,7 @@ class LocalStieConfigUtils {
 
     // 更新本地的site设置
     static updateLocalConfig = (data) => {
+        localStorage.removeItem(CONSTANT.STORE_CUSTOM_NAME);
         localStorage.setItem(CONSTANT.STORE_CUSTOM_NAME, JSON.stringify(data));
     }
 

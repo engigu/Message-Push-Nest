@@ -1,0 +1,357 @@
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+// 使用 defineAsyncComponent 导入没有默认导出的组件
+// const Dashboard = defineAsyncComponent(() => import("@/components/pages/dashboard/Dashboard.vue"))
+// const SendLogs = defineAsyncComponent(() => import("@/components/pages/sendLogs/SendLogs.vue"))
+// 导入 constant 模块，使用命名导入匹配 constant.js 的导出方式
+import { CONSTANT } from '../constant.js'
+import { LocalStieConfigUtils } from '@/util/localSiteConfig'
+import { usePageState } from '@/store/page_sate.js'
+
+import { useRoute, useRouter } from 'vue-router'
+
+// 定义标签接口
+interface TabRoute {
+  name: string;
+  path: string;
+}
+
+const route = useRoute()
+const router = useRouter()
+const pageState = usePageState()
+const isAuthenticated = ref(Boolean(localStorage.getItem(CONSTANT.STORE_TOKEN_NAME)));
+const isMobileMenuOpen = ref(false)
+const isUserMenuOpen = ref(false)
+const userAccount = ref('管理员')
+const siteConfig = ref<any>({})
+
+// 从JWT中解析用户名
+const parseJwtUsername = (token: string): string => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.username || payload.user || payload.name || '管理员'
+  } catch (error) {
+    console.error('解析JWT失败:', error)
+    return '管理员'
+  }
+}
+
+// 更新用户账号信息
+const updateUserAccount = () => {
+  const token = localStorage.getItem(CONSTANT.STORE_TOKEN_NAME)
+  if (token) {
+    userAccount.value = parseJwtUsername(token)
+  } else {
+    userAccount.value = '管理员'
+  }
+}
+
+// 更新favicon
+  const updateFavicon = (logoSvg: string) => {
+    if (logoSvg) {
+      // 查找现有的favicon链接
+      let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement
+      if (!link) {
+        // 如果不存在，创建新的favicon链接
+        link = document.createElement('link')
+        link.rel = 'icon'
+        document.head.appendChild(link)
+      }
+      // 将SVG转换为data URL
+      const svgBlob = new Blob([logoSvg], { type: 'image/svg+xml' })
+      const svgUrl = URL.createObjectURL(svgBlob)
+      link.href = svgUrl
+      link.type = 'image/svg+xml'
+    }
+  }
+
+// 获取本地配置
+const getLocalConfig = () => {
+  try {
+    const localConfig = LocalStieConfigUtils.getLocalConfig()
+    if (localConfig) {
+      siteConfig.value = localConfig
+      // 更新页面状态中的配置数据
+      if (pageState.setSiteConfigData) {
+        pageState.setSiteConfigData(localConfig)
+      }
+      // 更新网站标题
+      if (localConfig.title) {
+        document.title = localConfig.title
+      }
+      // 更新favicon
+      if (localConfig.logo) {
+        updateFavicon(localConfig.logo)
+      }
+      
+    }
+  } catch (error) {
+    console.error('获取本地配置失败:', error)
+  }
+}
+
+// 获取最新配置并更新
+const getLatestConfig = async () => {
+  try {
+    const latestConfig = await LocalStieConfigUtils.getLatestLocalConfig()
+    if (latestConfig) {
+      siteConfig.value = latestConfig
+      // 更新页面状态中的配置数据
+      if (pageState.setSiteConfigData) {
+        pageState.setSiteConfigData(latestConfig)
+      }
+      // 更新网站标题
+      if (latestConfig.title) {
+        document.title = latestConfig.title
+      }
+      // 更新favicon
+      if (latestConfig.logo) {
+        updateFavicon(latestConfig.logo)
+      }
+      
+    }
+  } catch (error) {
+    console.error('获取最新配置失败:', error)
+    // 如果获取最新配置失败，尝试使用本地配置
+    getLocalConfig()
+  }
+}
+
+// 切换移动端菜单
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+// 切换用户菜单
+const toggleUserMenu = () => {
+  isUserMenuOpen.value = !isUserMenuOpen.value
+}
+
+// 退出登录
+const logout = () => {
+  localStorage.removeItem(CONSTANT.STORE_TOKEN_NAME)
+  isAuthenticated.value = false
+  isUserMenuOpen.value = false
+  router.push('/login')
+}
+
+// 监听localStorage变化
+onMounted(() => {
+  // 初始化用户账号信息
+  updateUserAccount();
+  
+  // 初始化配置信息
+  getLocalConfig();
+  
+  // 如果已认证，获取最新配置
+  if (isAuthenticated.value) {
+    getLatestConfig();
+  }
+  
+  // 定期检查token状态
+  const checkAuth = () => {
+    const wasAuthenticated = isAuthenticated.value;
+    isAuthenticated.value = Boolean(localStorage.getItem(CONSTANT.STORE_TOKEN_NAME));
+    // 如果认证状态发生变化，更新用户账号信息和配置
+    if (wasAuthenticated !== isAuthenticated.value) {
+      updateUserAccount();
+      if (isAuthenticated.value) {
+        // 用户刚登录，获取最新配置
+        getLatestConfig();
+      } else {
+        // 用户退出登录，使用本地配置
+        getLocalConfig();
+      }
+    }
+  };
+  // 监听storage事件
+  window.addEventListener('storage', checkAuth);
+  // 定期检查（处理同一页面内的变化）
+  const interval = setInterval(checkAuth, 1000);
+  
+  // 点击外部关闭用户菜单
+  const handleClickOutside = (event: Event) => {
+    const target = event.target as Element;
+    if (!target.closest('.user-menu-container')) {
+      isUserMenuOpen.value = false;
+    }
+  };
+  document.addEventListener('click', handleClickOutside);
+  
+  // 清理函数
+  return () => {
+    window.removeEventListener('storage', checkAuth);
+    clearInterval(interval);
+    document.removeEventListener('click', handleClickOutside);
+  };
+});
+
+// 定义标签及其对应的路由路径
+const tabRoutes: TabRoute[] = [
+  { name: '数据统计', path: '/' },
+  { name: '发信日志', path: '/sendlogs' },
+  { name: '托管消息', path: '/hostedmessage' },
+  { name: '定时消息', path: '/cronmessages' },
+  { name: '发信任务', path: '/sendtasks' },
+  { name: '发信渠道', path: '/sendways' },
+  { name: '设置', path: '/settings' }
+];
+const activeTab = ref('Dashboard');
+
+// 处理标签点击事件，跳转到对应路由
+const handleTabClick = (tab: TabRoute) => {
+  activeTab.value = tab.name;
+  
+
+  // 使用 Vue Router 进行导航，保持单页应用状态
+  // 对于根路径，直接导航；对于其他路径，使用相对路径
+  if (tab.path === '/') {
+    router.push(tab.path);
+  } else {
+    // 去掉开头的斜杠，使用相对路径导航
+    const relativePath = tab.path.startsWith('/') ? tab.path.substring(1) : tab.path;
+    router.push(relativePath);
+  }
+};
+
+
+// 根据当前路由设置活动标签
+const updateActiveTab = () => {
+  // 获取当前路径（去掉开头的斜杠）
+  const currentPath = route.path.startsWith('/') ? route.path.substring(1) : route.path;
+
+  // 查找当前路由对应的标签
+  const currentTab = tabRoutes.find(tab => {
+    // 对于根路径，需要精确匹配
+    if (tab.path === '/') {
+      return route.path === '/' || route.path === '';
+    }
+
+    // 对于其他路径，检查当前路由是否匹配
+    // 去掉开头的斜杠进行比较
+    const tabPath = tab.path.startsWith('/') ? tab.path.substring(1) : tab.path;
+    return currentPath === tabPath || route.path === tab.path;
+  });
+
+  // 如果找到对应标签，更新活动标签
+  if (currentTab) {
+    activeTab.value = currentTab.name;
+  }
+};
+
+// 初始化时设置活动标签
+updateActiveTab();
+
+// 监听路由变化并更新活动标签
+watch(() => route.path, updateActiveTab);
+
+// 计算属性：站点标题
+const siteTitle = computed(() => {
+  return siteConfig.value?.title || '消息管理系统'
+})
+</script>
+
+
+<template>
+  <router-view v-if="!isAuthenticated || route.path == '/login' || route.path == 'login'"></router-view>
+
+  <div class="min-h-screen bg-gray-50" v-else>
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- Logo/品牌名称 -->
+          <div class="flex items-center">
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900">{{ siteTitle }}</h1>
+          </div>
+
+          <!-- 桌面端导航 -->
+          <div class="hidden md:flex space-x-6 lg:space-x-8">
+            <button v-for="tab in tabRoutes" :key="tab.name" @click="handleTabClick(tab)" :class="[
+              'relative py-2 px-3 text-sm font-medium transition-all duration-200 rounded-md whitespace-nowrap',
+              activeTab === tab.name
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+            ]">
+              {{ tab.name }}
+              <!-- 活动状态指示器 -->
+              <span v-if="activeTab === tab.name"
+                class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></span>
+            </button>
+          </div>
+
+          <!-- 右侧区域 -->
+          <div class="flex items-center space-x-4">
+            <!-- 用户账号下拉菜单 -->
+            <div class="relative user-menu-container">
+              <button @click="toggleUserMenu" class="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-50 transition-colors">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <span class="hidden sm:block text-sm font-medium text-gray-700">{{ userAccount }}</span>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              <!-- 下拉菜单 -->
+              <div v-if="isUserMenuOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div class="py-1">
+                  <div class="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
+                    <div class="font-medium text-gray-900">{{ userAccount }}</div>
+                    <!-- <div class="text-xs">当前登录账号</div> -->
+                  </div>
+                  <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span>退出登录</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 移动端菜单按钮 -->
+            <button @click="toggleMobileMenu"
+              class="md:hidden p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path v-if="!isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16" />
+                <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 移动端菜单 -->
+        <div v-if="isMobileMenuOpen" class="md:hidden border-t border-gray-200 py-2">
+          <div class="flex flex-col space-y-1">
+            <button v-for="tab in tabRoutes" :key="tab.name" @click="handleTabClick(tab); isMobileMenuOpen = false"
+              :class="[
+                'text-left py-3 px-4 text-sm font-medium transition-all duration-200 rounded-md',
+                activeTab === tab.name
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+              ]">
+              {{ tab.name }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主要内容区域 -->
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <!-- <div class="bg-white rounded-lg shadow-sm border border-gray-200"> -->
+      <div class="">
+        <!-- 使用 router-view 显示嵌套路由的内容 -->
+        <router-view></router-view>
+      </div>
+    </main>
+  </div>
+
+</template>
