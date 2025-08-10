@@ -23,7 +23,9 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 关于日志，考虑到目前多数服务以收集控制台输出为主，暂时不支持写出日志文件。
 
 ## 功能更新日志
-
+- **2025.08.10**
+  - **重大升级，重构web页面，样式更加美观友好**
+  - UI组件使用shadcn-vue，基于tailwindcss，现在支持大中小屏自适应
 - **2025.04.28**
     - 支持tidb作为存储，支持数据库ssl配置
     - docker运行指定环境变量SSL=true
@@ -66,7 +68,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 ## 效果图 📺
 
-![CPT2501011740-1492x733](https://github.com/user-attachments/assets/aa07ad2e-c44a-45c0-bc2b-a669a4adbb00)
+![CPT2501011740-1492x733](https://raw.githubusercontent.com/engigu/resources/refs/heads/images/CPT2508101507-1460x745.gif)
 
 
 ## 使用方法 🚀
@@ -620,56 +622,6 @@ curl_close($ch);
 ```
 </details>
 
-
-## 页面操作指引 🎞️
-
-关于消息的添加，发送的整个步骤，是以顶部菜单栏从右向左进行操作。
-
-<details>
-  <summary>1. 新增发信渠道（添加消息的具体渠道）</summary>
-
-![image](screenshots/1-add-message-ways.png)
-
-参考各个渠道tab的说明进行设置保存
-
-注意现在的自定义webhook形式，只支持`POST`请求，采用的是替换配置的消息体中的占位符`TEXT`，进行发送消息
-
-</details>
-
-<details>
-  <summary>2. 新增发信任务</summary>
-
-![image](screenshots/2-add-message-task.png)
-
-1. 点击渠道输入框会弹出所有渠道选项
-2. 选择一个渠道会出现渠道的明细信息，并选择一种消息类型，进行暂存成为实例，点击确定才会进行最终的保存
-3. 添加任务的页面实际上，会分别添加任务，以及任务关联的渠道实例
-4. 关于任务与实例的说明：
-
-> 一个任务可以关联创建多个实例
->
->  选择不同的渠道，填写的实例信息也不一样
->
->  一个任务可以绑定一个实例，也可以绑定多个实例，多个实例意味着一个消息可以推送给多个消息渠道
-
-5. 关于实例的消息类型说明：
-
-> 消息的类型大体上可以分为text、html、markdown三种类型。每种渠道消息现在支持的类型有不同的限制。
->
->  在实际发送的时候，会优先选择发送api中传过来对应类型的消息，如果api中没有对应的类型，会直接取api中text消息。
->
->  api中text消息在发送的时候必须要传
-
-</details>
-
-<details>
-  <summary>3. 消息发送</summary>
-
-![image](screenshots/3-send-message.png)
-
-参考各种语言的接口进行调用
-
-</details></details>
 
 ## 贡献 🤝
 

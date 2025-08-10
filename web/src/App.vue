@@ -1,9 +1,14 @@
-<template>
-  <Index></Index>
-</template>
 
-<script setup>
-import Index from "./views/home/index.vue"
+
+<script setup lang="ts">
+import { Toaster } from '@/components/ui/sonner'
+import 'vue-sonner/style.css' 
+// 不再直接导入Index组件，而是使用路由视图
 </script>
 
-<style></style>
+<template>
+    <!-- shacn-vue的toast -->
+    <Toaster />
+    <!-- 使用路由视图代替直接渲染Index组件 -->
+    <router-view />
+</template>
