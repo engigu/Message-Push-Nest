@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watch, defineAsyncComponent, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 // 使用 defineAsyncComponent 导入没有默认导出的组件
-const Dashboard = defineAsyncComponent(() => import("@/components/pages/dashboard/Dashboard.vue"))
-const SendLogs = defineAsyncComponent(() => import("@/components/pages/sendLogs/SendLogs.vue"))
+// const Dashboard = defineAsyncComponent(() => import("@/components/pages/dashboard/Dashboard.vue"))
+// const SendLogs = defineAsyncComponent(() => import("@/components/pages/sendLogs/SendLogs.vue"))
 // 导入 constant 模块，使用命名导入匹配 constant.js 的导出方式
 import { CONSTANT } from '../constant.js'
 import { LocalStieConfigUtils } from '@/util/localSiteConfig'

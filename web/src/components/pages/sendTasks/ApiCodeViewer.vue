@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ref, computed, defineComponent } from 'vue'
+import { ref, defineComponent } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'

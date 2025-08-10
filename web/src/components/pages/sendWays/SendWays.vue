@@ -69,7 +69,7 @@ const isEditChannelDrawerOpen = ref(false)
 const editChannelData = ref<WayItem | null>(null)
 
 // 处理保存新渠道
-const handleSaveChannel = (data: any) => {
+const handleSaveChannel = (_data: any) => {
   // 这里可以添加实际的保存逻辑
   // 保存成功后刷新列表
   queryListDataWithStatus()
@@ -90,7 +90,7 @@ const openEditChannelDrawer = (channel: WayItem) => {
 }
 
 // 处理编辑渠道保存
-const handleEditChannel = (data: any) => {
+const handleEditChannel = (_data: any) => {
   // 保存成功后刷新列表
   queryListDataWithStatus()
 }

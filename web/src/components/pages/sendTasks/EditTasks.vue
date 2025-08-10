@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineEmits, defineProps, withDefaults, watch, onMounted } from 'vue'
+import { ref, computed, defineEmits, defineProps, withDefaults, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from "@/components/ui/badge"
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'

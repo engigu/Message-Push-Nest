@@ -12,7 +12,7 @@ interface CronMessageItem {
   cron: string
   url: string
   task_id: string
-  enable: boolean
+  enable: number
   status: boolean
 }
 

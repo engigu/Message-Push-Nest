@@ -10,7 +10,7 @@ const emits = defineEmits<ComboboxItemEmits>()
 
 const delegatedProps = reactiveOmit(props, "class")
 
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const forwarded = useForwardPropsEmits(delegatedProps, emits) as any
 </script>
 
 <template>

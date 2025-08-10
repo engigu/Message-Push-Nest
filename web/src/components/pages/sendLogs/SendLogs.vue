@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 
@@ -93,7 +93,7 @@ const filterByStatus = async (value: any) => {
   }
 }
 
-const queryListData = async (page: number, size: number, name = '', taskid = '', query = '', status = '') => {
+const queryListData = async (page: number, size: number, name = '', taskid = '', query = '', _status = '') => {
   let params: any = { page: page, size: size, name: name, taskid: taskid, query: query };
   if (selectedStatus.value !== '' && selectedStatus.value !== 'all') {
     params.query = JSON.stringify({

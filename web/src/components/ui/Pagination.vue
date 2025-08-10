@@ -27,9 +27,9 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  'page-change': [page: number]
-}>()
+// const _emit = defineEmits<{
+//   'page-change': [page: number]
+// }>()
 
 const totalPages = computed(() => {
   return Math.ceil(props.total / props.pageSize)

@@ -9,7 +9,7 @@ import DrawerOverlay from "./DrawerOverlay.vue"
 const props = defineProps<DialogContentProps & { class?: HTMLAttributes["class"] }>()
 const emits = defineEmits<DialogContentEmits>()
 
-const forwarded = useForwardPropsEmits(props, emits)
+const forwarded = useForwardPropsEmits(props, emits) as any
 </script>
 
 <template>

@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<ComboboxContentProps & { class?: HTMLAttr
 const emits = defineEmits<ComboboxContentEmits>()
 
 const delegatedProps = reactiveOmit(props, "class")
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const forwarded = useForwardPropsEmits(delegatedProps, emits) as any
 </script>
 
 <template>

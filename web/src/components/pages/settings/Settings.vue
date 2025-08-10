@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Component } from 'vue'
 import SettingsSidebar from './SettingsSidebar.vue'
 import PasswordSettings from './PasswordSettings.vue'
 import LogsSettings from './LogsSettings.vue'

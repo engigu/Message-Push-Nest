@@ -2,7 +2,7 @@
 import StatCard from '@/components/pages/dashboard/CardNum.vue'
 import { DatabaseIcon, BarChartIcon, SendIcon, CheckCircleIcon, XCircleIcon } from 'lucide-vue-next'
 // import { LineChart } from "@/components/ui/chart-line"
-import { onMounted, ref, reactive } from 'vue';
+import { onMounted, reactive } from 'vue';
 import { request } from '@/api/api';
 // import VueApexCharts from 'vue3-apexcharts'
 import ApexCharts from 'apexcharts'
@@ -206,14 +206,14 @@ const renderLineChart = () => {
         format: 'MM/dd'
       },
       y: {
-        formatter: function (val: number, { seriesIndex }: { seriesIndex: number }) {
+        formatter: function (val: number, { seriesIndex: _seriesIndex }: { seriesIndex: number }) {
           return val + ' 条'
         }
       },
       marker: {
         show: true
       },
-      custom: function ({ series, seriesIndex, dataPointIndex, w }: { series: number[][], seriesIndex: number, dataPointIndex: number, w: any }) {
+      custom: function ({ series, seriesIndex: _seriesIndex, dataPointIndex, w }: { series: number[][], seriesIndex: number, dataPointIndex: number, w: any }) {
         const successCount = series[1][dataPointIndex];
         const failedCount = series[2][dataPointIndex];
         const total = successCount + failedCount;

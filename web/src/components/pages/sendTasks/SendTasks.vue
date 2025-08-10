@@ -2,10 +2,7 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
@@ -49,15 +46,6 @@ const selectedStatus = ref('all')
 // 任务类型过滤
 const selectedChannelType = ref('all')
 
-// 任务类型选项 - 从CONSTANT.WAYS_DATA生成
-const channelTypeOptions = computed(() => {
-  const options = [{ value: 'all', label: '全部类型' }]
-  CONSTANT.WAYS_DATA.forEach(item => {
-    options.push({ value: item.type, label: item.label })
-  })
-  return options
-})
-
 // Sheet 相关状态
 const isSheetOpen = ref(false)
 const selectedConfig = ref('')
@@ -75,7 +63,7 @@ const isApiCodeViewerOpen = ref(false)
 const selectedTaskData = ref<Record<string, any> | undefined>(undefined)
 
 // 处理保存新任务
-const handleSaveChannel = (data: any) => {
+const handleSaveChannel = (_data: any) => {
   // 这里可以添加实际的保存逻辑
   // 保存成功后刷新列表
   queryListDataWithStatus()
@@ -84,10 +72,10 @@ const handleSaveChannel = (data: any) => {
 // 总页数
 const totalPages = computed(() => Math.ceil(state.total / state.pageSize))
 
-const getWayTypeText = (type: string) => {
-  const wayData = CONSTANT.WAYS_DATA.find(item => item.type === type)
-  return wayData ? wayData.label : type
-}
+// const getWayTypeText = (type: string) => {
+//   const wayItem = CONSTANT.WAYS_DATA.find(item => item.type === type)
+//   return wayItem ? wayItem.label : type
+// }
 
 // 打开编辑任务Drawer
 const openEditChannelDrawer = (channel: WayItem) => {
@@ -96,7 +84,7 @@ const openEditChannelDrawer = (channel: WayItem) => {
 }
 
 // 处理编辑任务保存
-const handleEditChannel = (data: any) => {
+const handleEditChannel = (_data: any) => {
   // 保存成功后刷新列表
   queryListDataWithStatus()
 }
@@ -126,13 +114,13 @@ const filterFunc = async () => {
 }
 
 // 按任务类型过滤
-const filterByChannelType = async (value: any) => {
-  if (value) {
-    selectedChannelType.value = String(value);
-    state.currPage = 1; // 重置到第一页
-    await queryListDataWithStatus();
-  }
-}
+// const filterByChannelType = async (value: any) => {
+//   if (value) {
+//     selectedChannelType.value = String(value);
+//     state.currPage = 1; // 重置到第一页
+//     await queryListDataWithStatus();
+//   }
+// }
 
 // 查询数据（包含状态过滤）
 const queryListDataWithStatus = async () => {

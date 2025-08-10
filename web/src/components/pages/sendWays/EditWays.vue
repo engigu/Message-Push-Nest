@@ -7,7 +7,7 @@ interface Props {
   open?: boolean
   editData?: any // 编辑时传入的数据
 }
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   open: false,
   editData: null
 })

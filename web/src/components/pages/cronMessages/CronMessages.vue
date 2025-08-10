@@ -2,13 +2,9 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import AddCronMessages from './AddCronMessages.vue'
@@ -17,7 +13,6 @@ import { toast } from 'vue-sonner'
 
 import { useRoute, useRouter } from 'vue-router';
 import { request } from '@/api/api';
-import { CONSTANT } from '@/constant';
 // @ts-ignore
 import { getPageSize } from '@/util/pageUtils';
 
@@ -63,7 +58,7 @@ const isEditCronMessageDialogOpen = ref(false)
 const editCronMessageData = ref<CronMessageItem | null>(null)
 
 // 处理保存新定时消息
-const handleSaveCronMessage = (data: any) => {
+const handleSaveCronMessage = (_data: any) => {
   // 保存成功后刷新列表
   queryListDataWithStatus()
 }
@@ -78,7 +73,7 @@ const openEditCronMessageDialog = (cronMessage: CronMessageItem) => {
 }
 
 // 处理编辑定时消息保存
-const handleEditCronMessage = (data: any) => {
+const handleEditCronMessage = (_data: any) => {
   // 保存成功后刷新列表
   queryListDataWithStatus()
 }

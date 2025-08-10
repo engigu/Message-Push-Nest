@@ -9,7 +9,7 @@ const props = defineProps<TabsRootProps & { class?: HTMLAttributes["class"] }>()
 const emits = defineEmits<TabsRootEmits>()
 
 const delegatedProps = reactiveOmit(props, "class")
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const forwarded = useForwardPropsEmits(delegatedProps, emits) as any
 </script>
 
 <template>
