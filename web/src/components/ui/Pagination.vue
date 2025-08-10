@@ -1,23 +1,65 @@
 <template>
-  <div class="flex items-center justify-between space-y-6">
+  <div class="flex items-center justify-between">
     <div class="text-sm text-gray-500">
       共 {{ total }} 条记录，第 {{ currentPage }} / {{ totalPages }} 页
     </div>
-    <div class="flex items-center space-x-2">
-      <Button size="sm" variant="outline" :disabled="currentPage <= 1" @click="$emit('page-change', currentPage - 1)">
-        上一页
-      </Button>
-      <Button size="sm" variant="outline" :disabled="currentPage >= totalPages"
-        @click="$emit('page-change', currentPage + 1)">
-        下一页
-      </Button>
+    
+    <div class="flex justify-end">
+      <Pagination
+        :total="total"
+        :items-per-page="pageSize"
+        :sibling-count="1"
+        :show-edges="true"
+        :default-page="currentPage"
+        :page="currentPage"
+        @update:page="handlePageChange"
+        class="justify-end"
+      >
+      <PaginationContent>
+        <PaginationItem :value="currentPage - 1">
+          <PaginationPrevious @click="handlePrevious" :disabled="currentPage <= 1" class="mr-3">
+            上一页
+          </PaginationPrevious>
+        </PaginationItem>
+
+        <template v-for="(page, index) in items" :key="index">
+          <PaginationItem v-if="page.type === 'page'" :value="page.value" :is-active="page.value === currentPage">
+            <button
+              :class="[
+                'h-9 w-9 rounded-md border transition-colors',
+                page.value === currentPage
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
+              ]"
+              @click="handlePageChange(page.value)"
+            >
+              {{ page.value }}
+            </button>
+          </PaginationItem>
+          <PaginationEllipsis v-else-if="page.type === 'ellipsis'" :index="index" />
+        </template>
+
+        <PaginationItem :value="currentPage + 1">
+          <PaginationNext @click="handleNext" :disabled="currentPage >= totalPages" class="ml-3">
+            下一页
+          </PaginationNext>
+        </PaginationItem>
+      </PaginationContent>
+      </Pagination>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Button } from '@/components/ui/button'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 
 interface Props {
   total: number
@@ -27,13 +69,78 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// const _emit = defineEmits<{
-//   'page-change': [page: number]
-// }>()
+const emit = defineEmits<{
+  'page-change': [page: number]
+}>()
 
 const totalPages = computed(() => {
   return Math.ceil(props.total / props.pageSize)
 })
+
+// 分页项目类型
+type PaginationItem = 
+  | { type: 'page'; value: number }
+  | { type: 'ellipsis' }
+
+// 生成分页项目
+const items = computed((): PaginationItem[] => {
+  const pages: PaginationItem[] = []
+  const total = totalPages.value
+  const current = props.currentPage
+  
+  if (total <= 7) {
+    // 如果总页数小于等于7，显示所有页码
+    for (let i = 1; i <= total; i++) {
+      pages.push({ type: 'page', value: i })
+    }
+  } else {
+    // 复杂分页逻辑
+    if (current <= 2) {
+      // 当前页在前面
+      for (let i = 1; i <= 3; i++) {
+        pages.push({ type: 'page', value: i })
+      }
+      pages.push({ type: 'ellipsis' })
+      pages.push({ type: 'page', value: total })
+    } else if (current >= total - 3) {
+      // 当前页在后面
+      pages.push({ type: 'page', value: 1 })
+      pages.push({ type: 'ellipsis' })
+      for (let i = total - 4; i <= total; i++) {
+        pages.push({ type: 'page', value: i })
+      }
+    } else {
+      // 当前页在中间
+      pages.push({ type: 'page', value: 1 })
+      pages.push({ type: 'ellipsis' })
+      for (let i = current - 1; i <= current + 1; i++) {
+        pages.push({ type: 'page', value: i })
+      }
+      pages.push({ type: 'ellipsis' })
+      pages.push({ type: 'page', value: total })
+    }
+  }
+  
+  return pages
+})
+
+const handlePageChange = (page: number) => {
+  if (page !== props.currentPage && page >= 1 && page <= totalPages.value) {
+    emit('page-change', page)
+  }
+}
+
+const handlePrevious = () => {
+  if (props.currentPage > 1) {
+    emit('page-change', props.currentPage - 1)
+  }
+}
+
+const handleNext = () => {
+  if (props.currentPage < totalPages.value) {
+    emit('page-change', props.currentPage + 1)
+  }
+}
 </script>
 
 <script lang="ts">

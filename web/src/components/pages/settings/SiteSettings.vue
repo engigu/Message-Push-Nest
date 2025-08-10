@@ -160,8 +160,3 @@ export default {
   </Card>
 </template>
 
-<style scoped>
-.setting-container {
-  max-width: 500px;
-}
-</style>
