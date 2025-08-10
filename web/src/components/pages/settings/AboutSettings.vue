@@ -44,9 +44,9 @@ const getAboutConfig = async () => {
 // 获取构建时间
 const buildTime = computed(() => {
   try {
-    return (globalThis as any).__BUILD_TIME__ || new Date().toISOString()
+    return (globalThis as any).__BUILD_TIME__ || '开发模式 - 未构建'
   } catch {
-    return new Date().toISOString()
+    return '开发模式 - 未构建'
   }
 })
 
@@ -100,7 +100,7 @@ export default {
               </div> -->
               <div class="flex justify-between">
                 <span class="text-gray-600">构建时间:</span>
-                <span>{{ new Date(state.buildTime).toLocaleString('zh-CN') }}</span>
+                <span>{{ state.buildTime.includes('开发模式') ? state.buildTime : new Date(state.buildTime).toLocaleString('zh-CN') }}</span>
               </div>
             </div>
           </div>
