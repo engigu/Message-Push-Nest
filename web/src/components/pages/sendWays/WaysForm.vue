@@ -215,7 +215,7 @@ const handleTest = async () => {
   let postData = getFinalData()
   const rsp = await request.post('/sendways/test', postData)
   if (await rsp.data.code == 200) {
-    toast({ message: await rsp.data.msg, type: 'success' })
+    toast.success(rsp.data.msg)
   }
 }
 
