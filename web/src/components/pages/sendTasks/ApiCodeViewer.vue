@@ -108,10 +108,10 @@ export default defineComponent({
         </DialogTitle>
       </DialogHeader>
 
-      <div class="mt-6 space-y-4">
+      <div class=" space-y-2">
         <!-- API 信息概览 -->
 
-        <div class="space-y-3">
+        <!-- <div class="space-y-3">
           <div class="border rounded-lg p-4">
             <div class="flex items-center gap-2 mb-2">
               <Badge variant="default">POST</Badge>
@@ -119,7 +119,7 @@ export default defineComponent({
             </div>
             <p class="text-sm text-gray-600">发送消息，创建新的消息</p>
           </div>
-        </div>
+        </div> -->
 
         <!-- 代码示例 -->
         <div class="space-y-4">
