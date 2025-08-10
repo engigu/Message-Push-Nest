@@ -2,7 +2,6 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
@@ -44,9 +43,6 @@ const selectedTaskName = ref('')
 // 总页数
 const totalPages = computed(() => Math.ceil(state.total / state.pageSize))
 
-const getStatusText = (status: number) => {
-  return status === 1 ? '成功' : '失败'
-}
 
 // 打开消息详情Sheet
 const openMessageSheet = (message: HostedMessageItem) => {
@@ -149,10 +145,6 @@ onMounted(async () => {
           <TableCell>{{ message.created_on }}</TableCell>
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openMessageSheet(message)">查看</Button>
-            <!-- <Button size="sm" variant="destructive">删除</Button> -->
-            <!-- <Badge :class="message.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
-              {{ getStatusText(message.status) }} -->
-            <!-- </Badge> -->
           </TableCell>
         </TableRow>
       </TableBody>
