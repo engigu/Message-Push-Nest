@@ -1,7 +1,7 @@
 <template>
   <div class="flex items-center justify-between">
     <div class="text-sm text-gray-500">
-      共 {{ total }} 条记录，第 {{ currentPage }} / {{ totalPages }} 页
+      共 {{ total }} 条记录
     </div>
     
     <div class="flex justify-end">
