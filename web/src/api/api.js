@@ -1,5 +1,6 @@
 // request.js
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 import { usePageState } from '../store/page_sate';
 import { CONSTANT } from '../constant';
@@ -79,11 +80,12 @@ const handleException = (error) => {
 
 // 登出系统
 const logout = () => {
+    const router = useRouter();
     const pageState = usePageState();
     pageState.setIsLogin(false);
     localStorage.removeItem(CONSTANT.STORE_TOKEN_NAME);
     setTimeout(() => {
-        window.location.href = '/login';
+        router.push('/login');
     }, 500);
 };
 
