@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { CONSTANT } from '@/constant'
-import { validateForm, createValidationState, type InputConfig } from '@/util/validation'
+import {  createValidationState } from '@/util/validation'
+// import { validateForm, createValidationState, type InputConfig } from '@/util/validation'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 import {
@@ -112,50 +113,50 @@ const initFormData = () => {
   formData.value = newFormData
 }
 
-// 获取所有输入字段配置
-const getAllInputConfigs = (): InputConfig[] => {
-  const config = currentChannelConfig.value
-  if (!config) return []
+// // 获取所有输入字段配置
+// const getAllInputConfigs = (): InputConfig[] => {
+//   const config = currentChannelConfig.value
+//   if (!config) return []
 
-  const configs: InputConfig[] = []
+//   const configs: InputConfig[] = []
 
-  // 基本输入字段
-  if (config.inputs) {
-    configs.push(...config.inputs.map((input: any) => ({
-      col: input.col,
-      label: input.label,
-      subLabel: input.subLabel,
-      type: input.type,
-      required: input.required !== false,
-      minLength: input.minLength,
-      maxLength: input.maxLength
-    })))
-  }
+//   // 基本输入字段
+//   if (config.inputs) {
+//     configs.push(...config.inputs.map((input: any) => ({
+//       col: input.col,
+//       label: input.label,
+//       subLabel: input.subLabel,
+//       type: input.type,
+//       required: input.required !== false,
+//       minLength: input.minLength,
+//       maxLength: input.maxLength
+//     })))
+//   }
 
-  // 任务指令输入字段
-  if (config.taskInsInputs) {
-    configs.push(...config.taskInsInputs.map((input: any) => ({
-      col: input.col,
-      label: input.label,
-      subLabel: input.subLabel,
-      type: input.type,
-      required: input.required !== false,
-      minLength: input.minLength,
-      maxLength: input.maxLength
-    })))
-  }
+//   // 任务指令输入字段
+//   if (config.taskInsInputs) {
+//     configs.push(...config.taskInsInputs.map((input: any) => ({
+//       col: input.col,
+//       label: input.label,
+//       subLabel: input.subLabel,
+//       type: input.type,
+//       required: input.required !== false,
+//       minLength: input.minLength,
+//       maxLength: input.maxLength
+//     })))
+//   }
   
-  return configs
-}
+//   return configs
+// }
 
-// 校验表单
-const validateFormData = () => {
-  const inputConfigs = getAllInputConfigs()
-  const result = validateForm(formData.value, inputConfigs)
+// // 校验表单
+// const validateFormData = () => {
+//   const inputConfigs = getAllInputConfigs()
+//   const result = validateForm(formData.value, inputConfigs)
 
-  validationState.setErrors(result.errors)
-  return result.isValid
-}
+//   validationState.setErrors(result.errors)
+//   return result.isValid
+// }
 
 // 监听渠道模式变化
 const handleChannelModeChange = () => {
