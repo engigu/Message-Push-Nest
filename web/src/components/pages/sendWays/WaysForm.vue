@@ -221,7 +221,7 @@ const handleTest = async () => {
 
 // 保存数据
 const handleSave = async () => {
-  if (!validateFormData()) { return }
+  // if (!validateFormData()) { return }
 
   let postData = getFinalData()
 

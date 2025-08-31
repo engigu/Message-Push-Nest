@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 import { generateBizUniqueID } from '@/util/uuid'
@@ -32,6 +32,7 @@ const formData = reactive({
   url: ''
 })
 
+
 // 加载状态
 const loading = ref(false)
 
@@ -56,8 +57,8 @@ const handleSubmit = async () => {
         window.location.reload()
       }, 1000)
     } else {
-        toast.success(rsp.data.msg)
-      }
+      toast.error(rsp.data.msg)
+    }
   } finally {
     loading.value = false
   }
@@ -72,7 +73,11 @@ const handleCancel = () => {
 
 <template>
   <CronMessageForm
-    v-model="formData"
+    :model-value="formData"
+    @update:model-value="(val) => {
+      console.log('Received update:model-value:', val);
+      Object.assign(formData, val);
+    }"
     mode="add"
     :loading="loading"
     @submit="handleSubmit"

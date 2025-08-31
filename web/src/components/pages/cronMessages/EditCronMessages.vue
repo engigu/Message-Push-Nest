@@ -44,12 +44,17 @@ const formData = reactive({
   url: ''
 })
 
+
 // 加载状态
 const loading = ref(false)
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!props.cronMessage) return
+  if (!props.cronMessage) {
+    toast.error('未找到要编辑的定时消息')
+    return
+  }
+  
   
   loading.value = true
   try {
@@ -103,7 +108,8 @@ watch(
 
 <template>
   <CronMessageForm
-    v-model="formData"
+    :model-value="formData"
+    @update:model-value="(val) => Object.assign(formData, val)"
     mode="edit"
     :loading="loading"
     @submit="handleSubmit"

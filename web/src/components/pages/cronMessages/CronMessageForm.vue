@@ -48,7 +48,7 @@ watch(() => props.modelValue, (newValue) => {
 
 // 监听本地数据变化，同步到外部
 watch(localFormData, (newValue) => {
-  emit('update:modelValue', { ...newValue })
+  emit('update:modelValue', newValue)
 }, { deep: true })
 
 // 可用的发信任务列表
@@ -105,7 +105,7 @@ loadAvailableTasks()
 
     <div class="space-y-1">
       <Label for="task_id" class="text-sm">关联发信任务</Label>
-      <Select v-model="localFormData.task_id">
+      <Select :model-value="localFormData.task_id" @update:model-value="(val) => localFormData.task_id = String(val || '')">
         <SelectTrigger class="h-8">
           <SelectValue placeholder="选择要关联的发信任务" />
         </SelectTrigger>
