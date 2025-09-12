@@ -22,7 +22,9 @@ builds:
     binary: "{{ .Env.CUSTOM_PROJ_NAME }}"
 
 dockers:
-  - image_templates: [ "docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64" ]
+  - image_templates: 
+      - "docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64"
+      - "ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64"
     dockerfile: Dockerfile
     extra_files:
       - LICENSE
@@ -38,7 +40,9 @@ dockers:
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=MIT
-  - image_templates: [ "docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8" ]
+  - image_templates: 
+      - "docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8"
+      - "ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8"
     goarch: arm64
     dockerfile: Dockerfile
     extra_files:
@@ -64,6 +68,14 @@ docker_manifests:
     image_templates:
       - docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64
       - docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8
+  - name_template: ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}
+    image_templates:
+      - ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64
+      - ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8
+  - name_template: ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:latest
+    image_templates:
+      - ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64
+      - ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8
 
 archives:
   - format: tar.gz
