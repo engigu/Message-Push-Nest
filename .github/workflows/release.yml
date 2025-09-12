@@ -5,12 +5,12 @@ on:
     # run only against tags
     tags:
       - '*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version tag (e.g., v1.2.3).'
-        required: true
-        type: string
+  # workflow_dispatch:
+    # inputs:
+    #   version:
+    #     description: 'Release version tag (e.g., v1.2.3).'
+    #     required: true
+    #     type: string
   # release:
   #   types: [published]
 

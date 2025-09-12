@@ -258,18 +258,35 @@ TablePrefix = message_
 6. 使用命令启动，端口使用`-p`自定义
 
 ```shell
+# 从 Docker Hub 拉取
 docker pull engigu/message-nest:latest
-# 测试运行
+
+# 或从 GitHub Container Registry (GHCR) 拉取
+docker pull ghcr.io/engigu/message-nest:latest
+
+# 测试运行（Docker Hub 镜像）
 docker run --rm -ti \
   -p 8000:8000 \
   -v /your/path/conf:/app/conf \
   engigu/message-nest:latest 
+
+# 测试运行（GHCR 镜像）
+docker run --rm -ti \
+  -p 8000:8000 \
+  -v /your/path/conf:/app/conf \
+  ghcr.io/engigu/message-nest:latest 
   
-# 正式运行
+# 正式运行（Docker Hub 镜像）
 docker run -d \
   -p 8000:8000 \
   -v /your/path/conf:/app/conf \
   engigu/message-nest:latest 
+
+# 正式运行（GHCR 镜像）
+docker run -d \
+  -p 8000:8000 \
+  -v /your/path/conf:/app/conf \
+  ghcr.io/engigu/message-nest:latest 
 ```
 
 7. 启动项目，访问8000端口，初始账号为admin，密码为123456
@@ -288,6 +305,8 @@ services:
 
   message-nest:
     image: engigu/message-nest:latest
+    # 或使用 GHCR 镜像
+    # image: ghcr.io/engigu/message-nest:latest
     container_name: message-nest
     restart: always
     volumes:
@@ -356,12 +375,31 @@ docker run -d  \
   --name message-nest  \
   engigu/message-nest:latest 
 
+# 或使用 GHCR 镜像（mysql）
+docker run -d  \
+  -p 8000:8000 \
+  -e MYSQL_HOST=192.168.64.133  \
+  -e MYSQL_PORT=3308 \
+  -e MYSQL_USER=root \
+  -e MYSQL_PASSWORD=Aa123456 \
+  -e MYSQL_DB=test_11 \
+  -e MYSQL_TABLE_PREFIX=message_ \
+  --name message-nest  \
+  ghcr.io/engigu/message-nest:latest 
+
 # 正式运行（sqlite）
 docker run -d  \
   -p 8000:8000 \
   -v you/path/database.db=conf/database.db  \
   --name message-nest  \
   engigu/message-nest:latest 
+
+# 或使用 GHCR 镜像（sqlite）
+docker run -d  \
+  -p 8000:8000 \
+  -v you/path/database.db=conf/database.db  \
+  --name message-nest  \
+  ghcr.io/engigu/message-nest:latest 
 ```
 
 docker-compose运行(mysql)
@@ -372,6 +410,8 @@ services:
 
   message-nest:
     image: engigu/message-nest:latest
+    # 或使用 GHCR 镜像
+    # image: ghcr.io/engigu/message-nest:latest
     container_name: message-nest
     restart: always
     ports:
@@ -393,6 +433,8 @@ services:
 
   message-nest:
     image: engigu/message-nest:latest
+    # 或使用 GHCR 镜像
+    # image: ghcr.io/engigu/message-nest:latest
     container_name: message-nest
     restart: always
     ports:
