@@ -7,6 +7,7 @@ import (
 	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/constant"
+	"message-nest/pkg/util"
 	"message-nest/service/cron_service"
 )
 
@@ -41,6 +42,11 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 	// 版本信息单独获取
 	if section == constant.AboutSectionName {
 		result = constant.LatestVersion
+		// 添加内存使用信息
+		memoryInfo := util.GetMemoryUsage()
+		for key, value := range memoryInfo {
+			result[key] = value
+		}
 	}
 	return result, nil
 }
