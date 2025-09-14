@@ -22,7 +22,9 @@ const state = reactive({
   techStack: ['Golang','Vue 3', 'TypeScript', 'Vite', 'Tailwind CSS', 'Shadcn/ui'],
   githubUrl: 'https://github.com/engigu/Message-Push-Nest',
   copyright: '保留所有权利.',
-  versionLog: ''
+  versionLog: '',
+  memoryUsage: '',
+  uptime: ''
 })
 
 // 获取关于页面配置
@@ -34,6 +36,8 @@ const getAboutConfig = async () => {
       const data = response.data.data
       if (data.version) state.version = data.version
       if (data.desc) state.versionLog = data.desc
+      if (data.memory_usage) state.memoryUsage = data.memory_usage
+      if (data.uptime) state.uptime = data.uptime
     }
   } catch (error) {
     toast.error('获取关于信息失败')
@@ -99,6 +103,14 @@ export default {
               <div class="flex justify-between">
                 <span class="text-gray-600">构建时间:</span>
                 <span>{{ buildTime.includes('开发模式') ? buildTime : new Date(buildTime).toLocaleString('zh-CN') }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">内存使用:</span>
+                <span class="text-sm">{{ state.memoryUsage || '获取中...' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">运行时间:</span>
+                <span class="text-sm">{{ state.uptime || '获取中...' }}</span>
               </div>
             </div>
           </div>
