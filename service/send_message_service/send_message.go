@@ -3,12 +3,13 @@ package send_message_service
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"message-nest/models"
 	"message-nest/pkg/constant"
 	"message-nest/service/send_task_service"
 	"message-nest/service/send_way_service"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -131,7 +132,7 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 
 		// 暂停了实例的发送
 		if ins.Enable != 1 {
-			sm.LogsAndStatusMark("该实例发送已经被暂停，跳过发送！\n", sm.Status)
+			//sm.LogsAndStatusMark("该实例发送已经被暂停，跳过发送！\n", sm.Status)
 			continue
 		}
 
