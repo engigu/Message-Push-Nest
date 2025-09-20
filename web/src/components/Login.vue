@@ -27,6 +27,7 @@ let pageState = usePageState();
 let router = useRouter();
 let account = ref("");
 let password = ref("");
+let loading = ref(false);
 
 // 站点演示模式
 const demoSiteSet = () => {
@@ -89,13 +90,36 @@ onMounted(async () => {
 
 // 登录
 let clickLogin = async () => {
-  const rspe = await request.post('/auth', { username: account.value, passwd: password.value });
-  const rsp = rspe.data;
-  if (rsp.code != 200) {
-      toast(rsp.msg);
-  } else {
-      pageState.setToken(rsp.data.token);
-      router.push('/');
+  // 防止重复提交
+  if (loading.value) {
+    return;
+  }
+  
+  // 验证输入
+  if (!account.value.trim() || !password.value.trim()) {
+    toast.error('请输入账号和密码');
+    return;
+  }
+  
+  loading.value = true;
+  
+  try {
+    const rspe = await request.post('/auth', { username: account.value, passwd: password.value });
+    const rsp = rspe.data;
+    if (rsp.code != 200) {
+        toast.error(rsp.msg);
+    } else {
+        pageState.setToken(rsp.data.token);
+        toast.success('登录成功');
+        // 延迟一下再跳转，让用户看到成功提示
+        setTimeout(() => {
+          router.push('/');
+        }, 500);
+    }
+  } catch (error) {
+    toast.error('登录失败，请检查网络连接');
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -134,8 +158,12 @@ let clickLogin = async () => {
                   <Input id="password" type="password" v-model="password" required />
                 </div>
                 <Button type="submit" class="w-full active:scale-95 active:bg-gray-100 transition duration-150"
-                  @click.prevent="clickLogin">
-                  登录
+                  @click.prevent="clickLogin" :disabled="loading">
+                  <svg v-if="loading" class="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {{ loading ? '登录中...' : '登录' }}
                 </Button>
                 <!-- <div class="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
               <span class="relative z-10 bg-background px-2 text-muted-foreground">
