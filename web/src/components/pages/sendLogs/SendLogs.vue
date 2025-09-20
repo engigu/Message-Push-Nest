@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted, nextTick } from 'vue'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -85,26 +85,35 @@ const filterFunc = async () => {
 
 // 按状态过滤
 const filterByStatus = async (value: any) => {
-  if (value) {
-    state.currPage = 1; // 重置到第一页
-    await queryListData(state.currPage, state.pageSize, state.search, state.optionValue, JSON.stringify({
-      status: selectedStatus.value === 'all' ? '' : selectedStatus.value
-    }));
-  }
+  selectedStatus.value = value;
+  state.currPage = 1; // 重置到第一页
+  await queryListData(state.currPage, state.pageSize, state.search, state.optionValue);
 }
 
 const queryListData = async (page: number, size: number, name = '', taskid = '', query = '', _status = '') => {
-  let params: any = { page: page, size: size, name: name, taskid: taskid, query: query };
+  let params: any = { page: page, size: size, name: name, taskid: taskid };
+  
+  // 如果有状态筛选，添加到query参数中
   if (selectedStatus.value !== '' && selectedStatus.value !== 'all') {
     params.query = JSON.stringify({
-      status: selectedStatus.value === 'all' ? '' : selectedStatus.value
-    })
+      status: selectedStatus.value
+    });
+  } else if (query) {
+    // 如果有其他query参数，使用传入的query
+    params.query = query;
   }
 
   const rsp = await request.get('/sendlogs/list', { params: params });
-  state.tableData = await rsp.data.data.lists;
-  // state.tableData = []
-  state.total = await rsp.data.data.total;
+  
+  // 清空现有数据
+  state.tableData = [];
+  
+  // 使用 nextTick 确保响应式更新
+  await nextTick();
+  
+  // 更新数据
+  state.tableData = rsp.data.data.lists || [];
+  state.total = rsp.data.data.total;
 }
 
 onMounted(async () => {
