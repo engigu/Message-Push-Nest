@@ -3,8 +3,6 @@ package main
 import (
 	"embed"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"message-nest/migrate"
 	"message-nest/models"
 	"message-nest/pkg/constant"
@@ -15,6 +13,9 @@ import (
 	"message-nest/service/cron_service"
 	"net/http"
 	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -29,8 +30,8 @@ func init() {
 	constant.InitReleaseInfo(rf)
 	setting.Setup()
 	logging.Setup()
-	migrate.Setup()
 	models.Setup()
+	go migrate.Setup()
 }
 
 func main() {
