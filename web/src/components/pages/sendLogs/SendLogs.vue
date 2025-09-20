@@ -130,7 +130,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-6 w-full max-w-6xl mx-auto space-y-2">
+  <div class="p-4 w-full max-w-6xl mx-auto space-y-2">
     <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
       <div class="flex-1 sm:flex-initial">
         <Input v-model="state.search" placeholder="搜索任务..." class="w-full sm:w-64" @keyup.enter="filterFunc"

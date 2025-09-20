@@ -345,9 +345,9 @@ const siteTitle = computed(() => {
     </nav>
 
     <!-- 主要内容区域 -->
-    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto py-2 px-4 sm:px-2 lg:px-8">
       <!-- <div class="bg-white rounded-lg shadow-sm border border-gray-200"> -->
-      <div class="">
+      <div>
         <!-- 使用 router-view 显示嵌套路由的内容 -->
         <router-view></router-view>
       </div>

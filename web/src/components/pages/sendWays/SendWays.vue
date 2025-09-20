@@ -158,7 +158,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-6 w-full max-w-6xl mx-auto space-y-2">
+  <div class="p-4 w-full max-w-6xl mx-auto space-y-2">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
         <div class="flex-1 sm:flex-initial">
