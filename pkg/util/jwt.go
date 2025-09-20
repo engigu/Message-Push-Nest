@@ -2,9 +2,10 @@ package util
 
 import (
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"message-nest/pkg/setting"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type UserClaims struct {
@@ -16,6 +17,7 @@ type UserClaims struct {
 
 func GenerateToken(username, password string) (string, error) {
 	expHours := 1 * 24 * time.Hour
+	//expHours := 1 * time.Minute
 	SetClaims := UserClaims{
 		Username: username,
 		Password: EncodeMD5(password),

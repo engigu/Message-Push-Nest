@@ -129,6 +129,25 @@ type StatisticData struct {
 	WayCateData    []WayCateData    `json:"way_cate_data" gorm:"many2many:way_cate_data;"`
 }
 
+// BasicStatisticData 基础统计数据
+type BasicStatisticData struct {
+	TodaySuccNum          int `json:"today_succ_num"`
+	TodayFailedNum        int `json:"today_failed_num"`
+	TodayTotalNum         int `json:"today_total_num"`
+	MessageTotalNum       int `json:"message_total_num"`
+	HostedMessageTotalNum int `json:"hosted_message_total_num"`
+}
+
+// TrendStatisticData 趋势统计数据
+type TrendStatisticData struct {
+	LatestSendData []LatestSendData `json:"latest_send_data"`
+}
+
+// ChannelStatisticData 渠道统计数据
+type ChannelStatisticData struct {
+	WayCateData []WayCateData `json:"way_cate_data"`
+}
+
 type LatestSendData struct {
 	Day          string `json:"day"`
 	Num          int    `json:"num"`
@@ -201,6 +220,83 @@ func GetStatisticData() (StatisticData, error) {
 		Scan(&wayCateData)
 
 	statistic.LatestSendData = latestData
+	statistic.WayCateData = wayCateData
+	return statistic, nil
+}
+
+// GetBasicStatisticData 获取基础统计数据
+func GetBasicStatisticData() (BasicStatisticData, error) {
+	var statistic BasicStatisticData
+	logt := GetSchema(SendTasksLogs{})
+	hostedt := GetSchema(HostedMessage{})
+	currDay := util.GetNowTimeStr()[:10]
+
+	// 今日统计数据
+	query := db.
+		Table(logt).
+		Select(`
+	COUNT(*) AS today_total_num,
+	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
+	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
+		Where("DATE(created_on) = ?", currDay)
+
+	query.Take(&statistic)
+
+	// 全部消息统计数据
+	totalQuery := db.Table(logt).Select(`COUNT(*) AS message_total_num`)
+	totalQuery.Take(&statistic)
+
+	// 托管消息统计数据
+	hostedMessageTotalQuery := db.Table(hostedt).Select(`COUNT(*) AS hosted_message_total_num`)
+	hostedMessageTotalQuery.Take(&statistic)
+
+	return statistic, nil
+}
+
+// GetTrendStatisticData 获取趋势统计数据
+func GetTrendStatisticData() (TrendStatisticData, error) {
+	var statistic TrendStatisticData
+	var latestData []LatestSendData
+	logt := GetSchema(SendTasksLogs{})
+
+	// 最近30天数据
+	days := 30
+	now := util.GetNowTime()
+	past := now.AddDate(0, 0, -days)
+	pastDate := past.Format("2006-01-02")
+	next := now.AddDate(0, 0, 1)
+	nextDate := next.Format("2006-01-02")
+	queryData := db.
+		Table(logt).
+		Select(`
+	CAST(DATE(created_on) AS CHAR) AS day,
+	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
+	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
+	COUNT(*) AS num`).
+		Where(fmt.Sprintf(" created_on >= '%s' and created_on <= '%s' ", pastDate, nextDate)).
+		Group("day").
+		Order("day")
+
+	queryData.Scan(&latestData)
+	statistic.LatestSendData = latestData
+	return statistic, nil
+}
+
+// GetChannelStatisticData 获取渠道统计数据
+func GetChannelStatisticData() (ChannelStatisticData, error) {
+	var statistic ChannelStatisticData
+	var wayCateData []WayCateData
+	inst := GetSchema(SendTasksIns{})
+	wayst := GetSchema(SendWays{})
+
+	// 消息实例分类数目
+	db.
+		Table(inst).
+		Select(fmt.Sprintf("%s.name as way_name, count(%s.id) as count_num", wayst, wayst)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", wayst, inst, wayst)).
+		Group(fmt.Sprintf("%s.id", wayst)).
+		Scan(&wayCateData)
+
 	statistic.WayCateData = wayCateData
 	return statistic, nil
 }

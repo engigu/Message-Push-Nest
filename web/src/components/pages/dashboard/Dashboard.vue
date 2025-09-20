@@ -4,6 +4,7 @@ import { DatabaseIcon, BarChartIcon, SendIcon, CheckCircleIcon, XCircleIcon } fr
 // import { LineChart } from "@/components/ui/chart-line"
 import { onMounted, reactive } from 'vue';
 import { request } from '@/api/api';
+import { toast } from 'vue-sonner';
 // import VueApexCharts from 'vue3-apexcharts'
 import ApexCharts from 'apexcharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,33 +22,92 @@ interface CateData {
 }
 
 let state = reactive({
-  data: {
+  basicData: {
     message_total_num: 0,
     hosted_message_total_num: 0,
     today_total_num: 0,
     today_succ_num: 0,
     today_failed_num: 0,
-    way_cate_data: [] as CateData[],
+  },
+  trendData: {
     latest_send_data: [] as SendData[],
+  },
+  channelData: {
+    way_cate_data: [] as CateData[],
+  },
+  loading: {
+    basic: false,
+    trend: false,
+    channels: false,
   }
 });
 
-const getStatisticData = async () => {
+// 获取基础统计数据
+const getBasicStatisticData = async () => {
+  state.loading.basic = true;
   try {
-    const rsp = await request.get('/statistic');
+    const rsp = await request.get('/statistic?type=basic');
     if (rsp && rsp.data && rsp.data.code == 200) {
-      state.data = rsp.data.data;
-      // 数据加载完成后重新渲染图表
+      state.basicData = rsp.data.data;
+    } else {
+      toast.error(rsp?.data?.msg || '获取基础统计数据失败');
+    }
+  } catch (error) {
+    toast.error('获取基础统计数据时发生错误');
+  } finally {
+    state.loading.basic = false;
+  }
+}
+
+// 获取趋势统计数据
+const getTrendStatisticData = async () => {
+  state.loading.trend = true;
+  try {
+    const rsp = await request.get('/statistic?type=trend');
+    if (rsp && rsp.data && rsp.data.code == 200) {
+      state.trendData = rsp.data.data;
+      // 数据加载完成后重新渲染折线图
       setTimeout(() => {
         renderLineChart();
+      }, 100);
+    } else {
+      toast.error(rsp?.data?.msg || '获取趋势统计数据失败');
+    }
+  } catch (error) {
+    toast.error('获取趋势统计数据时发生错误');
+  } finally {
+    state.loading.trend = false;
+  }
+}
+
+// 获取渠道统计数据
+const getChannelStatisticData = async () => {
+  state.loading.channels = true;
+  try {
+    const rsp = await request.get('/statistic?type=channels');
+    if (rsp && rsp.data && rsp.data.code == 200) {
+      state.channelData = rsp.data.data;
+      // 数据加载完成后重新渲染饼图
+      setTimeout(() => {
         renderPieChart();
       }, 100);
     } else {
-      console.error('Failed to load statistics:', rsp?.data?.msg || 'Unknown error');
+      toast.error(rsp?.data?.msg || '获取渠道统计数据失败');
     }
   } catch (error) {
-    console.error('Error loading statistics:', error);
+    toast.error('获取渠道统计数据时发生错误');
+  } finally {
+    state.loading.channels = false;
   }
+}
+
+// 并行加载所有统计数据
+const loadAllStatisticData = async () => {
+  await Promise.all([
+    getBasicStatisticData(),
+    getTrendStatisticData(),
+    getChannelStatisticData()
+  ]);
 }
 
 const renderLineChart = () => {
@@ -55,20 +115,20 @@ const renderLineChart = () => {
     series: [
       {
         name: '发送总数',
-        data: state.data.latest_send_data.length > 0
-          ? state.data.latest_send_data.map(item => item.num || 0)
+        data: state.trendData.latest_send_data.length > 0
+          ? state.trendData.latest_send_data.map(item => item.num || 0)
           : []
       },
       {
         name: '发送成功数',
-        data: state.data.latest_send_data.length > 0
-          ? state.data.latest_send_data.map(item => item.day_succ_num || 0)
+        data: state.trendData.latest_send_data.length > 0
+          ? state.trendData.latest_send_data.map(item => item.day_succ_num || 0)
           : []
       },
       {
         name: '发送失败数',
-        data: state.data.latest_send_data.length > 0
-          ? state.data.latest_send_data.map(item => item.day_failed_num || 0)
+        data: state.trendData.latest_send_data.length > 0
+          ? state.trendData.latest_send_data.map(item => item.day_failed_num || 0)
           : []
       },
     ],
@@ -115,8 +175,8 @@ const renderLineChart = () => {
       }
     },
     xaxis: {
-      categories: state.data.latest_send_data.length > 0
-        ? state.data.latest_send_data.map(item => item.day)
+      categories: state.trendData.latest_send_data.length > 0
+        ? state.trendData.latest_send_data.map(item => item.day)
         : [],
       axisBorder: {
         show: false
@@ -268,8 +328,8 @@ const renderLineChart = () => {
 
 const renderPieChart = () => {
   const options = {
-    series: state.data.way_cate_data.length > 0
-      ? state.data.way_cate_data.map(item => item.count_num)
+    series: state.channelData.way_cate_data.length > 0
+      ? state.channelData.way_cate_data.map(item => item.count_num)
       : [],
     chart: {
       type: 'pie',
@@ -290,8 +350,8 @@ const renderPieChart = () => {
         }
       }
     },
-    labels: state.data.way_cate_data.length > 0
-      ? state.data.way_cate_data.map(item => item.way_name)
+    labels: state.channelData.way_cate_data.length > 0
+      ? state.channelData.way_cate_data.map(item => item.way_name)
       : [],
     colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
     legend: {
@@ -353,8 +413,7 @@ const renderPieChart = () => {
 }
 
 onMounted(() => {
-  getStatisticData();
-  // renderLineChart();
+  loadAllStatisticData();
 })
 
 
@@ -363,11 +422,11 @@ onMounted(() => {
 
 <template>
   <div class="w-[90%] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-5 gap-4">
-    <StatCard title="推送记录留存数" :value="state.data.message_total_num" description="" :icon="DatabaseIcon" />
-    <StatCard title="托管消息数" :value="state.data.hosted_message_total_num" description="" :icon="BarChartIcon" />
-    <StatCard title="今日发送总数" :value="state.data.today_total_num" description="" :icon="SendIcon" />
-    <StatCard title="今日成功数" :value="state.data.today_succ_num" description="" :icon="CheckCircleIcon" />
-    <StatCard title="今日失败数" :value="state.data.today_failed_num" description="" :icon="XCircleIcon" />
+    <StatCard title="推送记录留存数" :value="state.basicData.message_total_num" description="" :icon="DatabaseIcon" />
+    <StatCard title="托管消息数" :value="state.basicData.hosted_message_total_num" description="" :icon="BarChartIcon" />
+    <StatCard title="今日发送总数" :value="state.basicData.today_total_num" description="" :icon="SendIcon" />
+    <StatCard title="今日成功数" :value="state.basicData.today_succ_num" description="" :icon="CheckCircleIcon" />
+    <StatCard title="今日失败数" :value="state.basicData.today_failed_num" description="" :icon="XCircleIcon" />
   </div>
 
   <!-- 折线图 -->
