@@ -194,7 +194,7 @@ const tabRoutes: TabRoute[] = [
   { name: '定时消息', path: '/cronmessages' },
   { name: '发信任务', path: '/sendtasks' },
   { name: '发信渠道', path: '/sendways' },
-  { name: '设置', path: '/settings' }
+  { name: '设置偏好', path: '/settings' }
 ];
 const activeTab = ref('Dashboard');
 
