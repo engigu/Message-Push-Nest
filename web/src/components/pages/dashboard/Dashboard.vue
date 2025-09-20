@@ -422,9 +422,9 @@ onMounted(() => {
 
 <template>
   <div class="w-[90%] mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-5 gap-4">
-    <StatCard title="推送记录留存数" :value="state.basicData.message_total_num" description="" :icon="DatabaseIcon" />
+    <StatCard title="推送留存数" :value="state.basicData.message_total_num" description="" :icon="DatabaseIcon" />
     <StatCard title="托管消息数" :value="state.basicData.hosted_message_total_num" description="" :icon="BarChartIcon" />
-    <StatCard title="今日发送总数" :value="state.basicData.today_total_num" description="" :icon="SendIcon" />
+    <StatCard title="今日发送数" :value="state.basicData.today_total_num" description="" :icon="SendIcon" />
     <StatCard title="今日成功数" :value="state.basicData.today_succ_num" description="" :icon="CheckCircleIcon" />
     <StatCard title="今日失败数" :value="state.basicData.today_failed_num" description="" :icon="XCircleIcon" />
   </div>
