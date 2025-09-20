@@ -31,6 +31,13 @@ func (us *UserSettings) EditUserPasswd() error {
 
 // GetUserSetting 获取用户设置
 func (us *UserSettings) GetUserSetting(section string) (map[string]string, error) {
+	// 如果是site_config，优先从缓存获取
+	if section == constant.SiteSettingSectionName {
+		if IsSiteConfigCacheValid() {
+			return GetSiteConfigCache(), nil
+		}
+	}
+	
 	result := make(map[string]string)
 	settings, err := models.GetSettingBySection(section)
 	if err != nil {
@@ -39,6 +46,12 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 	for _, setting := range settings {
 		result[setting.Key] = setting.Value
 	}
+	
+	// 如果是site_config，更新缓存
+	if section == constant.SiteSettingSectionName {
+		SetSiteConfigCache(result)
+	}
+	
 	// 版本信息单独获取
 	if section == constant.AboutSectionName {
 		result = constant.LatestVersion
@@ -64,6 +77,10 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 			Key:     key,
 			Value:   value,
 		})
+		// 如果是site_config，清除缓存
+		if section == constant.SiteSettingSectionName {
+			ClearSiteConfigCache()
+		}
 		return err
 	} else {
 		if value == "" {
@@ -78,6 +95,10 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 		if key == constant.LogsCleanCronKeyName {
 			cronService := cron_service.CronService{}
 			cronService.UpdateLogsCronRun(value)
+		}
+		// 如果是site_config，清除缓存
+		if section == constant.SiteSettingSectionName {
+			ClearSiteConfigCache()
 		}
 		return err
 	}
