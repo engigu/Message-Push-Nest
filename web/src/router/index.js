@@ -83,13 +83,16 @@ router.beforeEach((to, from, next) => {
     return;
   }
   
+  // 如果没有token且不是访问登录页，跳转到登录页
   if (!isAuthenticated && to.path !== '/login') {
-
     next('/login');
-  } else if (isAuthenticated && to.path === '/login') {
-
+  } 
+  // 如果有token且访问登录页，跳转到首页
+  else if (isAuthenticated && to.path === '/login') {
     next('/');
-  } else {
+  } 
+  // 其他情况正常访问
+  else {
     next();
   }
 });

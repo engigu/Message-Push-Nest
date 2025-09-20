@@ -1,6 +1,6 @@
 // request.js
 import axios from 'axios';
-import { useRouter } from 'vue-router';
+import router from '../router';
 
 import { usePageState } from '../store/page_sate';
 import { CONSTANT } from '../constant';
@@ -41,24 +41,41 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
     (response) => {
-
+        // 检查业务逻辑错误
         if (response && response.data.code != 200) {
+            // 检查是否是token相关的错误码
+            const tokenErrorCodes = [20001, 20002, 20003, 20004, 20005];
+            if (tokenErrorCodes.includes(response.data.code)) {
+                // Token失效，执行登出
+                logout();
+                return Promise.reject(response);
+            }
+            
+            // 其他业务错误显示toast
             toast.error(response.data.msg, {
                 description: '接口逻辑错误'
-            })
-            // Promise.reject();
+            });
         }
         return response;
     },
     (error) => {
-
+        // HTTP状态码401表示未授权
         if (error.response && error.response.status == 401) {
-            logout();
-        } else if (error.response && 20000 <= error.response.status && error.response.status <= 29999) {
+            // 检查响应体中的业务错误码
+            if (error.response.data && error.response.data.code) {
+                const tokenErrorCodes = [20001, 20002, 20003, 20004, 20005];
+                if (tokenErrorCodes.includes(error.response.data.code)) {
+                    logout();
+                    return Promise.reject(error);
+                }
+            }
+            
+            // 其他401错误也执行登出
             logout();
         } else {
             handleException(error);
         }
+        return Promise.reject(error);
     }
 );
 
@@ -80,13 +97,14 @@ const handleException = (error) => {
 
 // 登出系统
 const logout = () => {
-    const router = useRouter();
     const pageState = usePageState();
-    pageState.setIsLogin(false);
+    
+    // 清除token和登录状态
+    pageState.setToken('');
     localStorage.removeItem(CONSTANT.STORE_TOKEN_NAME);
-    setTimeout(() => {
-        router.push('/login');
-    }, 500);
+    
+    // 立即跳转到登录页
+    router.push('/login');
 };
 
 export { request, handleException, logout };
