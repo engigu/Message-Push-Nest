@@ -117,6 +117,13 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			sm.LogsAndStatusMark(errStr, SendFail)
 			continue
 		}
+
+		// 暂停了实例的发送
+		if ins.Enable != 1 {
+			//sm.LogsAndStatusMark("该实例发送已经被暂停，跳过发送！\n", sm.Status)
+			continue
+		}
+
 		wayService := send_way_service.SendWay{
 			ID:   fmt.Sprintf("%s", way.ID),
 			Name: way.Name,
@@ -129,12 +136,6 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 		sm.LogsAndStatusMark(fmt.Sprintf("实例渠道名: %s", way.Name), sm.Status)
 		sm.LogsAndStatusMark(fmt.Sprintf("实例类型: %s + %s", ins.WayType, ins.ContentType), sm.Status)
 		sm.LogsAndStatusMark(fmt.Sprintf("实例配置: %s", ins.Config), sm.Status)
-
-		// 暂停了实例的发送
-		if ins.Enable != 1 {
-			//sm.LogsAndStatusMark("该实例发送已经被暂停，跳过发送！\n", sm.Status)
-			continue
-		}
 
 		// 发送内容校验绑定
 		typeC, content := sm.GetSendMsg(ins.SendTasksIns)
