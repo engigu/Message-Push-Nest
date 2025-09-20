@@ -133,7 +133,21 @@ let clickLogin = async () => {
           <CardContent class="grid p-0 md:grid-cols-2">
             <form class="p-6 md:p-8">
               <div class="flex flex-col gap-6">
-                <div class="flex flex-col items-center text-center">
+                <!-- 小屏时显示logo和标题 -->
+                <div class="flex flex-col items-center text-center md:hidden">
+                  <div class="w-20 h-20 mb-4 flex justify-center items-center bg-white rounded-full shadow-sm">
+                    <img :src="logo" alt="logo" class="w-12 h-12 object-contain" />
+                  </div>
+                  <h1 class="text-2xl font-bold text-gray-900">
+                    欢迎回来！
+                  </h1>
+                  <p class="text-sm text-gray-600 mt-1">
+                    {{ slogan }}
+                  </p>
+                </div>
+                
+                <!-- 大屏时显示标题 -->
+                <div class="hidden md:flex flex-col items-center text-center">
                   <h1 class="text-2xl font-bold">
                     欢迎回来！
                   </h1>

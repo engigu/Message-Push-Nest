@@ -131,15 +131,15 @@ onMounted(async () => {
 
 <template>
   <div class="p-4 w-full max-w-6xl mx-auto space-y-2">
-    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-      <div class="flex-1 sm:flex-initial">
+    <div class="flex flex-row sm:flex-row sm:items-center gap-2 sm:gap-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div class="flex-[3] sm:flex-initial min-w-0">
         <Input v-model="state.search" placeholder="搜索任务..." class="w-full sm:w-64" @keyup.enter="filterFunc"
           @blur="filterFunc" />
       </div>
     
-      <div class="flex-1 sm:flex-initial">
+      <div class="flex-[2] sm:flex-initial min-w-0">
         <Select v-model="selectedStatus" class="w-full" @update:model-value="filterByStatus">
-          <SelectTrigger>
+          <SelectTrigger class="w-full">
             <SelectValue placeholder="选择状态" />
           </SelectTrigger>
           <SelectContent>
