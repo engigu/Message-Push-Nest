@@ -93,14 +93,14 @@ const filterByStatus = async (value: any) => {
 const queryListData = async (page: number, size: number, name = '', taskid = '', query = '', _status = '') => {
   let params: any = { page: page, size: size, name: name, taskid: taskid };
   
-  // 如果有状态筛选，添加到query参数中
-  if (selectedStatus.value !== '' && selectedStatus.value !== 'all') {
+  // 优先使用URL传入的query参数（包含日期筛选等）
+  if (query) {
+    params.query = query;
+  } else if (selectedStatus.value !== '' && selectedStatus.value !== 'all') {
+    // 如果没有URL query参数，使用当前选择的状态筛选
     params.query = JSON.stringify({
       status: selectedStatus.value
     });
-  } else if (query) {
-    // 如果有其他query参数，使用传入的query
-    params.query = query;
   }
 
   const rsp = await request.get('/sendlogs/list', { params: params });

@@ -412,6 +412,12 @@ const renderPieChart = () => {
   pieChart.render();
 }
 
+// 获取今日日期
+const getTodayDate = () => {
+  const today = new Date();
+  return today.toISOString().split('T')[0]; // 返回 YYYY-MM-DD 格式
+}
+
 onMounted(() => {
   loadAllStatisticData();
 })
@@ -441,21 +447,21 @@ onMounted(() => {
       :value="state.basicData.today_total_num" 
       description="" 
       :icon="SendIcon" 
-      route-path="/sendlogs" 
+      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({day_created_on: getTodayDate()}))}`" 
     />
     <StatCard 
       title="今日成功数" 
       :value="state.basicData.today_succ_num" 
       description="" 
       :icon="CheckCircleIcon" 
-      route-path="/sendlogs?query=%7B%22status%22%3A%221%22%7D" 
+      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({status: '1', day_created_on: getTodayDate()}))}`" 
     />
     <StatCard 
       title="今日失败数" 
       :value="state.basicData.today_failed_num" 
       description="" 
       :icon="XCircleIcon" 
-      route-path="/sendlogs?query=%7B%22status%22%3A%220%22%7D" 
+      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({status: '0', day_created_on: getTodayDate()}))}`" 
     />
   </div>
 
