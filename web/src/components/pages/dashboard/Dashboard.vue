@@ -422,11 +422,41 @@ onMounted(() => {
 
 <template>
   <div class="w-[90%] mx-auto pt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-5 gap-4">
-    <StatCard title="推送留存数" :value="state.basicData.message_total_num" description="" :icon="DatabaseIcon" />
-    <StatCard title="托管消息数" :value="state.basicData.hosted_message_total_num" description="" :icon="BarChartIcon" />
-    <StatCard title="今日发送数" :value="state.basicData.today_total_num" description="" :icon="SendIcon" />
-    <StatCard title="今日成功数" :value="state.basicData.today_succ_num" description="" :icon="CheckCircleIcon" />
-    <StatCard title="今日失败数" :value="state.basicData.today_failed_num" description="" :icon="XCircleIcon" />
+    <StatCard 
+      title="推送留存数" 
+      :value="state.basicData.message_total_num" 
+      description="" 
+      :icon="DatabaseIcon" 
+      route-path="/sendtasks" 
+    />
+    <StatCard 
+      title="托管消息数" 
+      :value="state.basicData.hosted_message_total_num" 
+      description="" 
+      :icon="BarChartIcon" 
+      route-path="/hostedmessage" 
+    />
+    <StatCard 
+      title="今日发送数" 
+      :value="state.basicData.today_total_num" 
+      description="" 
+      :icon="SendIcon" 
+      route-path="/sendlogs" 
+    />
+    <StatCard 
+      title="今日成功数" 
+      :value="state.basicData.today_succ_num" 
+      description="" 
+      :icon="CheckCircleIcon" 
+      route-path="/sendlogs?query=%7B%22status%22%3A%221%22%7D" 
+    />
+    <StatCard 
+      title="今日失败数" 
+      :value="state.basicData.today_failed_num" 
+      description="" 
+      :icon="XCircleIcon" 
+      route-path="/sendlogs?query=%7B%22status%22%3A%220%22%7D" 
+    />
   </div>
 
   <!-- 折线图 -->

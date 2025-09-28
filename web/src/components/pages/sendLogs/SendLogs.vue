@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, nextTick } from 'vue'
+import { ref, computed, reactive, onMounted, nextTick, watch } from 'vue'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -116,16 +116,42 @@ const queryListData = async (page: number, size: number, name = '', taskid = '',
   state.total = rsp.data.data.total;
 }
 
-onMounted(async () => {
-  // 页面加载触发日志显示
+// 解析URL参数并更新筛选状态
+const parseUrlParams = async () => {
   state.search = router.query.name?.toString() || '';
+  
+  // 解析URL中的query参数，设置状态筛选
+  const queryParam = router.query.query?.toString() || '';
+  if (queryParam) {
+    try {
+      const queryObj = JSON.parse(decodeURIComponent(queryParam));
+      if (queryObj.status !== undefined) {
+        selectedStatus.value = queryObj.status.toString();
+      }
+    } catch (error) {
+      console.warn('解析query参数失败:', error);
+    }
+  } else {
+    // 如果没有query参数，重置为全部
+    selectedStatus.value = 'all';
+  }
+  
   await queryListData(
     1,
     state.pageSize,
     router.query.name?.toString() || '',
     router.query.taskid?.toString() || '',
-    router.query.query?.toString() || ''
+    queryParam
   );
+};
+
+// 监听路由变化
+watch(() => router.query, () => {
+  parseUrlParams();
+}, { deep: true });
+
+onMounted(async () => {
+  await parseUrlParams();
 });
 </script>
 
