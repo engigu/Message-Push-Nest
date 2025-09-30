@@ -1,7 +1,9 @@
 <template>
   <div class="flex items-center justify-between">
-    <div class="text-sm text-gray-500">
-      共 {{ total }} 条记录
+    <div class="text-sm text-muted-foreground">
+      <span class="block sm:inline">共 {{ total }} 条记录</span>
+      <span class="hidden sm:inline"> · </span>
+      <span class="block sm:inline">每页 {{ pageSize }} 条</span>
     </div>
     
     <div class="flex justify-end">
