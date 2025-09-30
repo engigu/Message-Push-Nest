@@ -240,8 +240,8 @@ onMounted(async () => {
           <SheetTitle>{{ selectedTaskName }} - 发信日志详情</SheetTitle>
         </SheetHeader>
         <div class="mt-4">
-          <div class="bg-gray-50 p-4 rounded-lg max-h-[82vh] overflow-y-auto break-words">
-            <pre class="whitespace-pre-wrap text-sm font-mono">{{ selectedLog }}</pre>
+          <div class="bg-card p-4 rounded-lg border border-border max-h-[82vh] overflow-y-auto break-words">
+            <pre class="whitespace-pre-wrap text-sm font-mono text-foreground">{{ selectedLog }}</pre>
           </div>
         </div>
       </SheetContent>

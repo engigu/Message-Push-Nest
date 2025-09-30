@@ -111,9 +111,9 @@ export default {
             <label class="text-sm font-medium text-gray-700">站点图标(只支持svg文本)</label>
             <Input v-model="state.logo" placeholder="请输入自定义的网站logo（svg文本）" />
             <!-- SVG预览 -->
-            <div v-if="state.logo" class="mt-2 p-3 border border-gray-200 rounded-md bg-gray-50">
-              <div class="text-xs text-gray-500 mb-2">预览效果：</div>
-              <div class="flex items-center justify-center w-16 h-16 bg-white border border-gray-300 rounded"
+            <div v-if="state.logo" class="mt-2 p-3 border border-border rounded-md bg-card">
+              <div class="text-xs text-muted-foreground mb-2">预览效果：</div>
+              <div class="flex items-center justify-center w-16 h-16 bg-white dark:bg-white border border-border rounded"
                 v-html="state.logo"></div>
             </div>
           </div>

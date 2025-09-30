@@ -25,6 +25,34 @@ const isUserMenuOpen = ref(false)
 const userAccount = ref('管理员')
 const siteConfig = ref<any>({})
 
+// 主题：明暗模式
+const getInitialTheme = (): 'light' | 'dark' => {
+  try {
+    const stored = localStorage.getItem('theme') as 'light' | 'dark' | null
+    if (stored === 'light' || stored === 'dark') return stored
+    const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    return systemDark ? 'dark' : 'light'
+  } catch {
+    return 'light'
+  }
+}
+
+const theme = ref<'light' | 'dark'>(getInitialTheme())
+
+const applyTheme = (next: 'light' | 'dark') => {
+  theme.value = next
+  if (next === 'dark') {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+  try { localStorage.setItem('theme', next) } catch {}
+}
+
+const toggleTheme = () => {
+  applyTheme(theme.value === 'dark' ? 'light' : 'dark')
+}
+
 // 从JWT中解析用户名
 const parseJwtUsername = (token: string): string => {
   try {
@@ -255,14 +283,14 @@ const siteTitle = computed(() => {
 <template>
   <router-view v-if="!isAuthenticated || route.path == '/login' || route.path == 'login'"></router-view>
 
-  <div class="min-h-screen bg-gray-50" v-else>
+  <div class="min-h-screen bg-background" v-else>
     <!-- 顶部导航栏 -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-background shadow-sm border-b border-border">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo/品牌名称 -->
           <div class="flex items-center">
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900">{{ siteTitle }}</h1>
+            <h1 class="text-lg sm:text-xl font-bold text-foreground">{{ siteTitle }}</h1>
           </div>
 
           <!-- 桌面端导航 -->
@@ -270,8 +298,8 @@ const siteTitle = computed(() => {
             <button v-for="tab in tabRoutes" :key="tab.name" @click="handleTabClick(tab)" :class="[
               'relative py-2 px-3 text-sm font-medium transition-all duration-200 rounded-md whitespace-nowrap',
               activeTab === tab.name
-                ? 'text-blue-600 bg-blue-50'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-400/10'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-white/5'
             ]">
               {{ tab.name }}
               <!-- 活动状态指示器 -->
@@ -282,27 +310,65 @@ const siteTitle = computed(() => {
 
           <!-- 右侧区域 -->
           <div class="flex items-center space-x-4">
+            <!-- 主题切换（仅桌面显示） -->
+            <button @click="toggleTheme" class="hidden md:inline-flex p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-white/5" :title="theme === 'dark' ? '切换到浅色' : '切换到深色'">
+              <svg v-if="theme === 'dark'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+              <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            </button>
             <!-- 用户账号下拉菜单 -->
             <div class="relative user-menu-container">
-              <button @click="toggleUserMenu" class="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-50 transition-colors">
+              <button @click="toggleUserMenu" class="flex items-center space-x-2 p-2 rounded-md hover:bg-muted transition-colors dark:hover:bg-white/5">
                 <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
                   </svg>
                 </div>
-                <span class="hidden sm:block text-sm font-medium text-gray-700">{{ userAccount }}</span>
+                <span class="hidden sm:block text-sm font-medium text-foreground">{{ userAccount }}</span>
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               
               <!-- 下拉菜单 -->
-              <div v-if="isUserMenuOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+              <div v-if="isUserMenuOpen" class="absolute right-0 mt-2 w-52 bg-card text-foreground rounded-md shadow-lg border border-border z-50">
                 <div class="py-1">
-                  <div class="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
-                    <div class="font-medium text-gray-900">{{ userAccount }}</div>
+                  <div class="px-4 py-2 text-sm text-muted-foreground border-b border-border">
+                    <div class="font-medium text-foreground">{{ userAccount }}</div>
                     <!-- <div class="text-xs">当前登录账号</div> -->
                   </div>
+                  <!-- 移动端主题切换入口 -->
+                  <button @click="toggleTheme" class="md:hidden w-full text-left px-4 py-2 text-sm hover:bg-muted dark:hover:bg-white/5 flex items-center justify-between">
+                    <span>外观</span>
+                    <span class="inline-flex items-center gap-2">
+                      <svg v-if="theme === 'dark'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                      </svg>
+                      <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3"/>
+                        <line x1="12" y1="21" x2="12" y2="23"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                        <line x1="1" y1="12" x2="3" y2="12"/>
+                        <line x1="21" y1="12" x2="23" y2="12"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                      </svg>
+                      <span class="text-xs text-muted-foreground">{{ theme === 'dark' ? '深色' : '浅色' }}</span>
+                    </span>
+                  </button>
                   <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                     <div class="flex items-center space-x-2">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,14 +394,14 @@ const siteTitle = computed(() => {
         </div>
 
         <!-- 移动端菜单 -->
-        <div v-if="isMobileMenuOpen" class="md:hidden border-t border-gray-200 py-2">
+        <div v-if="isMobileMenuOpen" class="md:hidden border-t border-border py-2">
           <div class="flex flex-col space-y-1">
             <button v-for="tab in tabRoutes" :key="tab.name" @click="handleTabClick(tab); isMobileMenuOpen = false"
               :class="[
                 'text-left py-3 px-4 text-sm font-medium transition-all duration-200 rounded-md',
                 activeTab === tab.name
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                  ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-400/10'
+                  : 'text-muted-foreground hover:text-blue-600 hover:bg-muted dark:hover:bg-white/5'
               ]">
               {{ tab.name }}
             </button>

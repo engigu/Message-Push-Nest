@@ -177,7 +177,7 @@ onMounted(async () => {
       <div class="flex-shrink-0">
         <Dialog v-model:open="isAddChannelDrawerOpen">
           <DialogTrigger as-child>
-            <Button variant="default" class="w-full sm:w-auto bg-gray-800 hover:bg-gray-900">
+            <Button variant="default" class="w-full sm:w-auto">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -265,8 +265,8 @@ onMounted(async () => {
           <SheetTitle>{{ selectedChannelName }} - 发信方式配置详情</SheetTitle>
         </SheetHeader>
         <div class="mt-6">
-          <div class="bg-gray-50 p-4 rounded-lg">
-            <pre class="whitespace-pre-wrap text-sm font-mono">{{ selectedConfig }}</pre>
+          <div class="bg-card p-4 rounded-lg border border-border">
+            <pre class="whitespace-pre-wrap text-sm font-mono text-foreground">{{ selectedConfig }}</pre>
           </div>
         </div>
       </SheetContent>

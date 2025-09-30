@@ -256,7 +256,7 @@ const renderLineChart = () => {
       enabled: true,
       shared: true,
       intersect: false,
-      theme: 'light',
+      theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
       style: {
         fontSize: '12px',
         fontFamily: 'Inter, sans-serif'
@@ -279,28 +279,33 @@ const renderLineChart = () => {
         const total = successCount + failedCount;
         const successRate = total > 0 ? ((successCount / total) * 100).toFixed(1) : '0.0';
 
+        const containerCls = 'bg-card text-foreground p-3 rounded-lg shadow-lg border border-border';
+        const labelMutedCls = 'text-sm text-muted-foreground';
+        const valueStrongCls = 'text-sm font-medium text-foreground';
+        const successRateCls = 'text-sm font-medium';
+
         return `
-          <div class="bg-white p-3 rounded-lg shadow-lg border">
-            <div class="font-medium text-gray-900 mb-2">${w.globals.categoryLabels[dataPointIndex]}</div>
+          <div class="${containerCls}">
+            <div class="font-medium mb-2">${w.globals.categoryLabels[dataPointIndex]}</div>
             <div class="space-y-1">
               <div class="flex items-center justify-between">
                 <span class="flex items-center">
                   <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                  <span class="text-sm text-gray-600">成功:</span>
+                  <span class="${labelMutedCls}">成功:</span>
                 </span>
-                <span class="text-sm font-medium text-gray-900">${successCount} 条</span>
+                <span class="${valueStrongCls}">${successCount} 条</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="flex items-center">
                   <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                  <span class="text-sm text-gray-600">失败:</span>
+                  <span class="${labelMutedCls}">失败:</span>
                 </span>
-                <span class="text-sm font-medium text-gray-900">${failedCount} 条</span>
+                <span class="${valueStrongCls}">${failedCount} 条</span>
               </div>
-              <div class="border-t pt-1 mt-2">
+              <div class="border-t border-border pt-1 mt-2">
                 <div class="flex items-center justify-between">
-                  <span class="text-sm text-gray-600">成功率:</span>
-                  <span class="text-sm font-medium text-green-600">${successRate}%</span>
+                  <span class="${labelMutedCls}">成功率:</span>
+                  <span class="${successRateCls}">${successRate}%</span>
                 </div>
               </div>
             </div>

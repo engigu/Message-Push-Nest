@@ -44,10 +44,10 @@ export default {
             :key="item.id"
             @click="$emit('update:activeTab', item.id)"
             :class="[
-              'w-full flex items-center px-4 py-3 text-left text-sm font-medium transition-colors',
+              'w-full flex items-center px-4 py-3 text-left text-sm font-medium transition-colors rounded-md',
               activeTab === item.id
-                ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-accent text-accent-foreground border-r-2 border-primary dark:bg-accent/40'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:hover:bg-white/5'
             ]"
           >
             <component :is="item.icon" class="mr-3 w-5 h-5" />

@@ -161,7 +161,7 @@ onMounted(async () => {
       <div class="flex-shrink-0">
         <Dialog v-model:open="isAddCronMessageDialogOpen">
           <DialogTrigger as-child>
-            <Button variant="default" class="w-full sm:w-auto bg-gray-800 hover:bg-gray-900">
+            <Button variant="default" class="w-full sm:w-auto">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -212,7 +212,9 @@ onMounted(async () => {
           <TableCell class="max-w-32 truncate" :title="cronMessage.title">{{ cronMessage.title }}</TableCell>
           <TableCell class="max-w-32 truncate" :title="cronMessage.content">{{ cronMessage.content }}</TableCell>
           <TableCell>
-            <code class="bg-gray-100 px-2 py-1 rounded text-sm">{{ cronMessage.cron }}</code>
+            <code class="px-2 py-1 rounded text-sm font-mono bg-muted text-foreground border border-border">
+              {{ cronMessage.cron }}
+            </code>
           </TableCell>
           <TableCell class="max-w-24 truncate" :title="cronMessage.task_id">{{ cronMessage.task_id }}</TableCell>
           <TableCell class="max-w-32 truncate" :title="cronMessage.next_time || '-'">{{ cronMessage.next_time || '-' }}
