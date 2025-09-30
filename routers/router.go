@@ -82,6 +82,9 @@ func InitRouter(f embed.FS) *gin.Engine {
 		apiV1.POST("/settings/reset", v1.RestDefaultSettings)
 		apiV1.GET("/settings/getsetting", v1.GetUserSetting)
 
+		// login logs
+		apiV1.GET("/loginlogs/recent", v1.GetRecentLoginLogs)
+
 		// statistic
 		apiV1.GET("/statistic", v1.GetStatisticData)
 

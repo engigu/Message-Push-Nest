@@ -1,15 +1,16 @@
 package api
 
 import (
-	"fmt"
-	"net/http"
+    "fmt"
+    "net/http"
 
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
 
-	"message-nest/pkg/app"
-	"message-nest/pkg/e"
-	"message-nest/pkg/util"
-	"message-nest/service/auth_service"
+    "message-nest/pkg/app"
+    "message-nest/pkg/e"
+    "message-nest/pkg/util"
+    "message-nest/service/auth_service"
+    "message-nest/models"
 )
 
 type auth struct {
@@ -51,7 +52,12 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	appG.CResponse(http.StatusOK, "登录成功!", map[string]string{
+    // 查询用户ID并记录登录日志
+    if u, _ := models.GetUserByUsername(req.Username); u != nil {
+        _ = models.AddLoginLog(u.ID, req.Username, c.ClientIP(), c.GetHeader("User-Agent"))
+    }
+
+    appG.CResponse(http.StatusOK, "登录成功!", map[string]string{
 		"token": token,
 	})
 }

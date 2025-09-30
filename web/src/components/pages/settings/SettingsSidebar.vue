@@ -19,6 +19,7 @@ defineEmits<Emits>()
 const settingsMenu = [
   { id: 'password', name: '重置密码', icon: KeyIcon },
   { id: 'logs', name: '日志清理', icon: TrashIcon },
+  { id: 'loginlogs', name: '登录日志', icon: InfoIcon },
   { id: 'site', name: '站点设置', icon: SettingsIcon },
   { id: 'about', name: '站点关于', icon: InfoIcon }
 ]

@@ -5,6 +5,7 @@ import PasswordSettings from './PasswordSettings.vue'
 import LogsSettings from './LogsSettings.vue'
 import SiteSettings from './SiteSettings.vue'
 import AboutSettings from './AboutSettings.vue'
+import LoginLogs from './LoginLogs.vue'
 
 // 当前选中的设置项
 const activeTab = ref('password')
@@ -29,6 +30,9 @@ const activeTab = ref('password')
 
         <!-- 站点设置 -->
         <SiteSettings v-if="activeTab === 'site'" />
+
+        <!-- 登录日志 -->
+        <LoginLogs v-if="activeTab === 'loginlogs'" />
 
         <!-- 站点关于 -->
         <AboutSettings v-if="activeTab === 'about'" />

@@ -26,6 +26,15 @@ func CheckAuth(username, password string) (bool, error) {
 	return false, nil
 }
 
+func GetUserByUsername(username string) (*Auth, error) {
+    var auth Auth
+    err := db.Where("username = ?", username).First(&auth).Error
+    if err != nil {
+        return nil, err
+    }
+    return &auth, nil
+}
+
 // EditUser 编辑用户信息
 func EditUser(username string, data map[string]interface{}) error {
 	if err := db.Model(&Auth{}).Where("username = ? ", username).Updates(data).Error; err != nil {
