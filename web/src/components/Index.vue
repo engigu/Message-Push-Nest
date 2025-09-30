@@ -330,13 +330,13 @@ const siteTitle = computed(() => {
             <!-- 用户账号下拉菜单 -->
             <div class="relative user-menu-container">
               <button @click="toggleUserMenu" class="flex items-center space-x-2 p-2 rounded-md hover:bg-muted transition-colors dark:hover:bg-white/5">
-                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <div class="w-8 h-8 bg-blue-100 dark:bg-muted border border-border rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-blue-600 dark:text-blue-300" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
                   </svg>
                 </div>
                 <span class="hidden sm:block text-sm font-medium text-foreground">{{ userAccount }}</span>
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-gray-400 dark:text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
