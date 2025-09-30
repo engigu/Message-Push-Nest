@@ -1,5 +1,6 @@
 <script lang="ts">
 import { ref, defineComponent } from 'vue'
+import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -81,9 +82,9 @@ export default defineComponent({
     const copyToClipboard = async (text: string) => {
       try {
         await navigator.clipboard.writeText(text)
-        // 这里可以添加成功提示
+        toast.success('复制成功')
       } catch (err) {
-        console.error('复制失败:', err)
+        toast.error('复制失败')
       }
     }
 
