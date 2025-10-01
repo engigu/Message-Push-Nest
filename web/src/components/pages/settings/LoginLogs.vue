@@ -67,15 +67,15 @@ const openIpInfo = async (ip: string) => {
       </button>
     </CardHeader>
     <CardContent>
-      <div class="overflow-x-auto">
-        <div class="min-w-full rounded-md border border-border">
-        <table class="w-full text-sm">
+      <div class="overflow-x-auto" style="will-change: transform;">
+        <div class="min-w-full">
+          <table class="w-full text-sm border-separate border-spacing-0">
           <thead>
-            <tr class="bg-muted">
-              <th class="px-3 py-2 text-left">用户名</th>
-              <th class="px-3 py-2 text-left">IP</th>
-              <th class="px-3 py-2 text-left">UA</th>
-              <th class="px-3 py-2 text-left">登录时间</th>
+            <tr>
+              <th class="px-3 py-2 text-left border-b border-border">用户名</th>
+              <th class="px-3 py-2 text-left border-b border-border">IP</th>
+              <th class="px-3 py-2 text-left border-b border-border">UA</th>
+              <th class="px-3 py-2 text-left border-b border-border">登录时间</th>
             </tr>
           </thead>
           <tbody>
@@ -86,7 +86,7 @@ const openIpInfo = async (ip: string) => {
                 </div>
               </td>
             </tr>
-            <tr v-for="item in logs" :key="item.id" class="border-t border-border">
+            <tr v-for="item in logs" :key="item.id" class="border-b border-border">
               <td class="px-3 py-2">{{ item.username }}</td>
               <td class="px-3 py-2">
                 <button class="text-blue-600 dark:text-blue-400 hover:underline" @click="openIpInfo(item.ip)">{{ item.ip }}</button>
