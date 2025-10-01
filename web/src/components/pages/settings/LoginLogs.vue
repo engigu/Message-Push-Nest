@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { toast } from 'vue-sonner'
+
 // @ts-ignore
 import { request } from '@/api/api'
 
@@ -53,6 +54,47 @@ const openIpInfo = async (ip: string) => {
     ipLoading.value = false
   }
 }
+
+const formatUtcOffset = (offset: any) => {
+  const num = typeof offset === 'number' ? offset : parseInt(offset, 10)
+  if (Number.isNaN(num)) return '-'
+  const hours = Math.floor(num / 3600)
+  const sign = hours >= 0 ? '+' : '-'
+  const abs = Math.abs(hours)
+  return `UTC${sign}${abs}`
+}
+
+const ipDisplayRows = computed(() => {
+  if (!ipInfo.value) return [] as Array<{ label: string, value: string }>
+  const info = ipInfo.value
+  const rows: Array<{ label: string, value: string }> = []
+
+  const ip = info.ip || selectedIp.value
+  if (ip) rows.push({ label: 'IP', value: String(ip) })
+
+  const country = [info.country, info.country_code ? `(${info.country_code})` : ''].filter(Boolean).join(' ')
+  if (country) rows.push({ label: '国家/地区', value: country })
+
+  const tz = [info.timezone, info.offset != null ? formatUtcOffset(info.offset) : ''].filter(Boolean).join(' · ')
+  if (tz) rows.push({ label: '时区', value: tz })
+
+  if (info.isp) rows.push({ label: 'ISP', value: String(info.isp) })
+  if (info.organization) rows.push({ label: '组织', value: String(info.organization) })
+
+  const asn = [info.asn, info.asn_organization].filter(Boolean).join(' - ')
+  if (asn) rows.push({ label: 'ASN', value: asn })
+
+  const continent = info.continent_code
+  if (continent) rows.push({ label: '大洲', value: String(continent) })
+
+  const coordParts = [] as string[]
+  if (info.latitude != null) coordParts.push(String(info.latitude))
+  if (info.longitude != null) coordParts.push(String(info.longitude))
+  const coord = coordParts.join(', ')
+  if (coord) rows.push({ label: '坐标', value: coord })
+
+  return rows
+})
 </script>
 
 <template>
@@ -103,36 +145,20 @@ const openIpInfo = async (ip: string) => {
 
   <Dialog :open="ipDialogOpen" @update:open="val => (ipDialogOpen = val)">
     <DialogContent class="w-[90vw] max-w-[90vw] sm:max-w-lg max-h-[80vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle>IP 信息 - {{ selectedIp }}</DialogTitle>
-      </DialogHeader>
+
+        <DialogHeader>
+    <!-- <VisuallyHidden> -->
+      <!-- <DialogTitle>IP 信息</DialogTitle> -->
+    <!-- </VisuallyHidden> -->
+  </DialogHeader>
+      
       <div v-if="ipLoading" class="text-sm text-muted-foreground">加载中...</div>
       <div v-else class="space-y-3 text-sm">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-          <div class="text-muted-foreground">organization</div>
-          <div class="break-all">{{ ipInfo?.organization ?? '-' }}</div>
-          <div class="text-muted-foreground">timezone</div>
-          <div class="break-all">{{ ipInfo?.timezone ?? '-' }}</div>
-          <div class="text-muted-foreground">ip</div>
-          <div class="break-all">{{ ipInfo?.ip ?? selectedIp }}</div>
-          <div class="text-muted-foreground">offset</div>
-          <div class="break-all">{{ ipInfo?.offset ?? '-' }}</div>
-          <div class="text-muted-foreground">isp</div>
-          <div class="break-all">{{ ipInfo?.isp ?? '-' }}</div>
-          <div class="text-muted-foreground">continent_code</div>
-          <div class="break-all">{{ ipInfo?.continent_code ?? '-' }}</div>
-          <div class="text-muted-foreground">asn_organization</div>
-          <div class="break-all">{{ ipInfo?.asn_organization ?? '-' }}</div>
-          <div class="text-muted-foreground">country</div>
-          <div class="break-all">{{ ipInfo?.country ?? '-' }}</div>
-          <div class="text-muted-foreground">asn</div>
-          <div class="break-all">{{ ipInfo?.asn ?? '-' }}</div>
-          <div class="text-muted-foreground">country_code</div>
-          <div class="break-all">{{ ipInfo?.country_code ?? '-' }}</div>
-          <div class="text-muted-foreground">latitude</div>
-          <div class="break-all">{{ ipInfo?.latitude ?? '-' }}</div>
-          <div class="text-muted-foreground">longitude</div>
-          <div class="break-all">{{ ipInfo?.longitude ?? '-' }}</div>
+          <template v-for="(row, idx) in ipDisplayRows" :key="idx">
+            <div class="text-muted-foreground">{{ row.label }}</div>
+            <div class="break-all" :class="{ 'font-mono': row.label === 'IP' || row.label === '坐标' }">{{ row.value }}</div>
+          </template>
         </div>
         <div class="text-xs text-muted-foreground mt-2">数据来源：<a href="https://api.ip.sb/geoip/185.222.222.222" target="_blank" rel="noreferrer" class="underline">api.ip.sb</a></div>
       </div>
