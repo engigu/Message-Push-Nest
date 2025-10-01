@@ -160,7 +160,7 @@ const ipDisplayRows = computed(() => {
             <div class="break-all" :class="{ 'font-mono': row.label === 'IP' || row.label === '坐标' }">{{ row.value }}</div>
           </template>
         </div>
-        <div class="text-xs text-muted-foreground mt-2">数据来源：<a href="https://api.ip.sb/geoip/185.222.222.222" target="_blank" rel="noreferrer" class="underline">api.ip.sb</a></div>
+        <div class="text-xs text-muted-foreground mt-2">数据来源：<a :href="'https://api.ip.sb/geoip/' + encodeURIComponent(selectedIp)" target="_blank" rel="noreferrer" class="underline">api.ip.sb</a></div>
       </div>
     </DialogContent>
   </Dialog>
