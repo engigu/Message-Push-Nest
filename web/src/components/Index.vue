@@ -9,6 +9,8 @@ import { LocalStieConfigUtils } from '@/util/localSiteConfig'
 import { usePageState } from '@/store/page_sate.js'
 
 import { useRoute, useRouter } from 'vue-router'
+import { MonitorIcon } from 'lucide-vue-next'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 // 定义标签接口
 interface TabRoute {
@@ -341,22 +343,32 @@ const siteTitle = computed(() => {
           <!-- 右侧区域 -->
           <div class="flex items-center space-x-4">
             <!-- 主题切换（仅桌面显示） -->
-            <button @click="toggleTheme" class="hidden md:inline-flex p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-white/5" :title="theme === 'dark' ? '切换到浅色' : '切换到深色'">
-              <svg v-if="theme === 'dark'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-              </svg>
-              <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="5"/>
-                <line x1="12" y1="1" x2="12" y2="3"/>
-                <line x1="12" y1="21" x2="12" y2="23"/>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                <line x1="1" y1="12" x2="3" y2="12"/>
-                <line x1="21" y1="12" x2="23" y2="12"/>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-              </svg>
-            </button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <button @click="toggleTheme" class="hidden md:inline-flex p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-white/5">
+                    <MonitorIcon v-if="themePreference === 'system'" class="w-5 h-5" />
+                    <svg v-else-if="theme === 'dark'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                    <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="5"/>
+                      <line x1="12" y1="1" x2="12" y2="3"/>
+                      <line x1="12" y1="21" x2="12" y2="23"/>
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                      <line x1="1" y1="12" x2="3" y2="12"/>
+                      <line x1="21" y1="12" x2="23" y2="12"/>
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  切换主题（当前：{{ themeLabel }}）
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <!-- 用户账号下拉菜单 -->
             <div class="relative user-menu-container">
               <button @click="toggleUserMenu" class="flex items-center space-x-2 p-2 rounded-md hover:bg-muted transition-colors dark:hover:bg-white/5">
