@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import StatCard from '@/components/pages/dashboard/CardNum.vue'
-import { DatabaseIcon, BarChartIcon, SendIcon, CheckCircleIcon, XCircleIcon } from 'lucide-vue-next'
+import { InboxIcon, FileTextIcon, SendIcon, CheckCircleIcon, XCircleIcon } from 'lucide-vue-next'
 // import { LineChart } from "@/components/ui/chart-line"
 import { onMounted, reactive } from 'vue';
 import { request } from '@/api/api';
@@ -438,14 +438,14 @@ onMounted(() => {
       title="托管消息数" 
       :value="state.basicData.hosted_message_total_num" 
       description="" 
-      :icon="BarChartIcon" 
+      :icon="InboxIcon" 
       route-path="/hostedmessage" 
     />
     <StatCard 
       title="发送日志数" 
       :value="state.basicData.message_total_num" 
       description="" 
-      :icon="DatabaseIcon" 
+      :icon="FileTextIcon" 
       route-path="/sendlogs" 
     />
     <StatCard 
