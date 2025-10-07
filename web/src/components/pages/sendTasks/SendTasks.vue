@@ -205,8 +205,8 @@ onMounted(async () => {
         <TableRow>
           <TableHead class="w-20">ID</TableHead>
           <TableHead>发信任务名称</TableHead>
-          <TableHead>创建时间</TableHead>
-          <TableHead>更新时间</TableHead>
+          <TableHead class="whitespace-nowrap w-[160px]">创建时间</TableHead>
+          <TableHead class="whitespace-nowrap w-[160px]">更新时间</TableHead>
           <TableHead class="text-center">操作/状态</TableHead>
         </TableRow>
       </TableHeader>
@@ -223,8 +223,8 @@ onMounted(async () => {
         <TableRow v-for="channel in state.tableData" :key="channel.id">
           <TableCell>{{ channel.id }}</TableCell>
           <TableCell>{{ channel.name }}</TableCell>
-          <TableCell>{{ channel.created_on }}</TableCell>
-          <TableCell>{{ channel.modified_on }}</TableCell>
+          <TableCell class="whitespace-nowrap w-[160px]">{{ channel.created_on }}</TableCell>
+          <TableCell class="whitespace-nowrap w-[160px]">{{ channel.modified_on }}</TableCell>
           <TableCell class="text-center space-x-2" v-if="channel.id !== CONSTANT.LOG_TASK_ID">
             <Button size="sm" variant="outline" @click="handleViewApi(channel)">接口</Button>
             <Button size="sm" variant="outline" @click="handleViewLogs(channel)">日志</Button>

@@ -19,7 +19,7 @@
       >
       <PaginationContent>
         <PaginationItem :value="currentPage - 1">
-          <PaginationPrevious @click="handlePrevious" :disabled="currentPage <= 1" class="mr-3">
+          <PaginationPrevious :disabled="currentPage <= 1" class="mr-3" @click.prevent.stop="handlePageChange(currentPage - 1)">
             上一页
           </PaginationPrevious>
         </PaginationItem>
@@ -42,7 +42,7 @@
         </template>
 
         <PaginationItem :value="currentPage + 1">
-          <PaginationNext @click="handleNext" :disabled="currentPage >= totalPages" class="ml-3">
+          <PaginationNext :disabled="currentPage >= totalPages" class="ml-3" @click.prevent.stop="handlePageChange(currentPage + 1)">
             下一页
           </PaginationNext>
         </PaginationItem>
@@ -132,17 +132,7 @@ const handlePageChange = (page: number) => {
   }
 }
 
-const handlePrevious = () => {
-  if (props.currentPage > 1) {
-    emit('page-change', props.currentPage - 1)
-  }
-}
-
-const handleNext = () => {
-  if (props.currentPage < totalPages.value) {
-    emit('page-change', props.currentPage + 1)
-  }
-}
+// no-op: previous/next handled inline to avoid double updates
 </script>
 
 <script lang="ts">

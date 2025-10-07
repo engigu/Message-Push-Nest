@@ -186,7 +186,7 @@ onMounted(async () => {
           <TableHead class="w-20">ID</TableHead>
           <TableHead>任务名称</TableHead>
           <TableHead>发信日志</TableHead>
-          <TableHead>发送时间</TableHead>
+          <TableHead class="whitespace-nowrap w-[160px]">发送时间</TableHead>
           <TableHead class="text-center">详情/状态</TableHead>
         </TableRow>
       </TableHeader>
@@ -212,8 +212,8 @@ onMounted(async () => {
         <TableRow v-for="task in state.tableData" :key="task.id">
           <TableCell>{{ task.id }}</TableCell>
           <TableCell>{{ task.task_name }}</TableCell>
-          <TableCell class="max-w-xs truncate" :title="formatLogDisplayHtml(task)">{{ task.log }}</TableCell>
-          <TableCell>{{ task.created_on }}</TableCell>
+          <TableCell class="truncate" :title="formatLogDisplayHtml(task)">{{ task.log }}</TableCell>
+          <TableCell class="whitespace-nowrap w-[160px]">{{ task.created_on }}</TableCell>
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openLogSheet(task)">查看</Button>
             <!-- <Button size="sm" variant="destructive">删除</Button> -->

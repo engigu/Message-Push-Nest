@@ -211,10 +211,10 @@ onMounted(async () => {
             <!-- 数据行 -->
             <TableRow v-for="cronMessage in state.tableData" :key="cronMessage.id">
               <TableCell>{{ cronMessage.id }}</TableCell>
-              <TableCell class="whitespace-pre-wrap break-words">{{ cronMessage.title }}</TableCell>
-              <TableCell class="whitespace-pre-wrap break-words">{{ cronMessage.content }}</TableCell>
+              <TableCell class="max-w-[100px] sm:max-w-[100px] truncate" :title="cronMessage.title">{{ cronMessage.title }}</TableCell>
+              <TableCell class="max-w-[100px] sm:max-w-[100px] truncate" :title="cronMessage.content">{{ cronMessage.content }}</TableCell>
               <TableCell>
-                <code class="px-2 py-1 rounded text-sm font-mono bg-muted text-foreground border border-border">
+                <code class="max-w-[90px] sm:max-w-[9px] rounded text-sm font-mono bg-muted text-foreground border border-border">
                   {{ cronMessage.cron }}
                 </code>
               </TableCell>
