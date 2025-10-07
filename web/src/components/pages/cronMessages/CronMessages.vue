@@ -184,59 +184,62 @@ onMounted(async () => {
     </div>
 
     <!-- 表格 -->
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead class="w-20">ID</TableHead>
-          <TableHead>名称</TableHead>
-          <TableHead>内容</TableHead>
-          <TableHead>Cron表达式</TableHead>
-          <TableHead>关联任务</TableHead>
-          <TableHead>下次执行时间</TableHead>
-          <TableHead>创建时间</TableHead>
-          <TableHead class="text-center">操作</TableHead>
-        </TableRow>
-      </TableHeader>
+    <div class="overflow-x-auto" style="will-change: transform;">
+      <div class="min-w-full">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead class="w-20">ID</TableHead>
+              <TableHead>名称</TableHead>
+              <TableHead>内容</TableHead>
+              <TableHead>Cron表达式</TableHead>
+              <TableHead>关联任务</TableHead>
+              <TableHead>下次执行时间</TableHead>
+              <TableHead>创建时间</TableHead>
+              <TableHead class="text-center">操作</TableHead>
+            </TableRow>
+          </TableHeader>
 
-      <TableBody>
-        <!-- 空数据展示 -->
-        <TableRow v-if="state.tableData.length === 0">
-          <TableCell colspan="8" class="text-center py-12">
-            <EmptyTableState title="暂无定时消息" description="还没有配置任何定时消息，请先添加定时消息" />
-          </TableCell>
-        </TableRow>
+          <TableBody>
+            <!-- 空数据展示 -->
+            <TableRow v-if="state.tableData.length === 0">
+              <TableCell colspan="8" class="text-center py-12">
+                <EmptyTableState title="暂无定时消息" description="还没有配置任何定时消息，请先添加定时消息" />
+              </TableCell>
+            </TableRow>
 
-        <!-- 数据行 -->
-        <TableRow v-for="cronMessage in state.tableData" :key="cronMessage.id">
-          <TableCell>{{ cronMessage.id }}</TableCell>
-          <TableCell class="max-w-32 truncate" :title="cronMessage.title">{{ cronMessage.title }}</TableCell>
-          <TableCell class="max-w-32 truncate" :title="cronMessage.content">{{ cronMessage.content }}</TableCell>
-          <TableCell>
-            <code class="px-2 py-1 rounded text-sm font-mono bg-muted text-foreground border border-border">
-              {{ cronMessage.cron }}
-            </code>
-          </TableCell>
-          <TableCell class="max-w-24 truncate" :title="cronMessage.task_id">{{ cronMessage.task_id }}</TableCell>
-          <TableCell class="max-w-32 truncate" :title="cronMessage.next_time || '-'">{{ cronMessage.next_time || '-' }}
-          </TableCell>
-          <TableCell class="max-w-32 truncate" :title="cronMessage.created_on">{{ cronMessage.created_on }}</TableCell>
-          <!-- <TableCell class="text-center">
-            <Badge :class="cronMessage.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
-              {{ getStatusText(cronMessage.status) }}
-            </Badge>
-          </TableCell> -->
-          <TableCell class="text-center space-x-2">
-            <Button size="sm" variant="outline" @click="handleViewLogs(cronMessage)">日志</Button>
-            <Button size="sm" variant="outline" @click="openEditCronMessageDialog(cronMessage)">编辑</Button>
-            <Button size="sm" variant="outline" class="text-red-500 border-red-300 hover:bg-red-50 
-              hover:border-red-400 hover:text-red-600 hover:shadow-md
-               transition-all duration-200" @click="handleDelete(cronMessage.id)">删除</Button>
-            <Switch :model-value="cronMessage.enable === 1" @update:model-value="toggleStatus(cronMessage)" />
+            <!-- 数据行 -->
+            <TableRow v-for="cronMessage in state.tableData" :key="cronMessage.id">
+              <TableCell>{{ cronMessage.id }}</TableCell>
+              <TableCell class="whitespace-pre-wrap break-words">{{ cronMessage.title }}</TableCell>
+              <TableCell class="whitespace-pre-wrap break-words">{{ cronMessage.content }}</TableCell>
+              <TableCell>
+                <code class="px-2 py-1 rounded text-sm font-mono bg-muted text-foreground border border-border">
+                  {{ cronMessage.cron }}
+                </code>
+              </TableCell>
+              <TableCell class="break-all">{{ cronMessage.task_id }}</TableCell>
+              <TableCell>{{ cronMessage.next_time || '-' }}</TableCell>
+              <TableCell>{{ cronMessage.created_on }}</TableCell>
+              <!-- <TableCell class="text-center">
+                <Badge :class="cronMessage.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
+                  {{ getStatusText(cronMessage.status) }}
+                </Badge>
+              </TableCell> -->
+              <TableCell class="text-center space-x-2">
+                <Button size="sm" variant="outline" @click="handleViewLogs(cronMessage)">日志</Button>
+                <Button size="sm" variant="outline" @click="openEditCronMessageDialog(cronMessage)">编辑</Button>
+                <Button size="sm" variant="outline" class="text-red-500 border-red-300 hover:bg-red-50 
+                  hover:border-red-400 hover:text-red-600 hover:shadow-md
+                   transition-all duration-200" @click="handleDelete(cronMessage.id)">删除</Button>
+                <Switch :model-value="cronMessage.enable === 1" @update:model-value="toggleStatus(cronMessage)" />
 
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </div>
 
     <!-- 分页 -->
     <Pagination :total="state.total" :current-page="state.currPage" :page-size="state.pageSize"
