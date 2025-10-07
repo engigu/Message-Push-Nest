@@ -117,7 +117,7 @@ const ipDisplayRows = computed(() => {
               <th class="px-3 py-2 text-left border-b border-border">用户名</th>
               <th class="px-3 py-2 text-left border-b border-border">IP</th>
               <th class="px-3 py-2 text-left border-b border-border">UA</th>
-              <th class="px-3 py-2 text-left border-b border-border">登录时间</th>
+              <th class="px-3 py-2 text-left border-b border-border whitespace-nowrap w-[160px]">登录时间</th>
             </tr>
           </thead>
           <tbody>
@@ -134,7 +134,7 @@ const ipDisplayRows = computed(() => {
                 <button class="text-blue-600 dark:text-blue-400 hover:underline" @click="openIpInfo(item.ip)">{{ item.ip }}</button>
               </td>
               <td class="px-3 py-2 truncate max-w-[220px] sm:max-w-[420px]" :title="item.ua">{{ item.ua }}</td>
-              <td class="px-3 py-2">{{ item.created_on }}</td>
+              <td class="px-3 py-2 whitespace-nowrap w-[160px]">{{ item.created_on }}</td>
             </tr>
           </tbody>
         </table>
