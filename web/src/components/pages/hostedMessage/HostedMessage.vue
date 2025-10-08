@@ -140,8 +140,8 @@ onMounted(async () => {
         <!-- 数据行 -->
         <TableRow v-for="message in state.tableData" :key="message.id">
           <TableCell>{{ message.id }}</TableCell>
-          <TableCell>{{ message.title }}</TableCell>
-          <TableCell class="truncate" :title="formatMessageDisplayHtml(message)">{{ message.content }}</TableCell>
+          <TableCell class="max-w-[220px] sm:max-w-[360px] truncate" :title="message.title">{{ message.title }}</TableCell>
+          <TableCell class="max-w-[320px] sm:max-w-[480px] truncate" :title="message.content">{{ message.content }}</TableCell>
           <TableCell class="whitespace-nowrap w-[160px]">{{ message.created_on }}</TableCell>
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openMessageSheet(message)">查看</Button>

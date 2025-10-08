@@ -211,8 +211,8 @@ onMounted(async () => {
         <!-- 数据行 -->
         <TableRow v-for="task in state.tableData" :key="task.id">
           <TableCell>{{ task.id }}</TableCell>
-          <TableCell>{{ task.task_name }}</TableCell>
-          <TableCell class="truncate" :title="formatLogDisplayHtml(task)">{{ task.log }}</TableCell>
+          <TableCell class="max-w-[220px] sm:max-w-[360px] truncate" :title="task.task_name">{{ task.task_name }}</TableCell>
+          <TableCell class="max-w-[320px] sm:max-w-[480px] truncate" :title="task.log">{{ task.log }}</TableCell>
           <TableCell class="whitespace-nowrap w-[160px]">{{ task.created_on }}</TableCell>
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openLogSheet(task)">查看</Button>
