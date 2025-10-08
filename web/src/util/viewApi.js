@@ -6,8 +6,29 @@ const gethttpOrigin = () => {
 
 class ApiStrGenerate {
 
+    // 根据字符串内容生成确定性 salt（范围 0~255）
+    static getDeterministicSalt(text) {
+        let sum = 0;
+        for (let i = 0; i < text.length; i++) {
+            sum = (sum + text.charCodeAt(i) * (i + 1)) & 0xFF;
+        }
+        return sum;
+    }
+
+    // 加密：首字节为salt，后续为按位异或后的数据
+    static encryptHex(text, key) {
+        const salt = ApiStrGenerate.getDeterministicSalt(text);
+        let result = salt.toString(16).padStart(2, '0');
+        for (let i = 0; i < text.length; i++) {
+            const code = text.charCodeAt(i) ^ (key & 0xFF) ^ ((salt + i) & 0xFF);
+            result += code.toString(16).padStart(2, '0');
+        }
+        return result;
+    }
+
     static getDataString(task_id, options) {
-        let data = { task_id: task_id };
+        // 新版仅展示 token；兼容旧版 task_id（后端依然支持）
+        let data = { token: ApiStrGenerate.encryptHex(task_id, 71) };
         data.title = 'message title';
         data.text = 'Hello World!';
         if (options.html) {

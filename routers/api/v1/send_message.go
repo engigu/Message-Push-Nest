@@ -2,16 +2,21 @@ package v1
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"message-nest/pkg/app"
 	"message-nest/pkg/e"
+	utilpkg "message-nest/pkg/util"
 	"message-nest/service/send_message_service"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type SendMessageReq struct {
-	TaskID   string `json:"task_id" validate:"required,len=12" label:"任务id"`
+	// 兼容旧参数：task_id；不再必填
+	TaskID string `json:"task_id" validate:"omitempty,len=12" label:"任务id"`
+	// 新参数：token（与task_id互斥，优先使用task_id）
+	Token    string `json:"token" label:"任务token"`
 	Text     string `json:"text" validate:"required" label:"文本内容"`
 	Title    string `json:"title"  label:"消息标题"`
 	HTML     string `json:"html"  label:"html内容"`
@@ -33,14 +38,31 @@ func DoSendMassage(c *gin.Context) {
 		return
 	}
 
+	// 解析token为task_id（如提供）
+	taskID := req.TaskID
+	// 如果使用了token就使用token解析出task_id
+	if req.Token != "" {
+		dec, err := utilpkg.DecryptTokenHex(req.Token, 71) // 71 为简单对称密钥
+		if err != nil {
+			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("token解析失败：%v", err), nil)
+			return
+		}
+		taskID = dec
+	}
+
+	if taskID == "" {
+		appG.CResponse(http.StatusBadRequest, "参数缺失：token 或 task_id 必须提供其一", nil)
+		return
+	}
+
 	msgService := send_message_service.SendMessageService{
-		TaskID:        req.TaskID,
-		Title:         req.Title,
-		Text:          req.Text,
-		HTML:          req.HTML,
-		URL:           req.URL,
-		MarkDown:      req.MarkDown,
-		CallerIp:      c.ClientIP(),
+		TaskID:   taskID,
+		Title:    req.Title,
+		Text:     req.Text,
+		HTML:     req.HTML,
+		URL:      req.URL,
+		MarkDown: req.MarkDown,
+		CallerIp: c.ClientIP(),
 		DefaultLogger: logrus.WithFields(logrus.Fields{
 			//"prefix": "[Message Instance]",
 		}),
