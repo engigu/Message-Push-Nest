@@ -36,8 +36,26 @@ const linkedHtml = computed(() => {
     if (start > lastIndex) {
       html += escapeHtml(value.slice(lastIndex, start))
     }
-    const escapedUrl = escapeHtml(url)
-    html += `<a href="${escapedUrl}" target="_blank" rel="noopener noreferrer" class="underline break-all text-blue-600 dark:text-blue-400">${escapedUrl}</a>`
+    // 处理结尾多余的标点，如 ) ] } . , ; : ! ? 等（不属于URL的一部分）
+    let trimmed = url
+    let suffix = ''
+    while (trimmed.length && /[)\]\}\.,;:!?，。；：、！？"'”’]$/.test(trimmed)) {
+      const ch = trimmed[trimmed.length - 1]
+      if (ch === ')') {
+        const opens = (trimmed.match(/\(/g) || []).length
+        const closes = (trimmed.match(/\)/g) || []).length
+        if (closes < opens) {
+          break
+        }
+      }
+      suffix = ch + suffix
+      trimmed = trimmed.slice(0, -1)
+    }
+    const escapedTrimmed = escapeHtml(trimmed)
+    html += `<a href="${escapedTrimmed}" target="_blank" rel="noopener noreferrer" class="underline break-all text-blue-600 dark:text-blue-400">${escapedTrimmed}</a>`
+    if (suffix) {
+      html += escapeHtml(suffix)
+    }
     lastIndex = start + url.length
   }
   if (value.length > lastIndex) {

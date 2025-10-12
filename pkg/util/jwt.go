@@ -16,7 +16,7 @@ type UserClaims struct {
 }
 
 func GenerateToken(username, password string) (string, error) {
-	expHours := 1 * 24 * time.Hour
+	expHours := 2 * 24 * time.Hour
 	//expHours := 1 * time.Minute
 	SetClaims := UserClaims{
 		Username: username,
