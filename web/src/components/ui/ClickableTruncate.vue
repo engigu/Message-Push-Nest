@@ -18,7 +18,7 @@ const handleClick = () => {
 
 <template>
   <span
-    class="inline-block truncate align-middle cursor-pointer"
+    class="inline-block align-middle cursor-pointer break-words whitespace-normal"
     :class="wrapperClass"
     :title="text"
     @click="handleClick"
