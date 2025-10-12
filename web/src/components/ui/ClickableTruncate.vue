@@ -18,7 +18,7 @@ const handleClick = () => {
 
 <template>
   <span
-    class="inline-block align-middle cursor-pointer break-words whitespace-normal"
+    class="inline-block truncate align-middle cursor-pointer"
     :class="wrapperClass"
     :title="text"
     @click="handleClick"
@@ -32,8 +32,8 @@ const handleClick = () => {
         <DialogTitle class="text-sm font-medium text-foreground">{{ previewTitle || '内容' }}</DialogTitle>
       </DialogHeader>
       <div class="mt-1">
-        <div class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm max-h-[65vh] overflow-auto">
-          <pre class="whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">{{ text }}</pre>
+        <div class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm max-h-[65vh] overflow-auto overflow-x-hidden">
+          <pre class="whitespace-pre-wrap break-words break-all text-sm leading-relaxed text-foreground">{{ text }}</pre>
         </div>
       </div>
     </DialogContent>
