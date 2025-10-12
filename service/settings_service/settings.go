@@ -3,6 +3,7 @@ package settings_service
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"github.com/robfig/cron/v3"
 	"message-nest/models"
 	"message-nest/pkg/app"
@@ -106,14 +107,39 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 
 // 站点自定义的结构
 type SiteConfig struct {
-	Title  string `json:"title" validate:"omitempty,min=1,max=50" label:"网站标题"`
-	Slogan string `json:"slogan" validate:"omitempty,min=1,max=50" label:"网站slogan"`
-	Logo   string `json:"logo" validate:"omitempty,min=1" label:"logo"`
+	Title         string `json:"title" validate:"omitempty,min=1,max=50" label:"网站标题"`
+	Slogan        string `json:"slogan" validate:"omitempty,min=1,max=50" label:"网站slogan"`
+	Logo          string `json:"logo" validate:"omitempty,min=1" label:"logo"`
+	CookieExpDays string `json:"cookie_exp_days" validate:"omitempty,numeric,min=1,max=365" label:"cookie过期天数"`
 }
 
 type LogConfig struct {
 	Cron    string `json:"cron" validate:"required,cron" label:"日志定时表达式"`
 	KeepNum string `json:"keep_num" validate:"required,min=1,max=50" label:"日志保留数"`
+}
+
+// GetCookieExpDays 获取 cookie 过期天数，若无配置则返回默认值 1
+func GetCookieExpDays() int {
+	// 优先从缓存获取
+	if IsSiteConfigCacheValid() {
+		cache := GetSiteConfigCache()
+		if expDays, ok := cache["cookie_exp_days"]; ok && expDays != "" {
+			if days, err := strconv.Atoi(expDays); err == nil && days > 0 {
+				return days
+			}
+		}
+	}
+	
+	// 从数据库获取
+	setting, _ := models.GetSettingByKey(constant.SiteSettingSectionName, "cookie_exp_days")
+	if setting.ID > 0 && setting.Value != "" {
+		if days, err := strconv.Atoi(setting.Value); err == nil && days > 0 {
+			return days
+		}
+	}
+	
+	// 返回默认值
+	return 1
 }
 
 // ValidateDiffSetting 校验不同的设置
@@ -123,6 +149,7 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		config.Title = data["title"]
 		config.Slogan = data["slogan"]
 		config.Logo = data["logo"]
+		config.CookieExpDays = data["cookie_exp_days"]
 		_, errStr := app.CommonPlaygroundValid(config)
 		return errStr
 	}

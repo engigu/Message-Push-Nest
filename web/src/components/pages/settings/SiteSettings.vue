@@ -15,6 +15,7 @@ const state = reactive({
   slogan: '',
   logo: '',
   pagesize: '',
+  cookieExpDays: '',
   section: 'site_config',
 })
 
@@ -27,7 +28,8 @@ const handleSubmit = async () => {
         title: state.title.trim(),
         slogan: state.slogan.trim(),
         logo: state.logo.trim(),
-        pagesize: state.pagesize,
+        pagesize: state.pagesize.toString(),
+        cookie_exp_days: state.cookieExpDays.toString(),
       },
     }
     const response = await request.post('/settings/set', postData)
@@ -66,6 +68,7 @@ const getSiteConfig = async () => {
       state.logo = data.logo || ''
       state.slogan = data.slogan || ''
       state.pagesize = data.pagesize || ''
+      state.cookieExpDays = data.cookie_exp_days || '1'
 
       LocalStieConfigUtils.updateLocalConfig(data)
     }
@@ -118,11 +121,21 @@ export default {
             </div>
           </div>
 
-          <!-- 分页大小 -->
-          <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">分页大小</label>
-            <Input v-model="state.pagesize" placeholder="页面分页大小" />
+          <!-- 分页大小和Cookie过期天数 -->
+          <div class="grid grid-cols-2 gap-4">
+            <!-- 分页大小 -->
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-700">分页大小</label>
+              <Input v-model="state.pagesize" placeholder="页面分页大小" />
+            </div>
+
+            <!-- Cookie过期天数 -->
+            <div class="space-y-2">
+              <label class="text-sm font-medium text-gray-700">Cookie过期天数（[1-365]天）</label>
+              <Input v-model="state.cookieExpDays" type="number" min="1" max="365" placeholder="Cookie过期天数（默认1天）" />
+            </div>
           </div>
+          
         </div>
 
         <!-- 底部操作区域 -->
@@ -138,6 +151,7 @@ export default {
                   <div class="text-sm space-y-1">
                     <p>1. logo请输入svg文本，替换后登录页面，ico，导航栏logo将全部一起更换</p>
                     <p>2. slogan将在登录页面展示</p>
+                    <p>3. Cookie过期天数设置用户登录后的有效期，修改后下次登录时生效</p>
                     <p>** 将在下一次登录的时候生效，如果不生效请在登录页面Ctrl+F5强制刷新</p>
                     <p>** logo将替换网页ico，登录页面logo，导航栏logo</p>
                   </div>

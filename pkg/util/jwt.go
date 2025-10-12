@@ -15,9 +15,12 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(username, password string) (string, error) {
-	expHours := 2 * 24 * time.Hour
-	//expHours := 1 * time.Minute
+func GenerateToken(username, password string, expDays int) (string, error) {
+	// 如果传入的天数小于等于0，使用默认值1天
+	if expDays <= 0 {
+		expDays = 1
+	}
+	expHours := time.Duration(expDays) * 24 * time.Hour
 	SetClaims := UserClaims{
 		Username: username,
 		Password: EncodeMD5(password),

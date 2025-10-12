@@ -10,6 +10,7 @@ import (
     "message-nest/pkg/e"
     "message-nest/pkg/util"
     "message-nest/service/auth_service"
+    "message-nest/service/settings_service"
     "message-nest/models"
 )
 
@@ -46,7 +47,9 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-	token, err := util.GenerateToken(req.Username, req.Password)
+	// 获取配置的 cookie 过期天数
+	expDays := settings_service.GetCookieExpDays()
+	token, err := util.GenerateToken(req.Username, req.Password, expDays)
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, fmt.Sprintf("生成token失败：%s", err), nil)
 		return
