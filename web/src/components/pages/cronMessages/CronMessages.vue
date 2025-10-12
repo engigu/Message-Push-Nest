@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import ClickableTruncate from '@/components/ui/ClickableTruncate.vue'
 import AddCronMessages from './AddCronMessages.vue'
 import EditCronMessages from './EditCronMessages.vue'
 import { toast } from 'vue-sonner'
@@ -211,8 +212,12 @@ onMounted(async () => {
             <!-- 数据行 -->
             <TableRow v-for="cronMessage in state.tableData" :key="cronMessage.id">
               <TableCell>{{ cronMessage.id }}</TableCell>
-              <TableCell class="max-w-[100px] sm:max-w-[100px] truncate" :title="cronMessage.title">{{ cronMessage.title }}</TableCell>
-              <TableCell class="max-w-[100px] sm:max-w-[100px] truncate" :title="cronMessage.content">{{ cronMessage.content }}</TableCell>
+              <TableCell>
+                <ClickableTruncate :text="cronMessage.title" wrapper-class="max-w-[180px] sm:max-w-[260px]" preview-title="标题" />
+              </TableCell>
+              <TableCell>
+                <ClickableTruncate :text="cronMessage.content" wrapper-class="max-w-[220px] sm:max-w-[320px]" preview-title="内容" />
+              </TableCell>
               <TableCell>
                 <code class="max-w-[90px] sm:max-w-[9px] rounded text-sm font-mono bg-muted text-foreground border border-border">
                   {{ cronMessage.cron }}

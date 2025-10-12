@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
+import ClickableTruncate from '@/components/ui/ClickableTruncate.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 
 import { useRoute } from 'vue-router';
@@ -211,8 +212,12 @@ onMounted(async () => {
         <!-- 数据行 -->
         <TableRow v-for="task in state.tableData" :key="task.id">
           <TableCell>{{ task.id }}</TableCell>
-          <TableCell class="max-w-[220px] sm:max-w-[360px] truncate" :title="task.task_name">{{ task.task_name }}</TableCell>
-          <TableCell class="max-w-[320px] sm:max-w-[480px] truncate" :title="task.log">{{ task.log }}</TableCell>
+          <TableCell>
+            <ClickableTruncate :text="task.task_name" wrapper-class="max-w-[220px] sm:max-w-[360px]" preview-title="任务名称" />
+          </TableCell>
+          <TableCell>
+            <ClickableTruncate :text="task.log" wrapper-class="max-w-[320px] sm:max-w-[480px]" preview-title="发信日志" />
+          </TableCell>
           <TableCell class="whitespace-nowrap w-[160px]">{{ task.created_on }}</TableCell>
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openLogSheet(task)">查看</Button>
@@ -240,8 +245,8 @@ onMounted(async () => {
           <SheetTitle>{{ selectedTaskName }} - 发信日志详情</SheetTitle>
         </SheetHeader>
         <div class="mt-4">
-          <div class="bg-card p-4 rounded-lg border border-border max-h-[82vh] overflow-y-auto break-words">
-            <pre class="whitespace-pre-wrap text-sm font-mono text-foreground">{{ selectedLog }}</pre>
+          <div class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm max-h-[82vh] overflow-y-auto break-words">
+            <pre class="whitespace-pre-wrap text-sm font-mono leading-relaxed text-foreground">{{ selectedLog }}</pre>
           </div>
         </div>
       </SheetContent>

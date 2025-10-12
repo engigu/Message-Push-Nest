@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import ClickableTruncate from '@/components/ui/ClickableTruncate.vue'
 
 import { useRoute } from 'vue-router';
 import { request } from '@/api/api';
@@ -140,8 +141,12 @@ onMounted(async () => {
         <!-- 数据行 -->
         <TableRow v-for="message in state.tableData" :key="message.id">
           <TableCell>{{ message.id }}</TableCell>
-          <TableCell class="max-w-[220px] sm:max-w-[360px] truncate" :title="message.title">{{ message.title }}</TableCell>
-          <TableCell class="max-w-[320px] sm:max-w-[480px] truncate" :title="message.content">{{ message.content }}</TableCell>
+          <TableCell>
+            <ClickableTruncate :text="message.title" wrapper-class="max-w-[220px] sm:max-w-[360px]" preview-title="消息标题" />
+          </TableCell>
+          <TableCell>
+            <ClickableTruncate :text="message.content" wrapper-class="max-w-[320px] sm:max-w-[480px]" preview-title="消息内容" />
+          </TableCell>
           <TableCell class="whitespace-nowrap w-[160px]">{{ message.created_on }}</TableCell>
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openMessageSheet(message)">查看</Button>

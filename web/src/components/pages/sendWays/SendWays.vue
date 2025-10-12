@@ -275,8 +275,8 @@ onMounted(async () => {
           <SheetTitle>{{ selectedChannelName }} - 发信方式配置详情</SheetTitle>
         </SheetHeader>
         <div class="mt-6">
-          <div class="bg-card p-4 rounded-lg border border-border">
-            <pre class="whitespace-pre-wrap text-sm font-mono text-foreground">{{ selectedConfig }}</pre>
+          <div class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm">
+            <pre class="whitespace-pre-wrap text-sm font-mono leading-relaxed text-foreground">{{ selectedConfig }}</pre>
           </div>
         </div>
       </SheetContent>
