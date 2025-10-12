@@ -131,7 +131,7 @@ export default {
 
             <!-- Cookie过期天数 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-gray-700">Cookie过期天数（[1-365]天）</label>
+              <label class="text-sm font-medium text-gray-700">Cookie过期天数</label>
               <Input v-model="state.cookieExpDays" type="number" min="1" max="365" placeholder="Cookie过期天数（默认1天）" />
             </div>
           </div>
