@@ -161,3 +161,40 @@ func EditCronMsgTask(c *gin.Context) {
 	cron_msg_service.UpdateCronMsgToCronServer(msg)
 	appG.CResponse(http.StatusOK, "编辑定时消息成功！", nil)
 }
+
+type SendNowCronMsgReq struct {
+	TaskID  string `json:"task_id" validate:"required,max=100,min=1" label:"关联的任务id"`
+	Title   string `json:"title" validate:"required,max=100,min=1" label:"消息标题"`
+	Content string `json:"content" validate:"required,max=10000,min=1" label:"消息内容"`
+	Url     string `json:"url" validate:"" label:"消息详情地址"`
+}
+
+// SendNowCronMsg 立即发送定时消息
+func SendNowCronMsg(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+		req  SendNowCronMsgReq
+	)
+
+	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
+	if errCode != e.SUCCESS {
+		appG.CResponse(errCode, errMsg, nil)
+		return
+	}
+
+	CronMsgService := cron_msg_service.CronMsgService{
+		TaskID:  req.TaskID,
+		Title:   req.Title,
+		Content: req.Content,
+		Url:     req.Url,
+	}
+
+	// 调用立即发送服务
+	err := CronMsgService.SendNowByParams(c.ClientIP())
+	if err != nil {
+		appG.CResponse(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	appG.CResponse(http.StatusOK, "发送成功！", nil)
+}

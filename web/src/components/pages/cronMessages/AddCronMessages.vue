@@ -69,6 +69,44 @@ const handleCancel = () => {
   emit('cancel')
   emit('update:open', false)
 }
+
+// 立即发送（新增模式也支持，可以在创建前测试发送效果）
+const handleSendNow = async () => {
+  // 验证必填字段
+  if (!formData.task_id) {
+    toast.error('请先选择关联的发信任务')
+    return
+  }
+  if (!formData.title) {
+    toast.error('请先填写消息标题')
+    return
+  }
+  if (!formData.content) {
+    toast.error('请先填写消息内容')
+    return
+  }
+
+  loading.value = true
+  try {
+    const postData = {
+      task_id: formData.task_id,
+      title: formData.title,
+      content: formData.content,
+      url: formData.url
+    }
+
+    const rsp = await request.post('/cronmessages/sendnow', postData)
+    if (rsp.data.code === 200) {
+      toast.success(rsp.data.msg)
+    } else {
+      toast.error(rsp.data.msg)
+    }
+  } catch (error) {
+    toast.error('发送失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -82,6 +120,7 @@ const handleCancel = () => {
     :loading="loading"
     @submit="handleSubmit"
     @cancel="handleCancel"
+    @send-now="handleSendNow"
   />
 </template>
 

@@ -85,3 +85,29 @@ func GetCronNextTime(cronExpr string) string {
 	nextTime := schedule.Next(time.Now()).Format("2006-01-02 15:04:05")
 	return nextTime
 }
+
+// SendNow 立即发送定时消息（根据定时消息ID）
+func (st *CronMsgService) SendNow(callerIP string) error {
+	// 获取定时消息详情
+	msg, err := st.GetByID()
+	if err != nil {
+		return err
+	}
+
+	// 调用发送服务
+	return SendCronMessage(msg, callerIP)
+}
+
+// SendNowByParams 立即发送定时消息（根据传入的参数）
+func (st *CronMsgService) SendNowByParams(callerIP string) error {
+	// 直接使用传入的参数构造消息对象
+	msg := models.CronMessages{
+		TaskID:  st.TaskID,
+		Title:   st.Title,
+		Content: st.Content,
+		Url:     st.Url,
+	}
+
+	// 调用发送服务
+	return SendCronMessage(msg, callerIP)
+}

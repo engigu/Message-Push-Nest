@@ -2,6 +2,7 @@ package cron_msg_service
 
 import (
 	"fmt"
+	"strings"
 	"github.com/sirupsen/logrus"
 	"message-nest/models"
 	"message-nest/pkg/constant"
@@ -105,4 +106,45 @@ func RemoveCronMsgToCronServer(msg models.CronMessages) {
 // StartUpMsgCronTask 启动注册定时任务
 func StartUpMsgCronTask() {
 	MsgCronTask{}.Register()
+}
+
+// SendCronMessage 发送定时消息（用于立即发送）
+func SendCronMessage(msg models.CronMessages, callerIP string) error {
+	// 查询关联的发信任务
+	task, err := models.GetTaskByID(msg.TaskID)
+	if err != nil {
+		return fmt.Errorf("发信任务不存在: %s", msg.TaskID)
+	}
+
+	// 创建发送服务
+	sender := send_message_service.SendMessageService{
+		TaskID:   task.ID,
+		Title:    msg.Title,
+		Text:     msg.Content,
+		URL:      msg.Url,
+		CallerIp: callerIP,
+		DefaultLogger: logrus.WithFields(logrus.Fields{
+			"prefix": "[Manual Send Cron Message]",
+		}),
+	}
+
+	// 预检查
+	taskData, err := sender.SendPreCheck()
+	if err != nil {
+		errMsg := err.Error()
+		// 如果是没有关联实例的错误，返回更友好的提示
+		if strings.Contains(errMsg, "没有关联任何实例") {
+			return fmt.Errorf("该发信任务尚未配置发送实例，请先在【发信任务】页面为任务 [%s] 添加至少一个发送实例", task.Name)
+		}
+		return fmt.Errorf("发送预检查失败: %s", errMsg)
+	}
+
+	// 发送消息
+	_, err = sender.Send(taskData)
+	if err != nil {
+		return fmt.Errorf("发送失败: %s", err.Error())
+	}
+
+	logrus.Infof("立即发送定时消息成功，消息id: %s，消息名: %s", msg.ID, msg.Name)
+	return nil
 }

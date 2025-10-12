@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { request } from '@/api/api'
 
 interface CronMessageFormData {
-  id?: number
+  id?: string
   name: string
   cron_expression: string
   title: string
@@ -27,6 +27,7 @@ interface Emits {
   (e: 'update:modelValue', value: CronMessageFormData): void
   (e: 'submit'): void
   (e: 'cancel'): void
+  (e: 'sendNow'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -92,6 +93,11 @@ const handleCancel = () => {
   emit('cancel')
 }
 
+// 立即发送
+const handleSendNow = () => {
+  emit('sendNow')
+}
+
 // 组件挂载时加载数据
 loadAvailableTasks()
 </script>
@@ -117,6 +123,9 @@ loadAvailableTasks()
           </SelectGroup>
         </SelectContent>
       </Select>
+      <p class="text-xs text-gray-500">
+        ⚠️ 请确保所选任务已配置至少一个发送实例，否则无法发送
+      </p>
     </div>
 
     <div class="space-y-1">
@@ -151,6 +160,9 @@ loadAvailableTasks()
     <div class="flex justify-end space-x-2 pt-2">
       <Button variant="outline" @click="handleCancel" size="sm" :disabled="loading">
         取消
+      </Button>
+      <Button variant="secondary" @click="handleSendNow" size="sm" :disabled="loading">
+        立即发送
       </Button>
       <Button @click="handleSubmit" size="sm" :disabled="loading">
         {{ mode === 'add' ? '创建定时消息' : '更新定时消息' }}

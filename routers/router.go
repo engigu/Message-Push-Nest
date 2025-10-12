@@ -93,6 +93,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 		apiV1.GET("/cronmessages/list", v1.GetCronMsgList)
 		apiV1.POST("/cronmessages/delete", v1.DeleteCronMsgTask)
 		apiV1.POST("/cronmessages/edit", v1.EditCronMsgTask)
+		apiV1.POST("/cronmessages/sendnow", v1.SendNowCronMsg)
 
 		// hostedMessage
 		apiV1.GET("/hostedmessages/list", v1.GetHostMessageList)
