@@ -15,7 +15,9 @@ type Time time.Time
 func (t Time) MarshalJSON() ([]byte, error) {
 	b := make([]byte, 0, len(timeFormat)+2)
 	b = append(b, '"')
-	b = time.Time(t).AppendFormat(b, timeFormat)
+	// 转换到东八区时间再格式化
+	loc, _ := time.LoadLocation(timezone)
+	b = time.Time(t).In(loc).AppendFormat(b, timeFormat)
 	b = append(b, '"')
 
 	return b, nil
@@ -28,7 +30,9 @@ func (t *Time) UnmarshalJSON(data []byte) (err error) {
 }
 
 func (t Time) String() string {
-	return time.Time(t).Format(timeFormat)
+	// 转换到东八区时间再格式化
+	loc, _ := time.LoadLocation(timezone)
+	return time.Time(t).In(loc).Format(timeFormat)
 }
 
 func (t Time) local() time.Time {
