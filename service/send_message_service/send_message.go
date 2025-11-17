@@ -151,61 +151,19 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			continue
 		}
 
-		// 邮箱类型的实例发送
-		emailAuth, ok := msgObj.(send_way_service.WayDetailEmail)
-		if ok {
-			//continue
-			es := EmailService{}
-			errMsg := es.SendTaskEmail(emailAuth, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+		// 使用注册的处理器发送消息
+		registry := GetGlobalRegistry()
+		handler, ok := registry.GetHandler(way.Type)
+		if !ok {
+			sm.LogsAndStatusMark(fmt.Sprintf("发送失败：未知渠道类型 %s 的发信实例: %s\n", way.Type, ins.ID), SendFail)
 			continue
 		}
-		// 钉钉类型的实例发送
-		dtalkAuth, ok := msgObj.(send_way_service.WayDetailDTalk)
-		if ok {
-			es := DtalkService{}
-			res, errMsg := es.SendDtalkMessage(dtalkAuth, ins.SendTasksIns, typeC, sm.Title, content)
+
+		res, errMsg := handler.Send(msgObj, ins.SendTasksIns, typeC, sm.Title, content, sm.URL)
+		if res != "" {
 			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
 		}
-		// 企业微信类型的实例发送
-		qywxAuth, ok := msgObj.(send_way_service.WayDetailQyWeiXin)
-		if ok {
-			es := QyWeiXinService{}
-			res, errMsg := es.SendQyWeiXinMessage(qywxAuth, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
-		}
-		// 自定义webhook类型的实例发送
-		customAuth, ok := msgObj.(send_way_service.WayDetailCustom)
-		if ok {
-			cs := CustomService{}
-			res, errMsg := cs.SendCustomMessage(customAuth, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
-		}
-		// 微信公众号模板消息的实例发送
-		wca, ok := msgObj.(send_way_service.WeChatOFAccount)
-		if ok {
-			cs := WeChatOfAccountService{}
-			res, errMsg := cs.SendWeChatOfAccountMessage(wca, ins.SendTasksIns, typeC, sm.Title, content, sm.URL)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
-		}
-		// 托管消息的实例发送
-		mnt, ok := msgObj.(send_way_service.MessageNest)
-		if ok {
-			cs := HostMessageService{}
-			res, errMsg := cs.SendHostMessage(mnt, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
-		}
-		sm.LogsAndStatusMark(fmt.Sprintf("发送失败：未知渠道的发信实例: %s\n", ins.ID), SendFail)
+		sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 
 	}
 
