@@ -12,6 +12,11 @@ export default defineConfig({
   // 如果使用自定义域名或部署到根路径，注释掉 base 或设置为 '/'
   base: '/Message-Push-Nest/',
   
+  // 网站图标
+  head: [
+    ['link', { rel: 'icon', href: '/Message-Push-Nest/logo.svg' }]
+  ],
+  
   themeConfig: {
     logo: '/logo.svg',
     
@@ -25,27 +30,9 @@ export default defineConfig({
 
     sidebar: {
       '/guide/': [
-        {
-          text: '开始',
-          items: [
-            { text: '介绍', link: '/guide/introduction' },
-            { text: '特色功能', link: '/guide/features' },
-            { text: '更新日志', link: '/guide/changelog' }
-          ]
-        },
-        {
-          text: '配置',
-          items: [
-            { text: '配置说明', link: '/guide/configuration' },
-            { text: 'EmbedHtml说明', link: '/guide/embed-html' }
-          ]
-        },
-        // {
-        //   text: '文档部署',
-        //   items: [
-        //     { text: '部署到 GitHub Pages', link: '/guide/deploy-to-github-pages' }
-        //   ]
-        // }
+        { text: '介绍', link: '/guide/introduction' },
+        { text: '特色功能', link: '/guide/features' },
+        { text: '更新日志', link: '/guide/changelog' }
       ],
       '/deployment/': [
         {
@@ -56,6 +43,13 @@ export default defineConfig({
             { text: '开发调试', link: '/deployment/development' },
             { text: 'Docker部署', link: '/deployment/docker' },
             { text: 'Docker Compose', link: '/deployment/docker-compose' }
+          ]
+        },
+        {
+          text: '配置',
+          items: [
+            { text: '配置说明', link: '/deployment/configuration' },
+            { text: 'EmbedHtml说明', link: '/deployment/embed-html' }
           ]
         }
       ],
@@ -76,7 +70,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024-present Message Nest'
+      copyright: 'Copyright © 2024-present Message-Push-Nest'
     },
 
     search: {
