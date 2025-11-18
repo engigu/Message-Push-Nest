@@ -49,7 +49,7 @@ features:
     details: 支持数据统计展示，查看消息发送情况。
 ---
 
-## 快速开始
+<!-- ## 快速开始
 
 ### Docker 部署（推荐）
 
@@ -83,4 +83,4 @@ docker run -d \
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=engigu/Message-Push-Nest&type=Date)](https://star-history.com/#engigu/Message-Push-Nest&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=engigu/Message-Push-Nest&type=Date)](https://star-history.com/#engigu/Message-Push-Nest&Date) -->
