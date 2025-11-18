@@ -18,7 +18,7 @@
 
 ### 3. 配置文件
 
-重命名 `conf/app.example.ini` 为 `conf/app.ini`，然后修改配置：
+新建conf文件夹，或者重命名项目中 `conf/app.example.ini` 为 `conf/app.ini`，然后修改配置：
 
 ```ini
 [app]
