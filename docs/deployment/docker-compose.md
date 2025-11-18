@@ -19,9 +19,9 @@ version: "3.7"
 services:
 
   message-nest:
-    image: engigu/message-nest:latest
-    # 或使用 GHCR 镜像
-    # image: ghcr.io/engigu/message-nest:latest
+    image: ghcr.io/engigu/message-nest:latest
+    # 或使用 Docker Hub 镜像
+    # image: engigu/message-nest:latest
     container_name: message-nest
     restart: always
     volumes:
@@ -60,9 +60,9 @@ version: "3.7"
 services:
 
   message-nest:
-    image: engigu/message-nest:latest
-    # 或使用 GHCR 镜像
-    # image: ghcr.io/engigu/message-nest:latest
+    image: ghcr.io/engigu/message-nest:latest
+    # 或使用 Docker Hub 镜像
+    # image: engigu/message-nest:latest
     container_name: message-nest
     restart: always
     ports:
@@ -85,9 +85,9 @@ version: "3.7"
 services:
 
   message-nest:
-    image: engigu/message-nest:latest
-    # 或使用 GHCR 镜像
-    # image: ghcr.io/engigu/message-nest:latest
+    image: ghcr.io/engigu/message-nest:latest
+    # 或使用 Docker Hub 镜像
+    # image: engigu/message-nest:latest
     container_name: message-nest
     restart: always
     ports:
@@ -124,7 +124,9 @@ services:
       - "3306:3306"
 
   message-nest:
-    image: engigu/message-nest:latest
+    image: ghcr.io/engigu/message-nest:latest
+    # 或使用 Docker Hub 镜像
+    # image: engigu/message-nest:latest
     container_name: message-nest
     restart: always
     depends_on:
