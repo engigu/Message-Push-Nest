@@ -46,7 +46,7 @@ cd docs
 npm run docs:dev
 ```
 
-访问：http://localhost:5173
+访问：`http://localhost:5173`
 
 ### 构建生产版本
 
