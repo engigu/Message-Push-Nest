@@ -42,6 +42,14 @@ export default defineComponent({
     // 当前选中的标签
     const activeTab = ref('curl')
 
+    // 可选参数选项
+    const showHtml = ref(false)
+    const showMarkdown = ref(false)
+    const showUrl = ref(false)
+    const showAtMobiles = ref(false)
+    const showAtUserIds = ref(false)
+    const showAtAll = ref(false)
+
     // 代码语言选项
     const codeLanguages = [
       { value: 'curl', label: 'cURL', icon: '🌐' },
@@ -56,7 +64,14 @@ export default defineComponent({
     // 生成API代码示例
     const generateApiCode = (language: string) => {
       const taskId = props.taskData?.id || 'TASK_ID'
-      const options = { html: false, markdown: false, url: false }
+      const options = { 
+        html: showHtml.value, 
+        markdown: showMarkdown.value, 
+        url: showUrl.value,
+        at_mobiles: showAtMobiles.value,
+        at_user_ids: showAtUserIds.value,
+        at_all: showAtAll.value
+      }
 
       switch (language) {
         case 'curl':
@@ -91,6 +106,12 @@ export default defineComponent({
     return {
       handleUpdateOpen,
       activeTab,
+      showHtml,
+      showMarkdown,
+      showUrl,
+      showAtMobiles,
+      showAtUserIds,
+      showAtAll,
       codeLanguages,
       generateApiCode,
       copyToClipboard
@@ -121,6 +142,41 @@ export default defineComponent({
             <p class="text-sm text-gray-600">发送消息，创建新的消息</p>
           </div>
         </div> -->
+
+        <!-- 可选参数 -->
+        <div class="border rounded-lg p-4 space-y-3">
+          <h3 class="font-semibold text-sm">可选参数</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="showHtml" class="rounded">
+              <span class="text-sm">HTML</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="showMarkdown" class="rounded">
+              <span class="text-sm">Markdown</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="showUrl" class="rounded">
+              <span class="text-sm">URL</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="showAtMobiles" class="rounded">
+              <span class="text-sm">@手机号</span>
+              <Badge variant="secondary" class="text-xs">新</Badge>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="showAtUserIds" class="rounded">
+              <span class="text-sm">@用户ID</span>
+              <Badge variant="secondary" class="text-xs">新</Badge>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" v-model="showAtAll" class="rounded">
+              <span class="text-sm">@所有人</span>
+              <Badge variant="secondary" class="text-xs">新</Badge>
+            </label>
+          </div>
+          <p class="text-xs text-gray-500">💡 提示：@功能仅钉钉和企业微信支持</p>
+        </div>
 
         <!-- 代码示例 -->
         <div class="space-y-4">

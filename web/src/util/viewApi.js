@@ -40,6 +40,16 @@ class ApiStrGenerate {
         if (options.url) {
             data.url = 'https://github.com';
         }
+        // @提及功能参数（可选）
+        if (options.at_mobiles) {
+            data.at_mobiles = ['13800138000', '13900139000'];
+        }
+        if (options.at_user_ids) {
+            data.at_user_ids = ['zhangsan', 'lisi'];
+        }
+        if (options.at_all) {
+            data.at_all = true;
+        }
         let dataStr = JSON.stringify(data, null, 4);
         return dataStr
     }

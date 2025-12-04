@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/constant"
+	"message-nest/service/send_message_service/unified"
 	"message-nest/service/send_task_service"
 	"message-nest/service/send_way_service"
 	"strings"
@@ -32,6 +33,11 @@ type SendMessageService struct {
 	URL      string
 	MarkDown string
 	CallerIp string
+
+	// @提及相关字段
+	AtMobiles []string
+	AtUserIds []string
+	AtAll     bool
 
 	Status    int
 	LogOutput []string
@@ -151,19 +157,33 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			continue
 		}
 
-		// 使用注册的处理器发送消息
-		registry := GetGlobalRegistry()
-		handler, ok := registry.GetHandler(way.Type)
+		// 使用新的Channel架构发送消息
+		channelRegistry := unified.GetGlobalChannelRegistry()
+		channel, ok := channelRegistry.GetChannel(way.Type)
 		if !ok {
 			sm.LogsAndStatusMark(fmt.Sprintf("发送失败：未知渠道类型 %s 的发信实例: %s\n", way.Type, ins.ID), SendFail)
 			continue
 		}
 
-		res, errMsg := handler.Send(msgObj, ins.SendTasksIns, typeC, sm.Title, content, sm.URL)
+		// 构建统一消息内容（支持@功能）
+		unifiedContent := &unified.UnifiedMessageContent{
+			Title:     sm.Title,
+			Text:      sm.Text,
+			HTML:      sm.HTML,
+			Markdown:  sm.MarkDown,
+			URL:       sm.URL,
+			AtMobiles: sm.AtMobiles,
+			AtUserIds: sm.AtUserIds,
+			AtAll:     sm.AtAll,
+		}
+
+		// 使用 SendUnified 方法（自动格式转换和@功能支持）
+		res, errMsg := channel.SendUnified(msgObj, ins.SendTasksIns, unifiedContent)
 		if res != "" {
 			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
+		} else {
+			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 		}
-		sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 
 	}
 
@@ -221,18 +241,18 @@ func (sm *SendMessageService) TransError(err string) string {
 // 先根据实例设置的类型取，取不到或者取到的是空，则使用text发送
 func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) (string, string) {
 	data := map[string]string{}
-	data["text"] = sm.Text
-	data["html"] = sm.HTML
-	data["markdown"] = sm.MarkDown
+	data[unified.FormatTypeText] = sm.Text
+	data[unified.FormatTypeHTML] = sm.HTML
+	data[unified.FormatTypeMarkdown] = sm.MarkDown
 	content, ok := data[strings.ToLower(ins.ContentType)]
 	if !ok || len(content) == 0 {
-		content, ok := data["text"]
+		content, ok := data[unified.FormatTypeText]
 		if !ok {
 			logrus.Error("text节点数据为空！")
-			return "text", ""
+			return unified.FormatTypeText, ""
 		} else {
 			logrus.Error(fmt.Sprintf("没有找到%s对应的消息，使用text消息替代！", ins.ContentType))
-			return "text", content
+			return unified.FormatTypeText, content
 		}
 	} else {
 		return strings.ToLower(ins.ContentType), content
