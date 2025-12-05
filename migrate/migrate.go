@@ -3,10 +3,11 @@ package migrate
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 	"message-nest/models"
 	"message-nest/service/settings_service"
+
+	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // 初始化admin账户
@@ -67,6 +68,7 @@ func Setup() {
 		&models.CronMessages{},
 		&models.HostedMessage{},
 		&models.LoginLog{},
+		&models.MessageTemplate{},
 	}
 
 	for _, table := range tables {

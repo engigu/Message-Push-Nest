@@ -51,6 +51,11 @@ const router = createRouter({
           path: 'cronmessages',
           name: 'cronmessages',
           component: () => import('../components/pages/cronMessages/CronMessages.vue')
+        },
+        {
+          path: 'templates',
+          name: 'templates',
+          component: () => import('../components/pages/messageTemplate/MessageTemplate.vue')
         }
       ]
     },

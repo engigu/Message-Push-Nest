@@ -61,6 +61,7 @@ func DoSendMassage(c *gin.Context) {
 	}
 
 	msgService := send_message_service.SendMessageService{
+		SendMode:  send_message_service.SendModeTask, // 明确标记为任务模式
 		TaskID:    taskID,
 		Title:     req.Title,
 		Text:      req.Text,

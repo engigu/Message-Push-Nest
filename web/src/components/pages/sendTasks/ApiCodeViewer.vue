@@ -175,7 +175,10 @@ export default defineComponent({
               <Badge variant="secondary" class="text-xs">新</Badge>
             </label>
           </div>
-          <p class="text-xs text-gray-500">💡 提示：@功能仅钉钉和企业微信支持</p>
+          <div class="space-y-1 text-xs text-gray-500 dark:text-gray-400">
+            <p>💡 提示：@功能仅钉钉和企业微信支持</p>
+            <p>📋 发送顺序：实例配置的内容类型优先，若为空则按 <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">HTML → Markdown → Text</code> 顺序回退</p>
+          </div>
         </div>
 
         <!-- 代码示例 -->
