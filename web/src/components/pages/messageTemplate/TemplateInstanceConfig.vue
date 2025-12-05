@@ -34,7 +34,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // 组件emits
-const emit = defineEmits<{
+defineEmits<{
   'update:open': [value: boolean]
 }>()
 
