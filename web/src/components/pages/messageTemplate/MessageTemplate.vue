@@ -3,10 +3,7 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
@@ -34,12 +31,6 @@ interface MessageTemplate {
   modified_on: string
 }
 
-interface Placeholder {
-  key: string
-  label: string
-  default: string
-}
-
 const router = useRouter()
 
 let state = reactive({
@@ -50,9 +41,6 @@ let state = reactive({
   search: '',
   status: 'all'
 })
-
-const isPreviewOpen = ref(false)
-const currentTemplate = ref<MessageTemplate | null>(null)
 
 // API代码查看器状态
 const isApiViewerOpen = ref(false)
@@ -66,13 +54,6 @@ const selectedTemplateForInstance = ref<MessageTemplate | null>(null)
 const isEditorOpen = ref(false)
 const isEditing = ref(false)
 const selectedTemplateForEdit = ref<MessageTemplate | null>(null)
-
-const previewData = reactive({
-  text: '',
-  html: '',
-  markdown: '',
-  params: {} as Record<string, string>
-})
 
 const totalPages = computed(() => Math.ceil(state.total / state.pageSize))
 
@@ -141,41 +122,6 @@ const handleConfigInstance = (template: MessageTemplate) => {
 const handleViewLogs = (template: MessageTemplate) => {
   // 跳转到发信日志页面，携带 taskid 参数（传递模板 id）
   router.push(`/sendlogs?taskid=${template.id}`)
-}
-
-const openPreview = async (template: MessageTemplate) => {
-  currentTemplate.value = template
-  
-  // 解析占位符
-  let placeholders: Placeholder[] = []
-  try {
-    placeholders = JSON.parse(template.placeholders || '[]')
-  } catch {}
-
-  // 初始化预览参数
-  previewData.params = {}
-  placeholders.forEach(p => {
-    previewData.params[p.key] = p.default || ''
-  })
-
-  await refreshPreview()
-  isPreviewOpen.value = true
-}
-
-const refreshPreview = async () => {
-  if (!currentTemplate.value) return
-
-  try {
-    const rsp = await request.post('/templates/preview', {
-      id: currentTemplate.value.id,
-      params: previewData.params
-    })
-    previewData.text = rsp.data.data.text || ''
-    previewData.html = rsp.data.data.html || ''
-    previewData.markdown = rsp.data.data.markdown || ''
-  } catch (error: any) {
-    toast.error(error.response?.data?.message || '预览失败')
-  }
 }
 
 onMounted(async () => {
@@ -273,13 +219,10 @@ onMounted(async () => {
           </TableCell>
           <TableCell class="whitespace-nowrap w-[160px]">{{ item.created_on }}</TableCell>
           <TableCell class="text-center space-x-2">
-                        <Button size="sm" variant="outline" @click="handleViewLogs(item)">日志</Button>
-                        <Button size="sm" variant="outline" @click="handleViewApi(item)">接口</Button>
-                        <Button size="sm" variant="outline" @click="openPreview(item)">预览</Button>
+            <Button size="sm" variant="outline" @click="handleViewLogs(item)">日志</Button>
+            <Button size="sm" variant="outline" @click="handleViewApi(item)">接口</Button>
             <Button size="sm" variant="outline" @click="openEditDialog(item)">编辑</Button>
             <Button size="sm" variant="outline" @click="handleConfigInstance(item)">实例</Button>
-
-
             <Button size="sm" variant="destructive" @click="deleteTemplate(item.id)">删除</Button>
           </TableCell>
         </TableRow>
@@ -302,68 +245,6 @@ onMounted(async () => {
       @update:open="isEditorOpen = $event"
       @saved="handleEditorSaved"
     />
-
-    <!-- 预览对话框 -->
-    <Dialog v-model:open="isPreviewOpen">
-      <DialogContent class="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>模板预览 - {{ currentTemplate?.name }}</DialogTitle>
-        </DialogHeader>
-        <div class="space-y-4 py-4">
-          <!-- 参数输入 -->
-          <div v-if="currentTemplate" class="space-y-2">
-            <Label>填写占位符参数</Label>
-            <div
-              v-for="(_, key, index) in previewData.params"
-              :key="key"
-              class="flex gap-2 items-center"
-            >
-              <Label class="w-32">{{ key }}</Label>
-              <Input
-                v-model="previewData.params[key]"
-                :placeholder="`请输入 ${key}`"
-                @input="refreshPreview"
-                :autofocus="false"
-                :tabindex="index + 1"
-              />
-            </div>
-          </div>
-
-          <!-- 预览结果 -->
-          <Tabs default-value="text" class="w-full">
-            <TabsList class="grid w-full grid-cols-3">
-              <TabsTrigger value="text">Text</TabsTrigger>
-              <TabsTrigger value="html">HTML</TabsTrigger>
-              <TabsTrigger value="markdown">Markdown</TabsTrigger>
-            </TabsList>
-            <TabsContent value="text">
-              <div class="p-4 border rounded-md bg-muted/50">
-                <pre class="whitespace-pre-wrap">{{ previewData.text || '无Text模板' }}</pre>
-              </div>
-            </TabsContent>
-            <TabsContent value="html">
-              <div class="space-y-2">
-                <div class="p-4 border rounded-md bg-muted/50">
-                  <div v-html="previewData.html || '无HTML模板'"></div>
-                </div>
-                <details class="text-xs">
-                  <summary class="cursor-pointer">查看HTML源码</summary>
-                  <pre class="mt-2 p-2 bg-muted rounded">{{ previewData.html }}</pre>
-                </details>
-              </div>
-            </TabsContent>
-            <TabsContent value="markdown">
-              <div class="p-4 border rounded-md bg-muted/50">
-                <pre class="whitespace-pre-wrap">{{ previewData.markdown || '无Markdown模板' }}</pre>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-        <DialogFooter>
-          <Button @click="isPreviewOpen = false">关闭</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
 
     <!-- API代码查看器 -->
     <TemplateApiViewer 

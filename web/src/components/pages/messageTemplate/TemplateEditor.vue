@@ -75,6 +75,71 @@ const validPlaceholders = computed(() => {
   return placeholdersList.value.filter(ph => ph.key && ph.key.trim())
 })
 
+// 预览数据
+const previewData = ref({
+  text: '',
+  html: '',
+  markdown: '',
+  params: {} as Record<string, string>
+})
+
+// 是否显示预览
+const showPreview = ref(false)
+
+// 预览防抖定时器
+let previewDebounceTimer: number | null = null
+
+// 刷新预览
+const refreshPreview = async () => {
+  if (!props.isEditing || !formData.value.id) {
+    // 新建模板时，直接使用当前输入的内容作为预览
+    previewData.value.text = replacePreviewPlaceholders(formData.value.text_template)
+    previewData.value.html = replacePreviewPlaceholders(formData.value.html_template)
+    previewData.value.markdown = replacePreviewPlaceholders(formData.value.markdown_template)
+    return
+  }
+
+  try {
+    const rsp = await request.post('/templates/preview', {
+      id: formData.value.id,
+      params: previewData.value.params
+    })
+    previewData.value.text = rsp.data.data.text || ''
+    previewData.value.html = rsp.data.data.html || ''
+    previewData.value.markdown = rsp.data.data.markdown || ''
+  } catch (error: any) {
+    console.error('预览失败:', error)
+  }
+}
+
+// 替换预览占位符（用于新建模板）
+const replacePreviewPlaceholders = (template: string) => {
+  if (!template) return ''
+  let result = template
+  Object.keys(previewData.value.params).forEach(key => {
+    const value = previewData.value.params[key] || `{{${key}}}`
+    result = result.replace(new RegExp(`{{${key}}}`, 'g'), value)
+  })
+  return result
+}
+
+// 监听模板内容变化，自动刷新预览（防抖）
+watch([
+  () => formData.value.text_template,
+  () => formData.value.html_template,
+  () => formData.value.markdown_template,
+  () => previewData.value.params
+], () => {
+  if (!showPreview.value) return
+  
+  if (previewDebounceTimer) {
+    clearTimeout(previewDebounceTimer)
+  }
+  previewDebounceTimer = window.setTimeout(() => {
+    refreshPreview()
+  }, 500)
+}, { deep: true })
+
 // 监听占位符列表变化，同步到 formData（使用防抖）
 let placeholderDebounceTimer: number | null = null
 watch(placeholdersList, () => {
@@ -164,6 +229,12 @@ const loadTemplateData = (template: TemplateData) => {
   } catch {
     placeholdersList.value = []
   }
+  
+  // 初始化预览参数
+  previewData.value.params = {}
+  placeholdersList.value.forEach(p => {
+    previewData.value.params[p.key] = p.default || ''
+  })
 }
 
 // 保存模板
@@ -263,7 +334,7 @@ watch(() => props.open, (newVal) => {
 
         <!-- @提醒配置 -->
         <div class="space-y-2">
-          <Label>@提醒配置 <span class="text-xs text-muted-foreground font-normal">（适用于钉钉、企业微信）</span></Label>
+          <Label>@提醒配置 <span class="text-xs text-muted-foreground font-normal">（适用于钉钉、企业微信等）</span></Label>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div class="flex items-center gap-2 px-3 py-2 border rounded-md">
               <input 
@@ -288,6 +359,35 @@ watch(() => props.open, (newVal) => {
         </div>
 
         <!-- 模板内容 -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <Label class="text-base font-semibold">模板内容</Label>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              @click="showPreview = !showPreview; if (showPreview) refreshPreview()"
+            >
+              {{ showPreview ? '隐藏预览' : '显示预览' }}
+            </Button>
+          </div>
+          
+          <!-- 占位符参数输入（仅在显示预览时） -->
+          <div v-if="showPreview && validPlaceholders.length > 0" class="p-3 bg-muted rounded-lg space-y-2">
+            <Label class="text-sm font-medium">填写占位符参数（用于预览）</Label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div v-for="ph in validPlaceholders" :key="ph.key" class="flex gap-2 items-center">
+                <Label class="text-xs w-24 flex-shrink-0">{{ ph.key }}</Label>
+                <Input
+                  v-model="previewData.params[ph.key]"
+                  :placeholder="ph.default || `请输入 ${ph.key}`"
+                  class="text-sm h-8"
+                  size="sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <Tabs default-value="text" class="w-full">
           <TabsList class="grid w-full grid-cols-3">
             <TabsTrigger value="text">Text</TabsTrigger>
@@ -317,8 +417,16 @@ watch(() => props.open, (newVal) => {
               ref="textTemplateRef"
               v-model="formData.text_template"
               placeholder="请输入纯文本模板内容，可使用 {{key}} 作为占位符"
-              rows="15"
+              :rows="showPreview ? 10 : 15"
             />
+            
+            <!-- 预览区 -->
+            <div v-if="showPreview" class="space-y-2">
+              <Label>预览效果</Label>
+              <div class="p-4 border rounded-md bg-muted/50">
+                <pre class="whitespace-pre-wrap text-sm">{{ previewData.text || '无内容' }}</pre>
+              </div>
+            </div>
           </TabsContent>
           <TabsContent value="html" class="space-y-2">
             <div class="flex flex-col gap-1">
@@ -343,8 +451,19 @@ watch(() => props.open, (newVal) => {
               ref="htmlTemplateRef"
               v-model="formData.html_template"
               placeholder="请输入HTML模板内容，可使用 {{key}} 作为占位符"
-              rows="15"
+              :rows="showPreview ? 10 : 15"
             />
+            
+            <!-- 预览区 -->
+            <div v-if="showPreview" class="space-y-2">
+              <Label>预览效果（基础渲染）</Label>
+              <div class="p-4 border rounded-md bg-muted/50">
+                <div v-html="previewData.html || '无内容'"></div>
+              </div>
+              <p class="text-xs text-muted-foreground">
+                💡 HTML 预览仅显示基础结构，实际发送时可能包含邮件样式等
+              </p>
+            </div>
           </TabsContent>
           <TabsContent value="markdown" class="space-y-2">
             <div class="flex flex-col gap-1">
@@ -369,8 +488,19 @@ watch(() => props.open, (newVal) => {
               ref="markdownTemplateRef"
               v-model="formData.markdown_template"
               placeholder="请输入Markdown模板内容，可使用 {{key}} 作为占位符"
-              rows="15"
+              :rows="showPreview ? 10 : 15"
             />
+            
+            <!-- 预览区 -->
+            <div v-if="showPreview" class="space-y-2">
+              <Label>预览效果（原始格式）</Label>
+              <div class="p-4 border rounded-md bg-muted/50">
+                <pre class="whitespace-pre-wrap text-sm">{{ previewData.markdown || '无内容' }}</pre>
+              </div>
+              <p class="text-xs text-muted-foreground">
+                💡 Markdown 在发送时会被渲染为对应格式（钉钉、企业微信等平台支持）
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
