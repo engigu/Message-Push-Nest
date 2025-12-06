@@ -256,7 +256,7 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 		// 使用 SendUnified 方法（自动格式转换和@功能支持）
 		res, errMsg := channel.SendUnified(msgObj, ins.SendTasksIns, unifiedContent)
 		if res != "" {
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
+			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s\n", res), sm.Status)
 		} else {
 			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
 		}
@@ -325,7 +325,7 @@ func (sm *SendMessageService) TransError(err string) string {
 // 模板模式：根据实例的 ContentType 精确匹配对应类型的内容，只传递该类型的内容
 func (sm *SendMessageService) BuildTemplateContent(ins models.SendTasksIns) *unified.UnifiedMessageContent {
 	contentType := strings.ToLower(ins.ContentType)
-	
+
 	// 内容类型映射表
 	contentMap := map[string]string{
 		unified.FormatTypeText:     sm.Text,

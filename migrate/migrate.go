@@ -68,7 +68,7 @@ func Setup() {
 		&models.CronMessages{},
 		&models.HostedMessage{},
 		&models.LoginLog{},
-		&models.MessageTemplate{},
+		&models.Template{},
 	}
 
 	for _, table := range tables {

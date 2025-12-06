@@ -41,7 +41,7 @@ func DoSendMessageByTemplate(c *gin.Context) {
 	}
 
 	// 获取模板
-	template, err := models.GetMessageTemplateByID(templateID)
+	template, err := models.GetTemplateByID(templateID)
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("模板不存在：%s", err), nil)
 		return

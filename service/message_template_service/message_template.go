@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type MessageTemplateService struct {
+type TemplateService struct {
 	ID               string
 	Name             string
 	Description      string
@@ -33,13 +33,13 @@ type Placeholder struct {
 }
 
 // Add 添加消息模板
-func (s *MessageTemplateService) Add() error {
+func (s *TemplateService) Add() error {
 	if err := s.validatePlaceholders(); err != nil {
 		return err
 	}
 	
 	newUUID := models.GenerateTemplateUniqueID()
-	model := models.MessageTemplate{
+	model := models.Template{
 		UUIDModel: models.UUIDModel{
 			ID: newUUID,
 		},
@@ -59,12 +59,12 @@ func (s *MessageTemplateService) Add() error {
 }
 
 // Update 更新消息模板
-func (s *MessageTemplateService) Update() error {
+func (s *TemplateService) Update() error {
 	if err := s.validatePlaceholders(); err != nil {
 		return err
 	}
 	
-	model := models.MessageTemplate{
+	model := models.Template{
 		UUIDModel: models.UUIDModel{
 			ID: s.ID,
 		},
@@ -84,8 +84,8 @@ func (s *MessageTemplateService) Update() error {
 }
 
 // Delete 删除消息模板
-func (s *MessageTemplateService) Delete() error {
-	model := models.MessageTemplate{
+func (s *TemplateService) Delete() error {
+	model := models.Template{
 		UUIDModel: models.UUIDModel{
 			ID: s.ID,
 		},
@@ -94,13 +94,13 @@ func (s *MessageTemplateService) Delete() error {
 }
 
 // Get 获取单个消息模板
-func (s *MessageTemplateService) Get() (*models.MessageTemplateResult, error) {
-	return models.GetMessageTemplateByID(s.ID)
+func (s *TemplateService) Get() (*models.TemplateResult, error) {
+	return models.GetTemplateByID(s.ID)
 }
 
 // GetAll 获取消息模板列表
-func (s *MessageTemplateService) GetAll() ([]models.MessageTemplateResult, error) {
-	templates, err := models.GetMessageTemplates(s.PageNum, s.PageSize, s.Text, s.getMaps())
+func (s *TemplateService) GetAll() ([]models.TemplateResult, error) {
+	templates, err := models.GetTemplates(s.PageNum, s.PageSize, s.Text, s.getMaps())
 	if err != nil {
 		return nil, err
 	}
@@ -108,17 +108,17 @@ func (s *MessageTemplateService) GetAll() ([]models.MessageTemplateResult, error
 }
 
 // Count 获取消息模板总数
-func (s *MessageTemplateService) Count() (int64, error) {
-	return models.GetMessageTemplatesTotal(s.Text, s.getMaps())
+func (s *TemplateService) Count() (int64, error) {
+	return models.GetTemplatesTotal(s.Text, s.getMaps())
 }
 
 // ExistByID 检查模板是否存在
-func (s *MessageTemplateService) ExistByID() (bool, error) {
-	return models.ExistMessageTemplateByID(s.ID)
+func (s *TemplateService) ExistByID() (bool, error) {
+	return models.ExistTemplateByID(s.ID)
 }
 
 // RenderTemplate 渲染模板（替换占位符）
-func (s *MessageTemplateService) RenderTemplate(templateContent string, params map[string]string) string {
+func (s *TemplateService) RenderTemplate(templateContent string, params map[string]string) string {
 	result := templateContent
 	
 	for key, value := range params {
@@ -130,7 +130,7 @@ func (s *MessageTemplateService) RenderTemplate(templateContent string, params m
 }
 
 // PreviewTemplate 预览模板效果
-func (s *MessageTemplateService) PreviewTemplate(params map[string]string) (map[string]string, error) {
+func (s *TemplateService) PreviewTemplate(params map[string]string) (map[string]string, error) {
 	template, err := s.Get()
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ func (s *MessageTemplateService) PreviewTemplate(params map[string]string) (map[
 }
 
 // validatePlaceholders 验证占位符格式
-func (s *MessageTemplateService) validatePlaceholders() error {
+func (s *TemplateService) validatePlaceholders() error {
 	if s.Placeholders == "" {
 		return nil
 	}
@@ -174,7 +174,7 @@ func (s *MessageTemplateService) validatePlaceholders() error {
 }
 
 // getMaps 获取查询条件
-func (s *MessageTemplateService) getMaps() map[string]interface{} {
+func (s *TemplateService) getMaps() map[string]interface{} {
 	maps := make(map[string]interface{})
 	
 	if s.Status != "" {

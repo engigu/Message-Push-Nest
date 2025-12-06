@@ -11,8 +11,8 @@ func GenerateTemplateUniqueID() string {
 	return fmt.Sprintf("TP%s", newUUID)
 }
 
-// MessageTemplate 消息模板
-type MessageTemplate struct {
+// Template 消息模板
+type Template struct {
 	UUIDModel
 	
 	Name        string `json:"name" gorm:"type:varchar(200);not null;index" binding:"required"`
@@ -36,7 +36,7 @@ type MessageTemplate struct {
 }
 
 // Add 添加消息模板
-func (t *MessageTemplate) Add() error {
+func (t *Template) Add() error {
 	if err := db.Create(&t).Error; err != nil {
 		return err
 	}
@@ -44,23 +44,23 @@ func (t *MessageTemplate) Add() error {
 }
 
 // Update 更新消息模板
-func (t *MessageTemplate) Update() error {
-	if err := db.Model(&MessageTemplate{}).Where("id = ?", t.ID).Updates(t).Error; err != nil {
+func (t *Template) Update() error {
+	if err := db.Model(&Template{}).Where("id = ?", t.ID).Updates(t).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
 // Delete 删除消息模板
-func (t *MessageTemplate) Delete() error {
-	if err := db.Where("id = ?", t.ID).Delete(&MessageTemplate{}).Error; err != nil {
+func (t *Template) Delete() error {
+	if err := db.Where("id = ?", t.ID).Delete(&Template{}).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-// MessageTemplateResult 消息模板查询结果
-type MessageTemplateResult struct {
+// TemplateResult 消息模板查询结果
+type TemplateResult struct {
 	ID               string    `json:"id"`
 	Name             string    `json:"name"`
 	Description      string    `json:"description"`
@@ -78,10 +78,10 @@ type MessageTemplateResult struct {
 	ModifiedOn       util.Time `json:"modified_on"`
 }
 
-// GetMessageTemplates 获取消息模板列表
-func GetMessageTemplates(pageNum int, pageSize int, text string, maps map[string]interface{}) ([]MessageTemplateResult, error) {
-	var datas []MessageTemplateResult
-	templateT := GetSchema(MessageTemplate{})
+// GetTemplates 获取消息模板列表
+func GetTemplates(pageNum int, pageSize int, text string, maps map[string]interface{}) ([]TemplateResult, error) {
+	var datas []TemplateResult
+	templateT := GetSchema(Template{})
 	
 	query := db.Table(templateT)
 	query = query.Where(maps)
@@ -102,10 +102,10 @@ func GetMessageTemplates(pageNum int, pageSize int, text string, maps map[string
 	return datas, nil
 }
 
-// GetMessageTemplatesTotal 获取消息模板总数
-func GetMessageTemplatesTotal(text string, maps map[string]interface{}) (int64, error) {
+// GetTemplatesTotal 获取消息模板总数
+func GetTemplatesTotal(text string, maps map[string]interface{}) (int64, error) {
 	var total int64
-	templateT := GetSchema(MessageTemplate{})
+	templateT := GetSchema(Template{})
 	
 	query := db.Table(templateT)
 	query = query.Where(maps)
@@ -120,10 +120,10 @@ func GetMessageTemplatesTotal(text string, maps map[string]interface{}) (int64, 
 	return total, nil
 }
 
-// GetMessageTemplateByID 根据ID获取消息模板
-func GetMessageTemplateByID(id string) (*MessageTemplateResult, error) {
-	var data MessageTemplateResult
-	templateT := GetSchema(MessageTemplate{})
+// GetTemplateByID 根据ID获取消息模板
+func GetTemplateByID(id string) (*TemplateResult, error) {
+	var data TemplateResult
+	templateT := GetSchema(Template{})
 	
 	err := db.Table(templateT).Where("id = ?", id).First(&data).Error
 	if err != nil {
@@ -133,9 +133,9 @@ func GetMessageTemplateByID(id string) (*MessageTemplateResult, error) {
 	return &data, nil
 }
 
-// ExistMessageTemplateByID 检查模板是否存在
-func ExistMessageTemplateByID(id string) (bool, error) {
-	var template MessageTemplate
+// ExistTemplateByID 检查模板是否存在
+func ExistTemplateByID(id string) (bool, error) {
+	var template Template
 	err := db.Select("id").Where("id = ?", id).First(&template).Error
 	if err != nil {
 		return false, err

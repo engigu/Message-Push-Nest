@@ -19,7 +19,7 @@ func GetMessageTemplateList(c *gin.Context) {
 	status := c.Query("status")
 	
 	offset, limit := util.GetPageSize(c)
-	templateService := message_template_service.MessageTemplateService{
+	templateService := message_template_service.TemplateService{
 		Text:     text,
 		Status:   status,
 		PageNum:  offset,
@@ -49,7 +49,7 @@ func GetMessageTemplate(c *gin.Context) {
 	appG := app.Gin{C: c}
 	id := c.Query("id")
 	
-	templateService := message_template_service.MessageTemplateService{
+	templateService := message_template_service.TemplateService{
 		ID: id,
 	}
 	
@@ -104,7 +104,7 @@ func AddMessageTemplate(c *gin.Context) {
 		req.Status = "enabled"
 	}
 	
-	templateService := message_template_service.MessageTemplateService{
+	templateService := message_template_service.TemplateService{
 		Name:             req.Name,
 		Description:      req.Description,
 		TextTemplate:     req.TextTemplate,
@@ -153,7 +153,7 @@ func EditMessageTemplate(c *gin.Context) {
 		return
 	}
 	
-	templateService := message_template_service.MessageTemplateService{
+	templateService := message_template_service.TemplateService{
 		ID: req.ID,
 	}
 	
@@ -200,7 +200,7 @@ func DeleteMessageTemplate(c *gin.Context) {
 		return
 	}
 	
-	templateService := message_template_service.MessageTemplateService{
+	templateService := message_template_service.TemplateService{
 		ID: req.ID,
 	}
 	
@@ -237,7 +237,7 @@ func PreviewMessageTemplate(c *gin.Context) {
 		return
 	}
 	
-	templateService := message_template_service.MessageTemplateService{
+	templateService := message_template_service.TemplateService{
 		ID: req.ID,
 	}
 	
@@ -272,7 +272,7 @@ func GetTemplateWithIns(c *gin.Context) {
 	}
 
 	// 获取模板信息
-	template, err := models.GetMessageTemplateByID(id)
+	template, err := models.GetTemplateByID(id)
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, "获取模板信息失败！", nil)
 		return
