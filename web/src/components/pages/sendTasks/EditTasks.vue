@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineEmits, defineProps, withDefaults, onMounted } from 'vue'
+import { ref, computed, defineProps, withDefaults, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from "@/components/ui/badge"
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
@@ -32,12 +32,6 @@ const props = withDefaults(defineProps<Props>(), {
   open: false,
   editData: null
 })
-
-// 组件emits
-const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'save': [data: any]
-}>()
 
 // 前端的页面添加配置
 const waysConfigMap = CONSTANT.WAYS_DATA
