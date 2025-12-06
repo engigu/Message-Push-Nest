@@ -339,17 +339,18 @@ func GetTrendStatisticData() (TrendStatisticData, error) {
 	return statistic, nil
 }
 
-// GetChannelStatisticData 获取渠道统计数据
+// GetChannelStatisticData 获取渠道统计数据（包含任务实例和模板实例）
 func GetChannelStatisticData() (ChannelStatisticData, error) {
 	var statistic ChannelStatisticData
 	var wayCateData []WayCateData
 	inst := GetSchema(SendTasksIns{})
 	wayst := GetSchema(SendWays{})
 
-	// 消息实例分类数目
+	// 统计所有实例的渠道分布（包含任务实例和模板实例）
+	// 不区分 task_id 和 template_id，统计所有关联到渠道的实例
 	db.
 		Table(inst).
-		Select(fmt.Sprintf("%s.name as way_name, count(%s.id) as count_num", wayst, wayst)).
+		Select(fmt.Sprintf("%s.name as way_name, count(%s.id) as count_num", wayst, inst)).
 		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", wayst, inst, wayst)).
 		Group(fmt.Sprintf("%s.id", wayst)).
 		Scan(&wayCateData)
