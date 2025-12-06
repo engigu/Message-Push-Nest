@@ -112,7 +112,7 @@ const handleAddSubmit = async () => {
 
   // 组建表单数据
   let postData = {
-    "id": generateBizUniqueID('I'),
+    "id": generateBizUniqueID('IN'),
     "enable": 1,
     "template_id": props.templateData.id,
     "way_id": displayOptions.value[0]?.id,

@@ -18,7 +18,7 @@ function generateUniqueID() {
 
 function generateBizUniqueID(flag) {
     const randomString = generateRandomString(10);
-    return `${flag}-${randomString}`;
+    return `${flag}${randomString}`;
 }
 
 export { generateUniqueID, generateBizUniqueID };

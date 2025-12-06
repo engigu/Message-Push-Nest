@@ -42,7 +42,7 @@ const handleSubmit = async () => {
   try {
     let postData = {
       "name": formData.name,
-      "id": generateBizUniqueID("C"),
+      "id": generateBizUniqueID("CM"),
       "title": formData.title,
       "content": formData.content,
       "cron": formData.cron_expression,

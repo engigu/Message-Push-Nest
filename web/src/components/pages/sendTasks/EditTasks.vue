@@ -91,7 +91,7 @@ const handleClose = () => {
 const handleAddSubmit = async () => {
   // 组建表单数据
   let postData = {
-    "id": generateBizUniqueID('I'),
+    "id": generateBizUniqueID('IN'),
     "enable": 1,
     "task_id": props.editData.id,
     "way_id": displayOptions.value[0]?.id,

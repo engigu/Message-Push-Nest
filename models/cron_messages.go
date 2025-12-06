@@ -22,7 +22,7 @@ type CronMessages struct {
 
 func GenerateMsgUniqueID() string {
 	newUUID := util.GenerateUniqueID()
-	return fmt.Sprintf("C-%s", newUUID)
+	return fmt.Sprintf("CM%s", newUUID)
 }
 
 func AddSendCronMsg(

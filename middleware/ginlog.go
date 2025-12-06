@@ -1,8 +1,10 @@
 package middleware
 
 import (
+	"bytes"
 	"fmt"
 	"math"
+	"strings"
 
 	"net/http"
 	"net/url"
@@ -11,6 +13,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
+
+// 需要记录响应内容的 API 路径前缀
+var logResponsePaths = []string{
+	"/api/v1/message/send",
+	"/api/v2/message/send",
+}
+
+// responseBodyWriter 用于捕获响应内容
+type responseBodyWriter struct {
+	gin.ResponseWriter
+	body *bytes.Buffer
+}
+
+func (w responseBodyWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
+}
 
 // LogMiddleware  Logger is the logrus logger handler
 func LogMiddleware(notLogged ...string) gin.HandlerFunc {
@@ -32,6 +51,24 @@ func LogMiddleware(notLogged ...string) gin.HandlerFunc {
 		path := c.Request.URL.Path
 		raw := c.Request.URL.RawQuery
 		start := time.Now()
+
+		// 判断是否需要捕获响应内容
+		needCaptureResponse := false
+		for _, logPath := range logResponsePaths {
+			if strings.HasPrefix(path, logPath) {
+				needCaptureResponse = true
+				break
+			}
+		}
+		
+		var bodyWriter *responseBodyWriter
+		if needCaptureResponse {
+			bodyWriter = &responseBodyWriter{
+				ResponseWriter: c.Writer,
+				body:           bytes.NewBufferString(""),
+			}
+			c.Writer = bodyWriter
+		}
 
 		c.Next()
 
@@ -70,6 +107,13 @@ func LogMiddleware(notLogged ...string) gin.HandlerFunc {
 			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
 		} else {
 			msg := fmt.Sprintf("%s [%s] %s %d %d (%dms)", clientIP, c.Request.Method, path, statusCode, dataLength, latency)
+			
+			// 如果是发送消息的 API，打印返回内容
+			if needCaptureResponse && bodyWriter != nil {
+				responseBody := bodyWriter.body.String()
+				msg = fmt.Sprintf("%s | Response: %s", msg, responseBody)
+			}
+			
 			if statusCode >= http.StatusInternalServerError {
 				entry.Error(msg)
 			} else if statusCode >= http.StatusBadRequest {

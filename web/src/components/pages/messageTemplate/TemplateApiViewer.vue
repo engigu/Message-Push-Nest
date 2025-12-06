@@ -153,7 +153,7 @@ export default defineComponent({
         </div>
 
         <!-- 说明 -->
-        <div class="border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950 p-3 rounded text-sm space-y-1">
+        <div class="border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950 p-3 rounded text-xs space-y-1">
           <p class="font-semibold text-blue-900 dark:text-blue-200">💡 使用说明</p>
           <ul class="text-blue-800 dark:text-blue-300 space-y-1 ml-4 list-disc">
             <li><strong>token 参数：</strong>需要使用加密后的 token，不能直接使用明文模板ID（安全考虑）</li>

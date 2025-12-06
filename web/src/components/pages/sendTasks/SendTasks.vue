@@ -189,7 +189,7 @@ onMounted(async () => {
           <p class="text-sm text-blue-800 dark:text-blue-200">
             新项目建议使用 
             <router-link to="/templates" class="font-medium underline hover:text-blue-600">消息模板</router-link> 
-            功能，它提供更好的内容管理和维护体验。发送任务主要用于兼容历史数据。
+            功能，它提供更好的内容管理和维护体验。发送任务主要用于兼容早期使用数据。
             <a href="https://engigu.github.io/Message-Push-Nest/guide/template.html" target="_blank" 
                class="font-medium underline hover:text-blue-600 ml-1">
               了解更多 →

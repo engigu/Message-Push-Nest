@@ -15,7 +15,7 @@ type SendTasks struct {
 
 func GenerateTaskUniqueID() string {
 	newUUID := util.GenerateUniqueID()
-	return fmt.Sprintf("T-%s", newUUID)
+	return fmt.Sprintf("TK%s", newUUID)
 }
 
 // AddSendTaskWithID 添加实例的时候添加任务
