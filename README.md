@@ -24,7 +24,17 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 关于运行日志，考虑到目前多数服务以收集控制台输出为主，暂时不支持写出日志文件。
 
 ## 更新日志 ☕
-[点我转跳](https://engigu.github.io/Message-Push-Nest/guide/changelog.html)
+
+### 最近更新
+
+**2025.12.06** - 新增消息模板功能、V2 API  
+**2025.10.12** - 增加 cookies 过期天数设置  
+**2025.09.30** - 支持明暗主题切换、登录日志  
+**2025.08.10** - 重构 web 页面，UI 升级（shadcn-vue + tailwindcss）  
+**2025.04.28** - 支持 TiDB、数据库 SSL 配置  
+**2025.01.01** - 支持托管消息功能  
+
+[查看完整更新日志](https://engigu.github.io/Message-Push-Nest/guide/changelog.html)
   
 ## 项目来由 💡
 
@@ -42,10 +52,6 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 ## 贡献 🤝
 
 欢迎通过提交问题和提出改进建议。
-
-## 致谢 🙏
-
-该项目汲取了[go-gin-example](https://github.com/eddycjy/go-gin-example)项目的灵感，展示了 Go 和 Gin 在实际应用中的强大和多才多艺。
 
 ## Star History ⭐
 

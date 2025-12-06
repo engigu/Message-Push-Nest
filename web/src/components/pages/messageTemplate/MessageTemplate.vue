@@ -184,7 +184,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-2 w-full max-w-6xl mx-auto space-y-2">
+  <div class="p-4 w-full max-w-6xl mx-auto space-y-2">
     <!-- 搜索和筛选 -->
     <div class="flex flex-row sm:flex-row sm:items-center gap-2 -mx-2 px-2 sm:mx-0 sm:px-0">
       <div class="flex-[3] sm:flex-initial min-w-0">
