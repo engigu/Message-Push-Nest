@@ -314,7 +314,7 @@ onMounted(async () => {
           <div v-if="currentTemplate" class="space-y-2">
             <Label>填写占位符参数</Label>
             <div
-              v-for="(_, key) in previewData.params"
+              v-for="(_, key, index) in previewData.params"
               :key="key"
               class="flex gap-2 items-center"
             >
@@ -323,6 +323,8 @@ onMounted(async () => {
                 v-model="previewData.params[key]"
                 :placeholder="`请输入 ${key}`"
                 @input="refreshPreview"
+                :autofocus="false"
+                :tabindex="index + 1"
               />
             </div>
           </div>

@@ -263,37 +263,28 @@ watch(() => props.open, (newVal) => {
 
         <!-- @提醒配置 -->
         <div class="space-y-2">
-          <Label>@提醒配置</Label>
-          <div class="space-y-2">
-            <div class="flex items-center gap-2">
+          <Label>@提醒配置 <span class="text-xs text-muted-foreground font-normal">（适用于钉钉、企业微信）</span></Label>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div class="flex items-center gap-2 px-3 py-2 border rounded-md">
               <input 
                 type="checkbox" 
                 id="is_at_all" 
                 v-model="formData.is_at_all"
                 class="w-4 h-4 rounded border-gray-300"
               />
-              <Label for="is_at_all" class="cursor-pointer">@所有人</Label>
+              <Label for="is_at_all" class="cursor-pointer text-sm">@所有人</Label>
             </div>
-            <div class="space-y-1">
-              <Label for="at_mobiles">@手机号（多个用逗号分隔）</Label>
-              <Input
-                id="at_mobiles"
-                v-model="formData.at_mobiles"
-                placeholder="例如：13800138000,13900139000"
-              />
-            </div>
-            <div class="space-y-1">
-              <Label for="at_user_ids">@用户ID（多个用逗号分隔）</Label>
-              <Input
-                id="at_user_ids"
-                v-model="formData.at_user_ids"
-                placeholder="例如：user001,user002"
-              />
-            </div>
+            <Input
+              v-model="formData.at_mobiles"
+              placeholder="@手机号（逗号分隔）"
+              class="text-sm"
+            />
+            <Input
+              v-model="formData.at_user_ids"
+              placeholder="@用户ID（逗号分隔）"
+              class="text-sm"
+            />
           </div>
-          <p class="text-xs text-muted-foreground">
-            配置后，使用此模板发送消息时会自动@指定的用户（适用于支持@功能的渠道，如钉钉、企业微信等）
-          </p>
         </div>
 
         <!-- 模板内容 -->
@@ -326,7 +317,7 @@ watch(() => props.open, (newVal) => {
               ref="textTemplateRef"
               v-model="formData.text_template"
               placeholder="请输入纯文本模板内容，可使用 {{key}} 作为占位符"
-              rows="10"
+              rows="15"
             />
           </TabsContent>
           <TabsContent value="html" class="space-y-2">
@@ -352,7 +343,7 @@ watch(() => props.open, (newVal) => {
               ref="htmlTemplateRef"
               v-model="formData.html_template"
               placeholder="请输入HTML模板内容，可使用 {{key}} 作为占位符"
-              rows="10"
+              rows="15"
             />
           </TabsContent>
           <TabsContent value="markdown" class="space-y-2">
@@ -378,7 +369,7 @@ watch(() => props.open, (newVal) => {
               ref="markdownTemplateRef"
               v-model="formData.markdown_template"
               placeholder="请输入Markdown模板内容，可使用 {{key}} 作为占位符"
-              rows="10"
+              rows="15"
             />
           </TabsContent>
         </Tabs>

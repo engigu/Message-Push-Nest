@@ -80,6 +80,36 @@ const handlechannelNameChange = () => {
 
 // 添加单条实例配置
 const handleAddSubmit = async () => {
+  // 验证是否选择了渠道
+  if (!channelName.value) {
+    toast.error('请选择发送渠道')
+    return
+  }
+
+  // 验证内容类型
+  const contentType = formData.value.templ_type
+  if (!contentType) {
+    toast.error('请选择消息格式')
+    return
+  }
+
+  // 验证模板对应格式的内容是否为空
+  const templateFieldMap: Record<string, string> = {
+    'text': 'text_template',
+    'html': 'html_template',
+    'markdown': 'markdown_template'
+  }
+  
+  const fieldName = templateFieldMap[contentType.toLowerCase()]
+  if (fieldName) {
+    const templateContent = props.templateData?.[fieldName] || ''
+    // 检查是否为空（去除所有空白字符后检查）
+    if (!templateContent.trim()) {
+      toast.error(`模板的 ${contentType} 格式内容为空，无法添加此类型的实例`)
+      return
+    }
+  }
+
   // 组建表单数据
   let postData = {
     "id": generateBizUniqueID('I'),
