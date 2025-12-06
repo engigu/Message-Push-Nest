@@ -152,6 +152,30 @@ watch(placeholdersList, () => {
   }, 300)
 }, { deep: true })
 
+// 检查占位符 key 是否重复
+const isDuplicateKey = (key: string, currentIndex: number): boolean => {
+  if (!key.trim()) return false
+  return placeholdersList.value.some((p, index) => 
+    index !== currentIndex && p.key.trim() === key.trim()
+  )
+}
+
+// 获取重复的 key 列表
+const getDuplicateKeys = computed(() => {
+  const keys = placeholdersList.value.map(p => p.key.trim()).filter(k => k)
+  const duplicates = new Set<string>()
+  const seen = new Set<string>()
+  
+  keys.forEach(key => {
+    if (seen.has(key)) {
+      duplicates.add(key)
+    }
+    seen.add(key)
+  })
+  
+  return duplicates
+})
+
 // 添加占位符
 const addPlaceholder = () => {
   placeholdersList.value.push({ key: '', label: '', default: '' })
@@ -250,6 +274,19 @@ const saveTemplate = async () => {
     toast.error('至少需要填写一种格式的模板内容')
     return
   }
+  
+  // 验证占位符 key 不能为空且不能重复
+  const emptyKeys = placeholdersList.value.filter(p => p.key.trim() === '')
+  if (emptyKeys.length > 0) {
+    toast.error('占位符 key 不能为空')
+    return
+  }
+  
+  if (getDuplicateKeys.value.size > 0) {
+    const duplicates = Array.from(getDuplicateKeys.value).join('、')
+    toast.error(`占位符 key 不能重复：${duplicates}`)
+    return
+  }
 
   // 同步占位符数据
   formData.value.placeholders = JSON.stringify(placeholdersList.value)
@@ -321,23 +358,30 @@ watch(() => props.open, (newVal) => {
             <Label>占位符配置</Label>
             <Button size="sm" variant="outline" @click="addPlaceholder">添加占位符</Button>
           </div>
-          <div v-for="(placeholder, index) in placeholdersList" :key="index" class="flex gap-2 items-center">
-            <Input
-              v-model="placeholder.key"
-              placeholder="key (如: username)"
-              class="flex-1"
-            />
-            <Input
-              v-model="placeholder.label"
-              placeholder="标签 (如: 用户名)"
-              class="flex-1"
-            />
-            <Input
-              v-model="placeholder.default"
-              placeholder="默认值"
-              class="flex-1"
-            />
-            <Button size="sm" variant="ghost" @click="removePlaceholder(index)">删除</Button>
+          <div v-for="(placeholder, index) in placeholdersList" :key="index" class="flex flex-col gap-1">
+            <div class="flex gap-2 items-center">
+              <div class="flex-1 relative">
+                <Input
+                  v-model="placeholder.key"
+                  placeholder="key (如: username)"
+                  :class="{ 'border-red-500 focus-visible:ring-red-500': isDuplicateKey(placeholder.key, index) }"
+                />
+                <p v-if="isDuplicateKey(placeholder.key, index)" class="text-xs text-red-500 mt-1">
+                  该 key 已存在
+                </p>
+              </div>
+              <Input
+                v-model="placeholder.label"
+                placeholder="标签 (如: 用户名)"
+                class="flex-1"
+              />
+              <Input
+                v-model="placeholder.default"
+                placeholder="默认值"
+                class="flex-1"
+              />
+              <Button size="sm" variant="ghost" @click="removePlaceholder(index)">删除</Button>
+            </div>
           </div>
           <p class="text-xs text-muted-foreground">
             在模板中使用 <code v-text="'{{key}}'"></code> 来引用占位符，例如：Hello <code v-text="'{{username}}'"></code>
