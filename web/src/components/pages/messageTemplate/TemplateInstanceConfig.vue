@@ -269,35 +269,42 @@ watch(() => props.open, (newVal) => {
         <div class="space-y-4">
 
         <!-- 模板信息 -->
-        <div class="mb-6 p-4 bg-muted rounded-lg">
-          <div class="text-sm text-muted-foreground">模板名称</div>
-          <div class="text-lg font-medium">{{ templateData?.name }}</div>
-          <div class="text-xs text-muted-foreground mt-1">ID: {{ templateData?.id }}</div>
+        <div class="mb-6 p-3 bg-muted rounded-lg space-y-1">
+          <div class="flex items-baseline gap-2">
+            <span class="text-base font-semibold">{{ templateData?.name }}</span>
+            <Badge variant="outline" class="text-xs">{{ templateData?.id }}</Badge>
+          </div>
+          <div class="text-xs text-muted-foreground">为此模板配置发送实例</div>
         </div>
 
         <!-- 添加实例表单 -->
         <div class="space-y-4">
-          <Label class="text-sm font-medium">选择发送渠道</Label>
-          <Combobox v-model="channelName" @update:model-value="handlechannelNameChange">
-            <ComboboxAnchor class="w-full">
-              <ComboboxInput v-model="inputDisplayValue" @input="handleSearch(inputDisplayValue)"
-                class="flex h-10 w-full" placeholder="搜索或选择渠道类型进行实例的添加..." />
-            </ComboboxAnchor>
-            <ComboboxList class="w-[var(--reka-combobox-trigger-width)]">
-              <ComboboxViewport>
-                <ComboboxItem v-for="option in displayOptions" :key="option.id" :value="option.name">
-                  <div class="flex items-center justify-between w-full">
-                    <span>{{ option.name }}</span>
-                    <CheckIcon v-if="channelName === option.name" class="h-4 w-4" />
-                  </div>
-                </ComboboxItem>
-                <div v-if="isSearching" class="p-2 text-sm text-muted-foreground">搜索中...</div>
-                <div v-if="!isSearching && displayOptions.length === 0 && searchQuery" class="p-2 text-sm text-muted-foreground">
-                  未找到匹配的渠道
-                </div>
-              </ComboboxViewport>
-            </ComboboxList>
-          </Combobox>
+          <div class="flex items-end gap-2">
+            <div class="flex-1 space-y-2">
+              <Label class="text-sm font-medium">选择发送渠道</Label>
+              <Combobox v-model="channelName" @update:model-value="handlechannelNameChange">
+                <ComboboxAnchor class="w-full">
+                  <ComboboxInput v-model="inputDisplayValue" @input="handleSearch(inputDisplayValue)"
+                    class="flex h-10 w-full" placeholder="搜索或选择渠道类型进行实例的添加..." />
+                </ComboboxAnchor>
+                <ComboboxList class="w-[var(--reka-combobox-trigger-width)]">
+                  <ComboboxViewport>
+                    <ComboboxItem v-for="option in displayOptions" :key="option.id" :value="option.name">
+                      <div class="flex items-center justify-between w-full">
+                        <span>{{ option.name }}</span>
+                        <CheckIcon v-if="channelName === option.name" class="h-4 w-4" />
+                      </div>
+                    </ComboboxItem>
+                    <div v-if="isSearching" class="p-2 text-sm text-muted-foreground">搜索中...</div>
+                    <div v-if="!isSearching && displayOptions.length === 0 && searchQuery" class="p-2 text-sm text-muted-foreground">
+                      未找到匹配的渠道
+                    </div>
+                  </ComboboxViewport>
+                </ComboboxList>
+              </Combobox>
+            </div>
+            <Button size="sm" variant="outline" @click="handleAddSubmit">添加实例</Button>
+          </div>
         </div>
 
         <!-- 渠道配置表单 -->
@@ -324,10 +331,6 @@ watch(() => props.open, (newVal) => {
               </div>
             </RadioGroup>
           </div>
-        </div>
-
-        <div class="flex justify-end gap-2 border-b pb-4 mt-2">
-          <Button @click="handleAddSubmit">添加实例</Button>
         </div>
 
         <!-- 关联的实例表 -->

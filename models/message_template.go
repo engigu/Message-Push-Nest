@@ -45,7 +45,11 @@ func (t *Template) Add() error {
 
 // Update 更新消息模板
 func (t *Template) Update() error {
-	if err := db.Model(&Template{}).Where("id = ?", t.ID).Updates(t).Error; err != nil {
+	// 使用 Select 明确指定要更新的字段，包括布尔值字段，排除不应更新的时间戳字段
+	if err := db.Model(&Template{}).Where("id = ?", t.ID).
+		Select("name", "description", "text_template", "html_template", "markdown_template", 
+			"placeholders", "at_mobiles", "at_user_ids", "is_at_all", "status", "modified_by").
+		Updates(t).Error; err != nil {
 		return err
 	}
 	return nil

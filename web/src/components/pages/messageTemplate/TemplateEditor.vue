@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 
@@ -219,7 +220,7 @@ const loadTemplateData = (template: TemplateData) => {
     placeholders: template.placeholders,
     at_mobiles: template.at_mobiles || '',
     at_user_ids: template.at_user_ids || '',
-    is_at_all: template.is_at_all || false,
+    is_at_all: Boolean(template.is_at_all),
     status: template.status
   }
   
@@ -243,18 +244,28 @@ const saveTemplate = async () => {
     toast.error('请输入模板名称')
     return
   }
+  
+  // 验证至少填写一种格式的模板内容
+  if (!formData.value.text_template && !formData.value.html_template && !formData.value.markdown_template) {
+    toast.error('至少需要填写一种格式的模板内容')
+    return
+  }
 
   // 同步占位符数据
   formData.value.placeholders = JSON.stringify(placeholdersList.value)
 
   try {
     const url = props.isEditing ? '/templates/edit' : '/templates/add'
-    await request.post(url, formData.value)
-    toast.success(props.isEditing ? '更新模板成功' : '添加模板成功')
-    emit('update:open', false)
-    emit('saved')
+    const response = await request.post(url, formData.value)
+    if (response.data.code === 200) {
+      toast.success(props.isEditing ? '更新模板成功' : '添加模板成功')
+      emit('update:open', false)
+      emit('saved')
+    } else {
+      toast.error(response.data.msg || '操作失败')
+    }
   } catch (error: any) {
-    toast.error(error.response?.data?.message || '操作失败')
+    toast.error(error.response?.data?.msg || error.response?.data?.message || '操作失败')
   }
 }
 
@@ -278,29 +289,30 @@ watch(() => props.open, (newVal) => {
       </DialogHeader>
       <div class="space-y-4 py-4">
         <!-- 基本信息 -->
-        <div class="space-y-2">
-          <Label for="name">模板名称 *</Label>
-          <Input id="name" v-model="formData.name" placeholder="请输入模板名称" />
+        <div class="grid grid-cols-10 gap-4">
+          <div class="col-span-7 space-y-2">
+            <Label for="name">模板名称 *</Label>
+            <Input id="name" v-model="formData.name" placeholder="请输入模板名称" />
+          </div>
+          <div class="col-span-3 space-y-2">
+            <Label>状态</Label>
+            <Select v-model="formData.status">
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="全部" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="enabled">启用</SelectItem>
+                  <SelectItem value="disabled">禁用</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div class="space-y-2">
           <Label for="description">描述</Label>
           <Textarea id="description" v-model="formData.description" placeholder="请输入模板描述" />
-        </div>
-
-        <div class="space-y-2">
-          <Label>状态</Label>
-          <Select v-model="formData.status">
-            <SelectTrigger class="w-full">
-              <SelectValue placeholder="全部" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="enabled">启用</SelectItem>
-                <SelectItem value="disabled">禁用</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
         </div>
 
         <!-- 占位符配置 -->
@@ -337,11 +349,10 @@ watch(() => props.open, (newVal) => {
           <Label>@提醒配置 <span class="text-xs text-muted-foreground font-normal">（适用于钉钉、企业微信等）</span></Label>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div class="flex items-center gap-2 px-3 py-2 border rounded-md">
-              <input 
-                type="checkbox" 
+              <Checkbox 
                 id="is_at_all" 
-                v-model="formData.is_at_all"
-                class="w-4 h-4 rounded border-gray-300"
+                :model-value="formData.is_at_all"
+                @update:model-value="(newVal: boolean | 'indeterminate') => formData.is_at_all = newVal === true"
               />
               <Label for="is_at_all" class="cursor-pointer text-sm">@所有人</Label>
             </div>

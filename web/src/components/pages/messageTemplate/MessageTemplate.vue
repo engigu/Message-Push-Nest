@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
+import ClickableTruncate from '@/components/ui/ClickableTruncate.vue'
 import TemplateApiViewer from './TemplateApiViewer.vue'
 import TemplateInstanceConfig from './TemplateInstanceConfig.vue'
 import TemplateEditor from './TemplateEditor.vue'
@@ -201,9 +202,11 @@ onMounted(async () => {
         <!-- 数据行 -->
         <TableRow v-for="item in state.tableData" :key="item.id">
           <TableCell>{{ item.id }}</TableCell>
-          <TableCell class="font-medium">{{ item.name }}</TableCell>
           <TableCell>
-            <div class="max-w-xs truncate">{{ item.description || '-' }}</div>
+            <ClickableTruncate :text="item.name" wrapper-class="max-w-[80px] sm:max-w-[100px]" preview-title="模板名称" />
+          </TableCell>
+          <TableCell>
+            <ClickableTruncate :text="item.description || '-'" wrapper-class="max-w-[80px] sm:max-w-[130px]" preview-title="模板描述" />
           </TableCell>
           <TableCell>
             <div class="flex gap-1">
