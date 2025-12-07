@@ -252,6 +252,7 @@ const tabRoutes: TabRoute[] = [
   { name: '发信日志', path: '/sendlogs' },
   { name: '托管消息', path: '/hostedmessage' },
   { name: '定时消息', path: '/cronmessages' },
+  { name: '模板任务', path: '/templates' },
   { name: '发信任务', path: '/sendtasks' },
   { name: '发信渠道', path: '/sendways' },
   { name: '设置偏好', path: '/settings' }
@@ -326,9 +327,9 @@ const siteTitle = computed(() => {
           </div>
 
           <!-- 桌面端导航 -->
-          <div class="hidden md:flex space-x-6 lg:space-x-8">
+          <div class="hidden md:flex space-x-2 lg:space-x-3">
             <button v-for="tab in tabRoutes" :key="tab.name" @click="handleTabClick(tab)" :class="[
-              'relative py-2 px-3 text-sm font-medium transition-all duration-200 rounded-md whitespace-nowrap',
+              'relative py-1.5 px-2 text-sm font-medium transition-all duration-200 rounded-md whitespace-nowrap',
               activeTab === tab.name
                 ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-400/10'
                 : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-white/5'

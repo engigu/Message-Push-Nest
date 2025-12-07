@@ -9,6 +9,8 @@ import (
 type SendTasksLogs struct {
 	ID       int    `gorm:"primaryKey" json:"id" `
 	TaskID   string `json:"task_id" gorm:"type:varchar(12) ;default:'';index:task_id"`
+	Type     string `json:"type" gorm:"type:varchar(20) ;default:'task';comment:'类型：task-任务，template-模板'"`
+	Name     string `json:"name" gorm:"type:varchar(256) ;default:'';comment:'任务或模板名称'"`
 	Log      string `json:"log" gorm:"type:text ;"`
 	Status   *int   `json:"status" gorm:"type:int ;default:0;"`
 	CallerIp string `json:"caller_ip" gorm:"type:varchar(256) ;default:'';"`
@@ -29,10 +31,11 @@ func (log *SendTasksLogs) Add() error {
 type LogsResult struct {
 	ID         int       `json:"id"`
 	TaskID     string    `json:"task_id"`
+	Type       string    `json:"type"`
+	Name       string    `json:"name"`
 	Log        string    `json:"log"`
 	CreatedOn  util.Time `json:"created_on"`
 	ModifiedOn util.Time `json:"modified_on"`
-	TaskName   string    `json:"task_name"`
 	Status     int       `json:"status"`
 	CallerIp   string    `json:"caller_ip"`
 }
@@ -41,12 +44,9 @@ type LogsResult struct {
 func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map[string]interface{}) ([]LogsResult, error) {
 	var logs []LogsResult
 	logt := GetSchema(SendTasksLogs{})
-	taskt := GetSchema(SendTasks{})
 
-	query := db.
-		Table(logt).
-		Select(fmt.Sprintf("%s.*, %s.name as task_name", logt, taskt)).
-		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
+	// 简化查询，只查询日志表
+	query := db.Table(logt)
 
 	dayVal, ok := maps["day_created_on"]
 	if ok {
@@ -55,8 +55,10 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map
 	}
 
 	query = query.Where(maps)
+	
+	// 按名称搜索（搜索日志表的 name 字段）
 	if name != "" {
-		query = query.Where(fmt.Sprintf("%s.name like ?", taskt), fmt.Sprintf("%%%s%%", name))
+		query = query.Where(fmt.Sprintf("%s.name like ?", logt), fmt.Sprintf("%%%s%%", name))
 	}
 	if taskId != "" {
 		query = query.Where(fmt.Sprintf("%s.task_id = ?", logt), taskId)
@@ -66,18 +68,71 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map
 		query = query.Offset(pageNum).Limit(pageSize)
 	}
 	query.Scan(&logs)
+	
+	//v1 接口的历史日志数据兼容处理
+	// 应用层处理：为历史数据（type=task 且 name 为空）补充任务名称
+	fillTaskNamesForLogs(&logs)
 
 	return logs, nil
+}
+
+// fillTaskNamesForLogs 为历史日志数据补充任务名称
+func fillTaskNamesForLogs(logs *[]LogsResult) {
+	if logs == nil || len(*logs) == 0 {
+		return
+	}
+
+	// 收集需要查询的 task_id
+	taskIdsMap := make(map[string]bool)
+	for _, log := range *logs {
+		// 只处理 type=task 且 name 为空的记录
+		if (log.Type == "" || log.Type == "task") && log.Name == "" && log.TaskID != "" {
+			taskIdsMap[log.TaskID] = true
+		}
+	}
+
+	// 如果没有需要查询的任务，直接返回
+	if len(taskIdsMap) == 0 {
+		return
+	}
+
+	// 批量查询任务名称
+	taskIds := make([]string, 0, len(taskIdsMap))
+	for taskId := range taskIdsMap {
+		taskIds = append(taskIds, taskId)
+	}
+
+	var tasks []SendTasks
+	taskt := GetSchema(SendTasks{})
+	db.Table(taskt).
+		Select("id, name").
+		Where("id IN ?", taskIds).
+		Scan(&tasks)
+
+	// 构建 taskId -> name 的映射
+	taskNameMap := make(map[string]string)
+	for _, task := range tasks {
+		taskNameMap[task.ID] = task.Name
+	}
+
+	// 填充日志的 name 字段
+	for i := range *logs {
+		log := &(*logs)[i]
+		if (log.Type == "" || log.Type == "task") && log.Name == "" && log.TaskID != "" {
+			if taskName, exists := taskNameMap[log.TaskID]; exists {
+				log.Name = taskName
+			}
+		}
+	}
 }
 
 // GetSendLogsTotal 获取所有日志总数
 func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (int64, error) {
 	var total int64
 	logt := GetSchema(SendTasksLogs{})
-	taskt := GetSchema(SendTasks{})
-	query := db.
-		Table(logt).
-		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.task_id = %s.id", taskt, logt, taskt))
+	
+	// 简化查询，只查询日志表
+	query := db.Table(logt)
 
 	dayVal, ok := maps["day_created_on"]
 	if ok {
@@ -86,8 +141,10 @@ func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (
 	}
 
 	query = query.Where(maps)
+	
+	// 按名称搜索（搜索日志表的 name 字段）
 	if name != "" {
-		query = query.Where(fmt.Sprintf("%s.name like ?", taskt), fmt.Sprintf("%%%s%%", name))
+		query = query.Where(fmt.Sprintf("%s.name like ?", logt), fmt.Sprintf("%%%s%%", name))
 	}
 	if taskId != "" {
 		query = query.Where(fmt.Sprintf("%s.task_id = ?", logt), taskId)
@@ -282,17 +339,18 @@ func GetTrendStatisticData() (TrendStatisticData, error) {
 	return statistic, nil
 }
 
-// GetChannelStatisticData 获取渠道统计数据
+// GetChannelStatisticData 获取渠道统计数据（包含任务实例和模板实例）
 func GetChannelStatisticData() (ChannelStatisticData, error) {
 	var statistic ChannelStatisticData
 	var wayCateData []WayCateData
 	inst := GetSchema(SendTasksIns{})
 	wayst := GetSchema(SendWays{})
 
-	// 消息实例分类数目
+	// 统计所有实例的渠道分布（包含任务实例和模板实例）
+	// 不区分 task_id 和 template_id，统计所有关联到渠道的实例
 	db.
 		Table(inst).
-		Select(fmt.Sprintf("%s.name as way_name, count(%s.id) as count_num", wayst, wayst)).
+		Select(fmt.Sprintf("%s.name as way_name, count(%s.id) as count_num", wayst, inst)).
 		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", wayst, inst, wayst)).
 		Group(fmt.Sprintf("%s.id", wayst)).
 		Scan(&wayCateData)

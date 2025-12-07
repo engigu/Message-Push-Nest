@@ -23,6 +23,11 @@ type SendMessageReq struct {
 	URL      string `json:"url"  label:"消息详情url地址"`
 	MarkDown string `json:"markdown" label:"markdown内容"`
 	Mode     string `json:"mode" label:"是否异步发送"`
+
+	// @提及相关参数
+	AtMobiles []string `json:"at_mobiles" label:"@的手机号列表"`
+	AtUserIds []string `json:"at_user_ids" label:"@的用户ID列表"`
+	AtAll     bool     `json:"at_all" label:"是否@所有人"`
 }
 
 // DoSendMassage 外部调用发信接口
@@ -56,15 +61,19 @@ func DoSendMassage(c *gin.Context) {
 	}
 
 	msgService := send_message_service.SendMessageService{
-		TaskID:   taskID,
-		Title:    req.Title,
-		Text:     req.Text,
-		HTML:     req.HTML,
-		URL:      req.URL,
-		MarkDown: req.MarkDown,
-		CallerIp: c.ClientIP(),
+		SendMode:  send_message_service.SendModeTask, // 明确标记为任务模式
+		TaskID:    taskID,
+		Title:     req.Title,
+		Text:      req.Text,
+		HTML:      req.HTML,
+		URL:       req.URL,
+		MarkDown:  req.MarkDown,
+		CallerIp:  c.ClientIP(),
+		AtMobiles: req.AtMobiles,
+		AtUserIds: req.AtUserIds,
+		AtAll:     req.AtAll,
 		DefaultLogger: logrus.WithFields(logrus.Fields{
-			//"prefix": "[Message Instance]",
+			"prefix": "[Send Instance]",
 		}),
 	}
 	task, err := msgService.SendPreCheck()

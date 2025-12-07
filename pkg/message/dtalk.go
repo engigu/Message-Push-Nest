@@ -62,6 +62,26 @@ func (t *Dtalk) SendMessageText(text string, at ...string) ([]byte, error) {
 			"content": text,
 		},
 	}
+	
+	// 添加@功能
+	if len(at) > 0 {
+		atMobiles := []string{}
+		isAtAll := false
+		
+		for _, mobile := range at {
+			if mobile == "all" || mobile == "@all" {
+				isAtAll = true
+			} else {
+				atMobiles = append(atMobiles, mobile)
+			}
+		}
+		
+		msg["at"] = map[string]interface{}{
+			"atMobiles": atMobiles,
+			"isAtAll":   isAtAll,
+		}
+	}
+	
 	resp, err := t.Request(msg)
 	return resp, err
 }
@@ -74,6 +94,26 @@ func (t *Dtalk) SendMessageMarkdown(title, text string, at ...string) ([]byte, e
 			"text":  text,
 		},
 	}
+	
+	// 添加@功能
+	if len(at) > 0 {
+		atMobiles := []string{}
+		isAtAll := false
+		
+		for _, mobile := range at {
+			if mobile == "all" || mobile == "@all" {
+				isAtAll = true
+			} else {
+				atMobiles = append(atMobiles, mobile)
+			}
+		}
+		
+		msg["at"] = map[string]interface{}{
+			"atMobiles": atMobiles,
+			"isAtAll":   isAtAll,
+		}
+	}
+	
 	resp, err := t.Request(msg)
 	return resp, err
 }

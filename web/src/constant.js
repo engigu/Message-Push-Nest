@@ -55,7 +55,7 @@ const CONSTANT = {
         },
         {
             type: 'QyWeiXin',
-            label: '企业微信',
+            label: '企业微信机器人',
             inputs: [
                 { subLabel: 'token', value: '', col: 'access_token', desc: "企业微信webhook中的token" },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },

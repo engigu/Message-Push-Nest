@@ -19,7 +19,8 @@ import { getPageSize } from '@/util/pageUtils';
 interface LogItem {
   id: number
   task_id: number
-  task_name: string
+  type: string  // 类型：task 或 template
+  name: string  // 任务或模板名称
   log: string
   created_on: string
   caller_ip?: string
@@ -34,7 +35,7 @@ let state = reactive({
   currPage: 1,
   pageSize: getPageSize(),
   search: '',
-  optionValue: '',
+  optionValue: '',  // 保存 taskid，用于过滤
 })
 
 // 状态过滤
@@ -50,10 +51,25 @@ const getStatusText = (status: number) => {
   return status === 1 ? '成功' : '失败'
 }
 
+// 获取类型文本
+const getTypeText = (type: string) => {
+  return type === 'template' ? '模板' : '任务'
+}
+
+// 获取类型徽章样式
+const getTypeBadgeVariant = (type: string) => {
+  return type === 'template' ? 'secondary' : 'default'
+}
+
+// 获取显示名称
+const getDisplayName = (task: LogItem) => {
+  return task.name || '-'
+}
+
 // 打开日志详情Sheet
 const openLogSheet = (task: LogItem) => {
   selectedLog.value = formatLogDisplayHtml(task);
-  selectedTaskName.value = task.task_name
+  selectedTaskName.value = getDisplayName(task)
   isSheetOpen.value = true
 }
 
@@ -120,6 +136,8 @@ const queryListData = async (page: number, size: number, name = '', taskid = '',
 // 解析URL参数并更新筛选状态
 const parseUrlParams = async () => {
   state.search = router.query.name?.toString() || '';
+  // 保存 taskid 到 state，用于后续过滤
+  state.optionValue = router.query.taskid?.toString() || '';
   
   // 解析URL中的query参数，设置状态筛选
   const queryParam = router.query.query?.toString() || '';
@@ -140,8 +158,8 @@ const parseUrlParams = async () => {
   await queryListData(
     1,
     state.pageSize,
-    router.query.name?.toString() || '',
-    router.query.taskid?.toString() || '',
+    state.search,
+    state.optionValue,
     queryParam
   );
 };
@@ -185,7 +203,8 @@ onMounted(async () => {
       <TableHeader>
         <TableRow>
           <TableHead class="w-20">ID</TableHead>
-          <TableHead>任务名称</TableHead>
+          <TableHead class="w-24">类型</TableHead>
+          <TableHead>名称</TableHead>
           <TableHead>发信日志</TableHead>
           <TableHead class="whitespace-nowrap w-[160px]">发送时间</TableHead>
           <TableHead class="text-center">详情/状态</TableHead>
@@ -195,7 +214,7 @@ onMounted(async () => {
       <TableBody>
         <!-- 空数据展示 -->
         <TableRow v-if="state.tableData.length === 0">
-          <TableCell colspan="5" class="text-center py-12">
+          <TableCell colspan="6" class="text-center py-12">
             <EmptyTableState 
               title="暂无发信日志" 
               description="还没有任何发信日志记录" 
@@ -213,7 +232,12 @@ onMounted(async () => {
         <TableRow v-for="task in state.tableData" :key="task.id">
           <TableCell>{{ task.id }}</TableCell>
           <TableCell>
-            <ClickableTruncate :text="task.task_name" wrapper-class="max-w-[220px] sm:max-w-[360px]" preview-title="任务名称" />
+            <Badge :variant="getTypeBadgeVariant(task.type || 'task')">
+              {{ getTypeText(task.type || 'task') }}
+            </Badge>
+          </TableCell>
+          <TableCell>
+            <ClickableTruncate :text="getDisplayName(task)" wrapper-class="max-w-[220px] sm:max-w-[360px]" preview-title="名称" />
           </TableCell>
           <TableCell>
             <ClickableTruncate :text="task.log" wrapper-class="max-w-[320px] sm:max-w-[480px]" preview-title="发信日志" />

@@ -8,6 +8,7 @@ import (
 	"message-nest/pkg/setting"
 	"message-nest/routers/api"
 	"message-nest/routers/api/v1"
+	"message-nest/routers/api/v2"
 	"net/http"
 )
 
@@ -98,6 +99,26 @@ func InitRouter(f embed.FS) *gin.Engine {
 		// hostedMessage
 		apiV1.GET("/hostedmessages/list", v1.GetHostMessageList)
 
+		// messageTemplate
+		apiV1.GET("/templates/list", v1.GetMessageTemplateList)
+		apiV1.GET("/templates/get", v1.GetMessageTemplate)
+		apiV1.POST("/templates/add", v1.AddMessageTemplate)
+		apiV1.POST("/templates/edit", v1.EditMessageTemplate)
+		apiV1.POST("/templates/delete", v1.DeleteMessageTemplate)
+		apiV1.POST("/templates/preview", v1.PreviewMessageTemplate)
+		
+		// messageTemplate instances
+		apiV1.GET("/templates/ins/get", v1.GetTemplateWithIns)
+		apiV1.POST("/templates/ins/addone", v1.AddTemplateIns)
+
+	}
+
+	// API v2
+	apiV2 := app.Group("/api/v2")
+	apiV2.Use(middleware.JWT())
+	{
+		// message/send - 使用模板发送消息
+		apiV2.POST("/message/send", v2.DoSendMessageByTemplate)
 	}
 
 	return app

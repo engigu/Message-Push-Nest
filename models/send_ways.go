@@ -17,7 +17,7 @@ type SendWays struct {
 
 func GenerateWayUniqueID() string {
 	newUUID := util.GenerateUniqueID()
-	return fmt.Sprintf("W-%s", newUUID)
+	return fmt.Sprintf("WY%s", newUUID)
 }
 
 func AddSendWay(name string, auth string, wayType string, createdBy string, modifiedBy string) error {

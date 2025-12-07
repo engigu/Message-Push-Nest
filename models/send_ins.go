@@ -1,9 +1,12 @@
 package models
 
+import "fmt"
+
 type SendTasksIns struct {
 	UUIDModel
 
 	TaskID      string `json:"task_id"  gorm:"type:varchar(12) ;default:'';index"`
+	TemplateID  string `json:"template_id"  gorm:"type:varchar(12) ;default:'';index"` // 模板ID
 	WayID       string `json:"way_id" gorm:"type:varchar(12) ;default:'';index"`
 	WayType     string `json:"way_type" gorm:"type:varchar(100) ;default:'';index"`
 	ContentType string `json:"content_type" gorm:"type:varchar(100) ;default:'';index"`
@@ -81,4 +84,24 @@ func UpdateMsgTaskIns(id string, data map[string]interface{}) error {
 		return err
 	}
 	return nil
+}
+
+// GetTemplateInsList 获取模板关联的实例列表（包含渠道名称）
+func GetTemplateInsList(templateID string) ([]SendTasksInsRes, error) {
+	insTable := GetSchema(SendTasksIns{})
+	waysTable := GetSchema(SendWays{})
+	var insList []SendTasksInsRes
+
+	err := db.
+		Table(insTable).
+		Select(fmt.Sprintf("%s.*, %s.name as way_name", insTable, waysTable)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
+		Where(fmt.Sprintf("%s.template_id = ?", insTable), templateID).
+		Order(fmt.Sprintf("%s.created_on DESC", insTable)).
+		Scan(&insList).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return insList, nil
 }

@@ -2,8 +2,9 @@ package middleware
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
+
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/gin-gonic/gin"
 
@@ -13,6 +14,7 @@ import (
 
 var ExcludedRoutes = []string{
 	"/api/v1/message/send",
+	"/api/v2/message/send",
 	"/api/v1/settings/getsetting",
 }
 

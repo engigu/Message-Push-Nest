@@ -24,7 +24,7 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: '指南', link: '/guide/introduction' },
       { text: '部署', link: '/deployment/overview' },
-      { text: 'API', link: '/api/usage' },
+      { text: 'API', link: '/api/v1' },
       { text: '演示站点', link: 'https://message-nest-demo-site.qwapi.eu.org/' }
     ],
 
@@ -32,6 +32,17 @@ export default defineConfig({
       '/guide/': [
         { text: '介绍', link: '/guide/introduction' },
         { text: '特色功能', link: '/guide/features' },
+        {
+          text: '功能使用',
+          items: [
+            { text: '渠道配置', link: '/guide/channels' },
+            { text: '发送任务', link: '/guide/tasks' },
+            { text: '消息模板', link: '/guide/template' },
+            { text: '定时消息', link: '/guide/scheduled-messages' },
+            { text: '托管消息', link: '/guide/self-hosted-messages' },
+            { text: '系统设置', link: '/guide/settings' }
+          ]
+        },
         { text: '更新日志', link: '/guide/changelog' }
       ],
       '/deployment/': [
@@ -57,8 +68,8 @@ export default defineConfig({
         {
           text: 'API文档',
           items: [
-            { text: '使用说明', link: '/api/usage' },
-            { text: '调用示例', link: '/api/examples' }
+            { text: 'V1 API（任务）', link: '/api/v1' },
+            { text: 'V2 API（模板）', link: '/api/v2' }
           ]
         }
       ]

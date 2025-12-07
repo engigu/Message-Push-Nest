@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/constant"
+	"message-nest/service/send_message_service/unified"
 	"message-nest/service/send_task_service"
 	"message-nest/service/send_way_service"
 	"strings"
@@ -17,6 +18,12 @@ const (
 	SendFail    = 0
 )
 
+// 发送模式类型
+const (
+	SendModeTask     = "task"     // 传统任务模式
+	SendModeTemplate = "template" // 模板模式
+)
+
 func errStrIsSuccess(errStr string) int {
 	if errStr == "" {
 		return SendSuccess
@@ -25,13 +32,21 @@ func errStrIsSuccess(errStr string) int {
 }
 
 type SendMessageService struct {
-	TaskID   string
-	Title    string
-	Text     string
-	HTML     string
-	URL      string
-	MarkDown string
-	CallerIp string
+	SendMode   string // 发送模式：task(任务模式) 或 template(模板模式)
+	TaskID     string // 任务ID（任务模式）或模板ID（模板模式，用于日志记录）
+	TemplateID string // 模板ID（仅模板模式使用）
+	Name       string // 任务或模板名称（用于日志记录）
+	Title      string
+	Text       string
+	HTML       string
+	URL        string
+	MarkDown   string
+	CallerIp   string
+
+	// @提及相关字段
+	AtMobiles []string
+	AtUserIds []string
+	AtAll     bool
 
 	Status    int
 	LogOutput []string
@@ -76,31 +91,88 @@ func (sm *SendMessageService) AsyncSend(task models.TaskIns) {
 }
 
 // SendPreCheck 发送前数据准备和预检查
+// 支持两种模式：
+// 1. SendModeTask：传统任务模式，使用 TaskID 查询任务和实例
+// 2. SendModeTemplate：模板模式，使用 TemplateID 查询模板关联的实例
 func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 	errStr := ""
 	entry := logrus.WithFields(logrus.Fields{
 		"prefix": "[Message PreChecK]",
 	})
-	sendTaskService := send_task_service.SendTaskService{
-		ID: sm.TaskID,
-	}
-	task, err := sendTaskService.GetTaskWithIns()
-	if err != nil {
-		errStr = fmt.Sprintf("任务[%s]查询失败！", sm.TaskID)
+
+	var task models.TaskIns
+
+	switch sm.SendMode {
+	case SendModeTemplate:
+		// 模板模式：使用模板ID获取实例
+		if sm.TemplateID == "" {
+			errStr = "模板模式下 TemplateID 不能为空"
+			entry.Errorf(errStr)
+			return task, errors.New(errStr)
+		}
+
+		// 获取模板关联的实例列表
+		insList, err := models.GetTemplateInsList(sm.TemplateID)
+		if err != nil {
+			errStr = fmt.Sprintf("模板[%s]实例查询失败：%s", sm.TemplateID, err)
+			entry.Errorf(errStr)
+			return task, errors.New(errStr)
+		}
+		if len(insList) == 0 {
+			errStr = fmt.Sprintf("模板[%s]没有关联任何实例！", sm.TemplateID)
+			entry.Errorf(errStr)
+			return task, errors.New(errStr)
+		}
+
+		// 构造虚拟任务对象（用于兼容现有发送逻辑）
+		// 将模板ID作为TaskID使用，便于日志记录
+		task.ID = sm.TaskID // 使用传入的TaskID（实际是模板ID）
+		task.InsData = make([]models.SendTasksInsRes, 0, len(insList))
+		for _, ins := range insList {
+			task.InsData = append(task.InsData, ins)
+		}
+		entry.Infof("模板[%s]加载了 %d 个实例", sm.TemplateID, len(insList))
+		return task, nil
+
+	case SendModeTask:
+		// 传统任务模式：使用任务ID查询
+		if sm.TaskID == "" {
+			errStr = "任务模式下 TaskID 不能为空"
+			entry.Errorf(errStr)
+			return task, errors.New(errStr)
+		}
+
+		sendTaskService := send_task_service.SendTaskService{
+			ID: sm.TaskID,
+		}
+		task, err := sendTaskService.GetTaskWithIns()
+		if err != nil {
+			errStr = fmt.Sprintf("任务[%s]查询失败！", sm.TaskID)
+			entry.Errorf(errStr)
+			return task, errors.New(errStr)
+		}
+		if task.ID == "" {
+			errStr = fmt.Sprintf("任务[%s]不存在！", sm.TaskID)
+			entry.Errorf(errStr)
+			return task, errors.New(errStr)
+		}
+		if len(task.InsData) == 0 {
+			errStr = fmt.Sprintf("任务[%s]没有关联任何实例！！", sm.TaskID)
+			entry.Errorf(errStr)
+			return task, errors.New(errStr)
+		}
+		// 设置任务名称用于日志记录
+		if sm.Name == "" {
+			sm.Name = task.Name
+		}
+		return task, nil
+
+	default:
+		// SendMode 未设置或无效
+		errStr = fmt.Sprintf("SendMode 未设置或无效: %s，必须是 '%s' 或 '%s'", sm.SendMode, SendModeTask, SendModeTemplate)
 		entry.Errorf(errStr)
 		return task, errors.New(errStr)
 	}
-	if task.ID == "" {
-		errStr = fmt.Sprintf("任务[%s]不存在！", sm.TaskID)
-		entry.Errorf(errStr)
-		return task, errors.New(errStr)
-	}
-	if len(task.InsData) == 0 {
-		errStr = fmt.Sprintf("任务[%s]没有关联任何实例！！", sm.TaskID)
-		entry.Errorf(errStr)
-		return task, errors.New(errStr)
-	}
-	return task, nil
 }
 
 // Send 发送一个消息任务的所有实例
@@ -137,13 +209,6 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 		sm.LogsAndStatusMark(fmt.Sprintf("实例类型: %s + %s", ins.WayType, ins.ContentType), sm.Status)
 		sm.LogsAndStatusMark(fmt.Sprintf("实例配置: %s", ins.Config), sm.Status)
 
-		// 发送内容校验绑定
-		typeC, content := sm.GetSendMsg(ins.SendTasksIns)
-		if content == "" {
-			sm.LogsAndStatusMark(fmt.Sprintf("发送内容为空，设置的类型: %s，实际检测的类型: %s", ins.SendTasksIns.ContentType, typeC), SendFail)
-			continue
-		}
-
 		// 发送渠道的校验
 		errStr, msgObj := wayService.ValidateDiffWay()
 		if errStr != "" {
@@ -151,61 +216,50 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			continue
 		}
 
-		// 邮箱类型的实例发送
-		emailAuth, ok := msgObj.(send_way_service.WayDetailEmail)
-		if ok {
-			//continue
-			es := EmailService{}
-			errMsg := es.SendTaskEmail(emailAuth, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+		// 使用新的Channel架构发送消息
+		channelRegistry := unified.GetGlobalChannelRegistry()
+		channel, ok := channelRegistry.GetChannel(way.Type)
+		if !ok {
+			sm.LogsAndStatusMark(fmt.Sprintf("发送失败：未知渠道类型 %s 的发信实例: %s\n", way.Type, ins.ID), SendFail)
 			continue
 		}
-		// 钉钉类型的实例发送
-		dtalkAuth, ok := msgObj.(send_way_service.WayDetailDTalk)
-		if ok {
-			es := DtalkService{}
-			res, errMsg := es.SendDtalkMessage(dtalkAuth, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
+
+		// 根据发送模式构建消息内容
+		var unifiedContent *unified.UnifiedMessageContent
+		if sm.SendMode == SendModeTemplate {
+			// 模板模式：根据实例的 ContentType 精确发送对应类型的内容
+			unifiedContent = sm.BuildTemplateContent(ins.SendTasksIns)
+			if unifiedContent == nil {
+				sm.LogsAndStatusMark(fmt.Sprintf("模板内容为空，实例类型: %s", ins.ContentType), SendFail)
+				continue
+			}
+		} else {
+			// 任务模式：使用现有逻辑（支持内容类型回退）
+			typeC, content := sm.GetSendMsg(ins.SendTasksIns)
+			if content == "" {
+				sm.LogsAndStatusMark(fmt.Sprintf("发送内容为空，设置的类型: %s，实际检测的类型: %s", ins.SendTasksIns.ContentType, typeC), SendFail)
+				continue
+			}
+			// 构建统一消息内容（支持@功能）
+			unifiedContent = &unified.UnifiedMessageContent{
+				Title:     sm.Title,
+				Text:      sm.Text,
+				HTML:      sm.HTML,
+				Markdown:  sm.MarkDown,
+				URL:       sm.URL,
+				AtMobiles: sm.AtMobiles,
+				AtUserIds: sm.AtUserIds,
+				AtAll:     sm.AtAll,
+			}
 		}
-		// 企业微信类型的实例发送
-		qywxAuth, ok := msgObj.(send_way_service.WayDetailQyWeiXin)
-		if ok {
-			es := QyWeiXinService{}
-			res, errMsg := es.SendQyWeiXinMessage(qywxAuth, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
+
+		// 使用 SendUnified 方法（自动格式转换和@功能支持）
+		res, errMsg := channel.SendUnified(msgObj, ins.SendTasksIns, unifiedContent)
+		if res != "" {
+			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s\n", res), sm.Status)
+		} else {
 			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
 		}
-		// 自定义webhook类型的实例发送
-		customAuth, ok := msgObj.(send_way_service.WayDetailCustom)
-		if ok {
-			cs := CustomService{}
-			res, errMsg := cs.SendCustomMessage(customAuth, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
-		}
-		// 微信公众号模板消息的实例发送
-		wca, ok := msgObj.(send_way_service.WeChatOFAccount)
-		if ok {
-			cs := WeChatOfAccountService{}
-			res, errMsg := cs.SendWeChatOfAccountMessage(wca, ins.SendTasksIns, typeC, sm.Title, content, sm.URL)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
-		}
-		// 托管消息的实例发送
-		mnt, ok := msgObj.(send_way_service.MessageNest)
-		if ok {
-			cs := HostMessageService{}
-			res, errMsg := cs.SendHostMessage(mnt, ins.SendTasksIns, typeC, sm.Title, content)
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
-			continue
-		}
-		sm.LogsAndStatusMark(fmt.Sprintf("发送失败：未知渠道的发信实例: %s\n", ins.ID), SendFail)
 
 	}
 
@@ -238,9 +292,17 @@ func (sm *SendMessageService) AppendSendContent() {
 
 // RecordSendLog 记录发送日志
 func (sm *SendMessageService) RecordSendLog() {
+	// 确定日志类型
+	logType := "task"
+	if sm.SendMode == SendModeTemplate {
+		logType = "template"
+	}
+
 	log := models.SendTasksLogs{
 		Log:      strings.Join(sm.LogOutput, "\n"),
 		TaskID:   sm.TaskID,
+		Type:     logType,
+		Name:     sm.Name,
 		Status:   &sm.Status,
 		CallerIp: sm.CallerIp,
 	}
@@ -259,22 +321,67 @@ func (sm *SendMessageService) TransError(err string) string {
 	}
 }
 
-// GetSendMsg 获取对应消息内容
+// BuildTemplateContent 构建模板模式的消息内容
+// 模板模式：根据实例的 ContentType 精确匹配对应类型的内容，只传递该类型的内容
+func (sm *SendMessageService) BuildTemplateContent(ins models.SendTasksIns) *unified.UnifiedMessageContent {
+	contentType := strings.ToLower(ins.ContentType)
+
+	// 内容类型映射表
+	contentMap := map[string]string{
+		unified.FormatTypeText:     sm.Text,
+		unified.FormatTypeHTML:     sm.HTML,
+		unified.FormatTypeMarkdown: sm.MarkDown,
+	}
+
+	// 检查内容是否存在
+	contentValue, exists := contentMap[contentType]
+	if !exists {
+		logrus.Warnf("模板模式：未知的内容类型 %s", ins.ContentType)
+		return nil
+	}
+	if contentValue == "" {
+		logrus.Warnf("模板模式：实例要求的 %s 类型内容为空", contentType)
+		return nil
+	}
+
+	// 构建消息内容，只填充实例要求的类型
+	content := &unified.UnifiedMessageContent{
+		Title:     sm.Title,
+		URL:       sm.URL,
+		AtMobiles: sm.AtMobiles,
+		AtUserIds: sm.AtUserIds,
+		AtAll:     sm.AtAll,
+	}
+
+	// 根据类型填充对应字段
+	switch contentType {
+	case unified.FormatTypeText:
+		content.Text = contentValue
+	case unified.FormatTypeHTML:
+		content.HTML = contentValue
+	case unified.FormatTypeMarkdown:
+		content.Markdown = contentValue
+	}
+
+	return content
+}
+
+// GetSendMsg 获取对应消息内容（任务模式使用）
 // 先根据实例设置的类型取，取不到或者取到的是空，则使用text发送
 func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) (string, string) {
 	data := map[string]string{}
-	data["text"] = sm.Text
-	data["html"] = sm.HTML
-	data["markdown"] = sm.MarkDown
+	data[unified.FormatTypeText] = sm.Text
+	data[unified.FormatTypeHTML] = sm.HTML
+	data[unified.FormatTypeMarkdown] = sm.MarkDown
 	content, ok := data[strings.ToLower(ins.ContentType)]
 	if !ok || len(content) == 0 {
-		content, ok := data["text"]
+		content, ok := data[unified.FormatTypeText]
 		if !ok {
 			logrus.Error("text节点数据为空！")
-			return "text", ""
+			return unified.FormatTypeText, ""
 		} else {
 			logrus.Error(fmt.Sprintf("没有找到%s对应的消息，使用text消息替代！", ins.ContentType))
-			return "text", content
+			return unified.FormatTypeText, content
 		}
 	} else {
 		return strings.ToLower(ins.ContentType), content

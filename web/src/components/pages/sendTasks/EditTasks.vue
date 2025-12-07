@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineEmits, defineProps, withDefaults, onMounted } from 'vue'
+import { ref, computed, defineProps, withDefaults, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from "@/components/ui/badge"
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
@@ -32,12 +32,6 @@ const props = withDefaults(defineProps<Props>(), {
   open: false,
   editData: null
 })
-
-// 组件emits
-const emit = defineEmits<{
-  'update:open': [value: boolean]
-  'save': [data: any]
-}>()
 
 // 前端的页面添加配置
 const waysConfigMap = CONSTANT.WAYS_DATA
@@ -82,16 +76,11 @@ const handlechannelNameChange = () => {
   }
 }
 
-// 关闭drawer
-const handleClose = () => {
-  emit('update:open', false)
-}
-
 // 添加单条实例配置
 const handleAddSubmit = async () => {
   // 组建表单数据
   let postData = {
-    "id": generateBizUniqueID('I'),
+    "id": generateBizUniqueID('IN'),
     "enable": 1,
     "task_id": props.editData.id,
     "way_id": displayOptions.value[0]?.id,
@@ -244,19 +233,19 @@ onMounted(() => {
     <div v-if="props.editData" class="flex flex-col sm:flex-row sm:items-center gap-2 border-b p-4">
       <Label class="w-16 sm:w-16">任务名称</Label>
       <Input v-model="props.editData.name" placeholder="请输入任务名称" class="w-full sm:w-64" />
-      <Button class="w-full sm:w-auto sm:ml-auto" @click="handleEditTask">修改</Button>
+      <Button size="sm" variant="outline" class="w-full sm:w-auto sm:ml-auto" @click="handleEditTask">修改</Button>
     </div>
 
 
 
     <div class="mt-4">
-      <div class="flex gap-4">
-
-        <div class="flex-1">
+      <div class="flex items-end gap-2">
+        <div class="flex-1 space-y-2">
+          <Label class="text-sm font-medium">选择发送渠道</Label>
           <Combobox v-model="channelName" @update:model-value="handlechannelNameChange">
             <ComboboxAnchor class="w-full">
               <ComboboxInput v-model="inputDisplayValue" @input="handleSearch(inputDisplayValue)"
-                class="flex h-10 w-full " placeholder="搜索或选择渠道类型进行实例的添加..." />
+                class="flex h-10 w-full" placeholder="搜索或选择渠道类型进行实例的添加..." />
             </ComboboxAnchor>
             <ComboboxList class="w-[var(--reka-combobox-trigger-width)]">
               <ComboboxViewport>
@@ -276,6 +265,7 @@ onMounted(() => {
             </ComboboxList>
           </Combobox>
         </div>
+        <Button size="sm" variant="outline" @click="handleAddSubmit">添加实例</Button>
       </div>
       <!-- 动态任务配置区域 -->
       <div v-if="currentChannelConfig" class="mt-4">
@@ -307,11 +297,6 @@ onMounted(() => {
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="flex justify-end gap-2  border-b pb-4 mt-2">
-    <Button variant="outline" @click="handleClose">取消</Button>
-    <Button @click="handleAddSubmit">添加实例</Button>
   </div>
 
   <!-- 关联的实例表 -->

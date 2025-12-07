@@ -25,7 +25,7 @@ const handleCancel = () => {
 
 // 添加一条任务
 const handleSubmit = async () => {
-  const taskId = generateBizUniqueID('T');
+  const taskId = generateBizUniqueID('TK');
   const postData: Record<string, any> = {
     id: taskId,
     name: inputValue.value.trim(),
