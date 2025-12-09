@@ -3,6 +3,7 @@ package constant
 import "github.com/robfig/cron/v3"
 
 const CleanLogsTaskId = "T-IM1GBswSRY"
+const CleanHostedMsgTaskId = "T-HM2KCxwTZQ"
 const SiteSettingSectionName = "site_config"
 
 //const SiteSettingTitleKeyName = "title"
@@ -22,11 +23,26 @@ var SiteSiteDefaultValueMap = map[string]string{
 const LogsCleanSectionName = "log_config"
 const LogsCleanCronKeyName = "cron"
 const LogsCleanKeepKeyName = "keep_num"
+const LogsCleanEnabledKeyName = "enabled"
 
 // 日志清理默认值
 var LogsCleanDefaultValueMap = map[string]string{
 	"cron":     "1 0 * * *",
 	"keep_num": "1000",
+	"enabled":  "true",
+}
+
+// 托管消息清理自定义
+const HostedMsgCleanSectionName = "hosted_msg_config"
+const HostedMsgCleanCronKeyName = "cron"
+const HostedMsgCleanKeepKeyName = "keep_num"
+const HostedMsgCleanEnabledKeyName = "enabled"
+
+// 托管消息清理默认值
+var HostedMsgCleanDefaultValueMap = map[string]string{
+	"cron":     "30 0 * * *",
+	"keep_num": "50000",
+	"enabled":  "false",
 }
 
 const AboutSectionName = "about"

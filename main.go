@@ -34,10 +34,9 @@ func init() {
 	go func() {
 		// 完成model的迁移之后，需要加载异步任务
 		migrate.Setup()
-		// 1. 加载日志清除服务（第一次实例化会初始化日志的定时设置，所以要在迁移以后）
-		cron_service.StartLogsCronRun()
-		// 2. 加载用户自己设定的定时消息任务
-		cron_msg_service.StartUpMsgCronTask()
+		cron_service.StartTasksRunOnStartup()
+		// 加载用户自己设定的定时消息任务
+		cron_msg_service.StartUpUserSetupMsgCronTask()
 	}()
 }
 

@@ -79,3 +79,32 @@ func GetHostMessagesTotal(text string, maps map[string]interface{}) (int64, erro
 	query.Count(&total)
 	return total, nil
 }
+
+// DeleteOutDateHostedMessages 删除过期的托管消息，保留最新的 keepNum 条
+func DeleteOutDateHostedMessages(keepNum int) (int, error) {
+	var affectedRows int
+	
+	// 优化方案：使用GORM的Offset和Limit找到临界ID，兼容多种数据库
+	// 1. 获取第 keepNum 条记录的ID作为临界值
+	var threshold HostedMessage
+	result := db.Model(&HostedMessage{}).
+		Select("id").
+		Order("created_on DESC").
+		Offset(keepNum - 1).
+		Limit(1).
+		First(&threshold)
+	
+	// 如果记录总数不足keepNum条，则不需要删除
+	if result.Error != nil {
+		return 0, nil
+	}
+	
+	// 2. 删除ID小于临界值的记录
+	deleteResult := db.Where("id < ?", threshold.ID).Delete(&HostedMessage{})
+	if deleteResult.Error != nil {
+		return affectedRows, deleteResult.Error
+	}
+	
+	affectedRows = int(deleteResult.RowsAffected)
+	return affectedRows, nil
+}

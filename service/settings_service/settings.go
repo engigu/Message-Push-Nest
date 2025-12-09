@@ -93,9 +93,25 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 		data["value"] = value
 		data["modified_by"] = currentUser
 		err := models.EditSetting(setting.ID, data)
-		if key == constant.LogsCleanCronKeyName {
-			cronService := cron_service.CronService{}
-			cronService.UpdateLogsCronRun(value)
+		// 更新日志清理配置
+		if section == constant.LogsCleanSectionName {
+			if key == constant.LogsCleanCronKeyName || key == constant.LogsCleanEnabledKeyName {
+				cronService := cron_service.CronService{}
+				// 获取最新的cron和enabled值
+				cronSetting, _ := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanCronKeyName)
+				enabledSetting, _ := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanEnabledKeyName)
+				cronService.UpdateLogsCronRun(cronSetting.Value, enabledSetting.Value == "true")
+			}
+		}
+		// 更新托管消息清理配置
+		if section == constant.HostedMsgCleanSectionName {
+			if key == constant.HostedMsgCleanCronKeyName || key == constant.HostedMsgCleanEnabledKeyName {
+				cronService := cron_service.CronService{}
+				// 获取最新的cron和enabled值
+				cronSetting, _ := models.GetSettingByKey(constant.HostedMsgCleanSectionName, constant.HostedMsgCleanCronKeyName)
+				enabledSetting, _ := models.GetSettingByKey(constant.HostedMsgCleanSectionName, constant.HostedMsgCleanEnabledKeyName)
+				cronService.UpdateHostedMsgCronRun(cronSetting.Value, enabledSetting.Value == "true")
+			}
 		}
 		// 如果是site_config，清除缓存
 		if section == constant.SiteSettingSectionName {
@@ -116,6 +132,13 @@ type SiteConfig struct {
 type LogConfig struct {
 	Cron    string `json:"cron" validate:"required,cron" label:"日志定时表达式"`
 	KeepNum string `json:"keep_num" validate:"required,min=1,max=50" label:"日志保留数"`
+	Enabled string `json:"enabled" validate:"required,oneof=true false" label:"是否启用"`
+}
+
+type HostedMsgConfig struct {
+	Cron    string `json:"cron" validate:"required,cron" label:"托管消息定时表达式"`
+	KeepNum string `json:"keep_num" validate:"required,min=1,max=50" label:"托管消息保留数"`
+	Enabled string `json:"enabled" validate:"required,oneof=true false" label:"是否启用"`
 }
 
 // GetCookieExpDays 获取 cookie 过期天数，若无配置则返回默认值 1
@@ -157,6 +180,19 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		var config LogConfig
 		config.Cron = data["cron"]
 		config.KeepNum = data["keep_num"]
+		config.Enabled = data["enabled"]
+		_, err := cron.ParseStandard(config.Cron)
+		if err != nil {
+			return fmt.Sprintf("%s 不是合法的corn表达式", config.Cron)
+		}
+		_, errStr := app.CommonPlaygroundValid(config)
+		return errStr
+	}
+	if section == constant.HostedMsgCleanSectionName {
+		var config HostedMsgConfig
+		config.Cron = data["cron"]
+		config.KeepNum = data["keep_num"]
+		config.Enabled = data["enabled"]
 		_, err := cron.ParseStandard(config.Cron)
 		if err != nil {
 			return fmt.Sprintf("%s 不是合法的corn表达式", config.Cron)

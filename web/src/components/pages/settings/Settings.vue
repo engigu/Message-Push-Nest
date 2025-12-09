@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import SettingsSidebar from './SettingsSidebar.vue'
 import PasswordSettings from './PasswordSettings.vue'
-import LogsSettings from './LogsSettings.vue'
+import CleanSettings from './CleanSettings.vue'
 import SiteSettings from './SiteSettings.vue'
 import AboutSettings from './AboutSettings.vue'
 import LoginLogs from './LoginLogs.vue'
@@ -25,8 +25,8 @@ const activeTab = ref('password')
         <!-- 重置密码 -->
         <PasswordSettings v-if="activeTab === 'password'" />
 
-        <!-- 日志清理 -->
-        <LogsSettings v-if="activeTab === 'logs'" />
+        <!-- 数据清理 -->
+        <CleanSettings v-if="activeTab === 'clean'" />
 
         <!-- 站点设置 -->
         <SiteSettings v-if="activeTab === 'site'" />
