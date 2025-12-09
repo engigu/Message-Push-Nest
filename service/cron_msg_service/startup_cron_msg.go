@@ -2,12 +2,13 @@ package cron_msg_service
 
 import (
 	"fmt"
-	"strings"
-	"github.com/sirupsen/logrus"
 	"message-nest/models"
 	"message-nest/pkg/constant"
 	"message-nest/service/cron_service"
 	"message-nest/service/send_message_service"
+	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type MsgCronTask struct {
@@ -62,6 +63,7 @@ func CronMsgSendF(msg models.CronMessages) {
 	}
 	sender := send_message_service.SendMessageService{
 		TaskID:   task.ID,
+		SendMode: "task",
 		Title:    msg.Title,
 		Text:     msg.Content,
 		URL:      msg.Url,
@@ -104,7 +106,7 @@ func RemoveCronMsgToCronServer(msg models.CronMessages) {
 }
 
 // StartUpMsgCronTask 启动注册定时任务
-func StartUpMsgCronTask() {
+func StartUpUserSetupMsgCronTask() {
 	MsgCronTask{}.Register()
 }
 

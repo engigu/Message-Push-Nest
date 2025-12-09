@@ -4,6 +4,7 @@ export interface ConstantType {
   TOTAL: number;
   DEFALUT_SITE_CONFIG: string;
   LOG_TASK_ID: string;
+  HOSTED_MSG_TASK_ID: string;
   STORE_TOKEN_NAME: string;
   STORE_CUSTOM_NAME: string;
   NO_AUTH_URL: string[];

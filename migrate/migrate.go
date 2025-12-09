@@ -90,6 +90,7 @@ func Setup() {
 
 	entry.Infof("Init Cron data...")
 	ss.InitLogConfig()
+	ss.InitHostedMsgConfig()
 
 	entry.Infof("All table data init done.")
 }

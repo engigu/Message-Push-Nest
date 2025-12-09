@@ -156,22 +156,29 @@ func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (
 // GetSendLogsTotal 获取所有日志总数
 func DeleteOutDateLogs(keepNum int) (int, error) {
 	var affectedRows int
-	logt := GetSchema(SendTasksLogs{})
-	sql := fmt.Sprintf(`DELETE FROM %s
-			WHERE id NOT IN (
-				SELECT id FROM (
-					SELECT id
-					FROM %s
-					ORDER BY created_on DESC
-					LIMIT %d
-				) tmp
-			);`, logt, logt, keepNum)
-
-	result := db.Exec(sql)
+	
+	// 优化方案：使用GORM的Offset和Limit找到临界ID，兼容多种数据库
+	// 1. 获取第 keepNum 条记录的ID作为临界值
+	var threshold SendTasksLogs
+	result := db.Model(&SendTasksLogs{}).
+		Select("id").
+		Order("created_on DESC").
+		Offset(keepNum - 1).
+		Limit(1).
+		First(&threshold)
+	
+	// 如果记录总数不足keepNum条，则不需要删除
 	if result.Error != nil {
-		return affectedRows, result.Error
+		return 0, nil
 	}
-	affectedRows = int(result.RowsAffected)
+	
+	// 2. 删除ID小于临界值的记录
+	deleteResult := db.Where("id < ?", threshold.ID).Delete(&SendTasksLogs{})
+	if deleteResult.Error != nil {
+		return affectedRows, deleteResult.Error
+	}
+	
+	affectedRows = int(deleteResult.RowsAffected)
 	return affectedRows, nil
 }
 

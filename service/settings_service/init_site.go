@@ -41,3 +41,11 @@ func (es *InitSettingService) InitLogConfig() {
 		es.CommonAddSetting(section, key, value)
 	}
 }
+
+// InitHostedMsgConfig 初始化托管消息清理设置
+func (es *InitSettingService) InitHostedMsgConfig() {
+	section := constant.HostedMsgCleanSectionName
+	for key, value := range constant.HostedMsgCleanDefaultValueMap {
+		es.CommonAddSetting(section, key, value)
+	}
+}
