@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withDefaults } from 'vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import InstanceConfig from '@/components/ui/InstanceConfig.vue'
 
@@ -7,7 +8,7 @@ interface Props {
   open?: boolean
   templateData?: any // 模板数据
 }
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   open: false,
   templateData: null
 })
