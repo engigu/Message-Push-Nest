@@ -169,14 +169,35 @@ Markdown 格式，适用于钉钉、企业微信等支持 Markdown 的渠道：
 不同渠道需要配置不同的参数：
 
 **邮件渠道：**
-- 收件人邮箱地址
-- 消息格式：Text 或 HTML
+- **固定模式**：
+  - 收件人邮箱地址
+  - 消息格式：Text 或 HTML
+- **动态接收者模式（群发）** 🆕：
+  - 勾选"动态接收者模式"
+  - 无需配置固定收件人
+  - 发送时通过 API 的 `recipients` 参数指定多个收件人
+  - 适用于邮件群发场景
 
 **钉钉/企业微信：**
 - 消息格式：Text 或 Markdown
 
+**微信公众号：**
+- **固定模式**：
+  - 用户 OpenID
+- **动态接收者模式（群发）** 🆕：
+  - 勾选"动态接收者模式"
+  - 无需配置固定 OpenID
+  - 发送时通过 API 的 `recipients` 参数指定多个 OpenID
+
 **自定义 Webhook：**
 - 根据 Webhook 要求配置
+
+::: warning 动态接收者模式限制
+1. 一个模板只能配置一个动态接收实例
+2. 动态接收实例不能与固定接收实例混合使用
+3. 如果配置了动态接收实例，API 调用时 `recipients` 参数为必填
+4. 建议控制接收者数量，避免触发渠道限流
+:::
 
 ### 3. 管理实例
 
@@ -217,6 +238,26 @@ curl -X POST http://your-domain/api/v2/message/send \
       "email": "zhangsan@example.com",
       "action": "登录"
     }
+  }'
+```
+
+**动态接收者示例（群发）** 🆕：
+
+```bash
+curl -X POST http://your-domain/api/v2/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "encrypted_template_token",
+    "title": "活动通知",
+    "placeholders": {
+      "activity_name": "双十二大促",
+      "discount": "全场8折"
+    },
+    "recipients": [
+      "user1@example.com",
+      "user2@example.com",
+      "user3@example.com"
+    ]
   }'
 ```
 

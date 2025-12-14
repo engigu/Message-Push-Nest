@@ -41,6 +41,12 @@ type InsCustomConfig struct {
 type InsMessageNestConfig struct {
 }
 
+// InsAliyunSMSConfig 实例里面的阿里云短信config
+type InsAliyunSMSConfig struct {
+	PhoneNumber  string `json:"phone_number" validate:"required" label:"手机号码"`
+	TemplateCode string `json:"template_code" validate:"required" label:"短信模板CODE"`
+}
+
 // ManyAddTaskIns 批量添加实例
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()

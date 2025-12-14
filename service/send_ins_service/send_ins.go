@@ -28,6 +28,20 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		if err != nil {
 			return "邮箱auth反序列化失败！", empty
 		}
+		
+		// 检查是否为动态接收者模式
+		var configMap map[string]interface{}
+		json.Unmarshal([]byte(ins.Config), &configMap)
+		allowMultiRecip, exists := configMap["allowMultiRecip"].(bool)
+		
+		// allowMultiRecip=true为动态模式，to_account可以为空
+		// 历史数据（不存在allowMultiRecip字段）默认为固定模式
+		if exists && allowMultiRecip && emailConfig.ToAccount == "" {
+			// 动态模式，不验证to_account
+			return "", emailConfig
+		}
+		
+		// 固定模式或有to_account时，进行常规验证
 		_, Msg := app.CommonPlaygroundValid(emailConfig)
 		return Msg, emailConfig
 	}
@@ -57,6 +71,29 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		err := json.Unmarshal([]byte(ins.Config), &Config)
 		if err != nil {
 			return "微信公众号发送配置反序列化失败！", empty
+		}
+		
+		// 检查是否为动态接收者模式
+		var configMap map[string]interface{}
+		json.Unmarshal([]byte(ins.Config), &configMap)
+		allowMultiRecip, exists := configMap["allowMultiRecip"].(bool)
+		
+		// allowMultiRecip=true为动态模式，to_account可以为空
+		// 历史数据（不存在allowMultiRecip字段）默认为固定模式
+		if exists && allowMultiRecip && Config.ToAccount == "" {
+			// 动态模式，不验证to_account
+			return "", Config
+		}
+		
+		// 固定模式或有to_account时，进行常规验证
+		_, Msg := app.CommonPlaygroundValid(Config)
+		return Msg, Config
+	}
+	if ins.WayType == "AliyunSMS" {
+		var Config models.InsAliyunSMSConfig
+		err := json.Unmarshal([]byte(ins.Config), &Config)
+		if err != nil {
+			return "阿里云短信配置反序列化失败！", empty
 		}
 		_, Msg := app.CommonPlaygroundValid(Config)
 		return Msg, Config

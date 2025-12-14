@@ -24,6 +24,7 @@ const (
 	MessageTypeCustom          = channels.MessageTypeCustom
 	MessageTypeWeChatOFAccount = channels.MessageTypeWeChatOFAccount
 	MessageTypeMessageNest     = channels.MessageTypeMessageNest
+	MessageTypeAliyunSMS       = channels.MessageTypeAliyunSMS
 )
 
 // ChannelRegistry 渠道注册表
@@ -95,6 +96,7 @@ func GetGlobalChannelRegistry() *ChannelRegistry {
 		globalChannelRegistry.Register(channels.NewCustomChannel())
 		globalChannelRegistry.Register(channels.NewWeChatOFAccountChannel())
 		globalChannelRegistry.Register(channels.NewMessageNestChannel())
+		globalChannelRegistry.Register(channels.NewAliyunSMSChannel())
 	})
 	return globalChannelRegistry
 }

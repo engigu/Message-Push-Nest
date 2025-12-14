@@ -179,6 +179,8 @@ class ApiStrGenerate {
         if (options.at_mobiles) data.at_mobiles = ['13800138000', '13900139000'];
         if (options.at_user_ids) data.at_user_ids = ['zhangsan', 'lisi'];
         if (options.at_all) data.at_all = true;
+        // 动态接收者字段（用于邮箱、微信公众号等支持动态接收者的渠道）
+        if (options.recipients) data.recipients = ['user1@example.com', 'user2@example.com'];
         return JSON.stringify(data, null, 4);
     }
 
@@ -218,7 +220,7 @@ class ApiStrGenerate {
 // ==================== 模板 API (V2) ====================
 
 class TemplateApiStrGenerate {
-    static getTemplateDataString(template_id, placeholders_json) {
+    static getTemplateDataString(template_id, placeholders_json, options = {}) {
         // 解析占位符配置
         let placeholders = {};
         try {
@@ -241,6 +243,12 @@ class TemplateApiStrGenerate {
             title: 'message title',
             placeholders: placeholders
         };
+        
+        // 添加动态接收者字段（如果需要）
+        if (options.recipients) {
+            data.recipients = ['user1@example.com', 'user2@example.com'];
+        }
+        
         return JSON.stringify(data, null, 4);
     }
 
@@ -248,32 +256,32 @@ class TemplateApiStrGenerate {
         return `${gethttpOrigin()}/api/v2/message/send`;
     }
 
-    static getCurlString(template_id, placeholders_json) {
-        return CodeTemplates.getCurl(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json));
+    static getCurlString(template_id, placeholders_json, options = {}) {
+        return CodeTemplates.getCurl(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getGolangString(template_id, placeholders_json) {
-        return CodeTemplates.getGolang(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json));
+    static getGolangString(template_id, placeholders_json, options = {}) {
+        return CodeTemplates.getGolang(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getPythonString(template_id, placeholders_json) {
-        return CodeTemplates.getPython(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json));
+    static getPythonString(template_id, placeholders_json, options = {}) {
+        return CodeTemplates.getPython(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getJavaString(template_id, placeholders_json) {
-        return CodeTemplates.getJava(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json));
+    static getJavaString(template_id, placeholders_json, options = {}) {
+        return CodeTemplates.getJava(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getRustString(template_id, placeholders_json) {
-        return CodeTemplates.getRust(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json));
+    static getRustString(template_id, placeholders_json, options = {}) {
+        return CodeTemplates.getRust(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getPHPString(template_id, placeholders_json) {
-        return CodeTemplates.getPHP(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json));
+    static getPHPString(template_id, placeholders_json, options = {}) {
+        return CodeTemplates.getPHP(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getNodeString(template_id, placeholders_json) {
-        return CodeTemplates.getNode(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json));
+    static getNodeString(template_id, placeholders_json, options = {}) {
+        return CodeTemplates.getNode(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 }
 

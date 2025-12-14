@@ -1,6 +1,7 @@
 package send_message_service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"message-nest/models"
@@ -47,6 +48,9 @@ type SendMessageService struct {
 	AtMobiles []string
 	AtUserIds []string
 	AtAll     bool
+
+	// 动态接收者（用于邮箱、微信公众号等支持群发的渠道）
+	Recipients []string
 
 	Status    int
 	LogOutput []string
@@ -253,12 +257,35 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			}
 		}
 
-		// 使用 SendUnified 方法（自动格式转换和@功能支持）
-		res, errMsg := channel.SendUnified(msgObj, ins.SendTasksIns, unifiedContent)
-		if res != "" {
-			sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s\n", res), sm.Status)
+		// 处理动态接收者（邮箱、微信公众号等支持群发的渠道）
+		isDynamicMode := sm.isDynamicRecipientMode(ins.SendTasksIns)
+
+		if isDynamicMode && sm.supportsDynamicRecipient(way.Type) && len(sm.Recipients) > 0 {
+			// 动态接收模式：使用API传入的Recipients列表（群发）
+			sm.LogsAndStatusMark(fmt.Sprintf("动态接收模式，共 %d 个接收者", len(sm.Recipients)), sm.Status)
+			for recipientIdx, recipient := range sm.Recipients {
+				sm.LogsAndStatusMark(fmt.Sprintf(">>> 接收者 %d/%d: %s", recipientIdx+1, len(sm.Recipients), recipient), sm.Status)
+
+				// 临时修改实例配置中的接收者
+				modifiedIns := sm.modifyInsRecipient(ins.SendTasksIns, recipient, way.Type)
+
+				// 使用 SendUnified 方法发送
+				res, errMsg := channel.SendUnified(msgObj, modifiedIns, unifiedContent)
+				if res != "" {
+					sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
+				} else {
+					sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+				}
+			}
 		} else {
-			sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+			// 固定接收模式：使用实例配置的to_account
+			sm.LogsAndStatusMark("固定接收模式，使用实例配置的接收者", sm.Status)
+			res, errMsg := channel.SendUnified(msgObj, ins.SendTasksIns, unifiedContent)
+			if res != "" {
+				sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s\n", res), sm.Status)
+			} else {
+				sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+			}
 		}
 
 	}
@@ -364,6 +391,64 @@ func (sm *SendMessageService) BuildTemplateContent(ins models.SendTasksIns) *uni
 	}
 
 	return content
+}
+
+// supportsDynamicRecipient 判断渠道是否支持动态接收者
+func (sm *SendMessageService) supportsDynamicRecipient(wayType string) bool {
+	// 支持动态接收者的渠道类型
+	supportedTypes := map[string]bool{
+		unified.MessageTypeEmail:           true,
+		unified.MessageTypeWeChatOFAccount: true,
+		// 可以继续添加其他支持动态接收者的渠道
+	}
+	return supportedTypes[wayType]
+}
+
+// isDynamicRecipientMode 判断实例是否配置为动态接收模式
+func (sm *SendMessageService) isDynamicRecipientMode(ins models.SendTasksIns) bool {
+	// 解析实例配置
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(ins.Config), &config); err != nil {
+		return false
+	}
+
+	// 检查allowMultiRecip字段
+	// allowMultiRecip=true: 动态模式
+	// allowMultiRecip=false或不存在: 固定模式
+	if allowMultiRecip, ok := config["allowMultiRecip"]; ok {
+		if allow, ok := allowMultiRecip.(bool); ok {
+			return allow
+		}
+	}
+
+	// 默认为固定模式（兼容历史数据）
+	return false
+}
+
+// modifyInsRecipient 临时修改实例配置中的接收者
+func (sm *SendMessageService) modifyInsRecipient(ins models.SendTasksIns, recipient string, wayType string) models.SendTasksIns {
+	// 创建副本
+	modifiedIns := ins
+
+	// 根据渠道类型修改配置
+	var config map[string]interface{}
+	if err := json.Unmarshal([]byte(ins.Config), &config); err != nil {
+		sm.LogsAndStatusMark(fmt.Sprintf("解析实例配置失败: %s", err.Error()), SendFail)
+		return ins
+	}
+
+	// 修改接收者字段
+	config["to_account"] = recipient
+
+	// 序列化回JSON
+	modifiedConfigBytes, err := json.Marshal(config)
+	if err != nil {
+		sm.LogsAndStatusMark(fmt.Sprintf("序列化实例配置失败: %s", err.Error()), SendFail)
+		return ins
+	}
+
+	modifiedIns.Config = string(modifiedConfigBytes)
+	return modifiedIns
 }
 
 // GetSendMsg 获取对应消息内容（任务模式使用）

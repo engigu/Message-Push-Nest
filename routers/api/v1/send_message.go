@@ -28,6 +28,9 @@ type SendMessageReq struct {
 	AtMobiles []string `json:"at_mobiles" label:"@的手机号列表"`
 	AtUserIds []string `json:"at_user_ids" label:"@的用户ID列表"`
 	AtAll     bool     `json:"at_all" label:"是否@所有人"`
+
+	// 动态接收者（用于邮箱、微信公众号等支持群发的渠道）
+	Recipients []string `json:"recipients" label:"接收者列表"`
 }
 
 // DoSendMassage 外部调用发信接口
@@ -61,17 +64,18 @@ func DoSendMassage(c *gin.Context) {
 	}
 
 	msgService := send_message_service.SendMessageService{
-		SendMode:  send_message_service.SendModeTask, // 明确标记为任务模式
-		TaskID:    taskID,
-		Title:     req.Title,
-		Text:      req.Text,
-		HTML:      req.HTML,
-		URL:       req.URL,
-		MarkDown:  req.MarkDown,
-		CallerIp:  c.ClientIP(),
-		AtMobiles: req.AtMobiles,
-		AtUserIds: req.AtUserIds,
-		AtAll:     req.AtAll,
+		SendMode:   send_message_service.SendModeTask, // 明确标记为任务模式
+		TaskID:     taskID,
+		Title:      req.Title,
+		Text:       req.Text,
+		HTML:       req.HTML,
+		URL:        req.URL,
+		MarkDown:   req.MarkDown,
+		CallerIp:   c.ClientIP(),
+		AtMobiles:  req.AtMobiles,
+		AtUserIds:  req.AtUserIds,
+		AtAll:      req.AtAll,
+		Recipients: req.Recipients,
 		DefaultLogger: logrus.WithFields(logrus.Fields{
 			"prefix": "[Send Instance]",
 		}),

@@ -20,6 +20,13 @@ const CONSTANT = {
         {
             type: 'Email',
             label: '邮箱',
+            // 动态接收者配置
+            dynamicRecipient: {
+                support: true,              // 是否支持动态接收者
+                field: 'to_account',        // 接收者字段名
+                label: '收件邮箱',           // 接收者字段标签
+                desc: '邮箱地址',            // 接收者字段描述
+            },
             inputs: [
                 { subLabel: 'smtp服务地址', value: '', col: 'server', desc: "smtp@xyz.com" },
                 { subLabel: 'smtp服务端口', value: '', col: 'port', desc: "port" },
@@ -32,8 +39,7 @@ const CONSTANT = {
                 { subLabel: 'html', content: 'html' },
             ],
             taskInsInputs: [
-                { value: '', col: 'to_account', desc: "目的邮箱账号（发给谁）" },
-                // { value: '', col: 'title', desc: "邮箱标题" },
+                { value: '', col: 'to_account', desc: '收件邮箱', label: '收件邮箱' },
             ],
         },
         {
@@ -90,6 +96,13 @@ const CONSTANT = {
         {
             type: 'WeChatOFAccount',
             label: '微信测试公众号模板',
+            // 动态接收者配置
+            dynamicRecipient: {
+                support: true,              // 是否支持动态接收者
+                field: 'to_account',        // 接收者字段名
+                label: '接收者OpenId',       // 接收者字段标签
+                desc: 'OpenId',             // 接收者字段描述
+            },
             inputs: [
                 { subLabel: 'appID', value: '', col: 'appID', desc: "公众号appid" },
                 { subLabel: 'appsecret', value: '', col: 'appsecret', desc: "公众号appsecret" },
@@ -103,7 +116,7 @@ const CONSTANT = {
                 { subLabel: 'text', content: 'text' },
             ],
             taskInsInputs: [
-                { value: '', col: 'to_account', desc: "要发送的OpenId（登录微信公众号后台查看）" },
+                { value: '', col: 'to_account', desc: '接收者OpenId', label: '接收者OpenId' },
             ],
         },
         {
@@ -121,6 +134,27 @@ const CONSTANT = {
             taskInsInputs: [
             ],
         },
+        // 暂时屏蔽阿里云短信入口
+        // {
+        //     type: 'AliyunSMS',
+        //     label: '阿里云短信',
+        //     inputs: [
+        //         { subLabel: 'AccessKeyId', value: '', col: 'access_key_id', desc: "阿里云AccessKeyId" },
+        //         { subLabel: 'AccessKeySecret', value: '', col: 'access_key_secret', desc: "阿里云AccessKeySecret" },
+        //         { subLabel: '短信签名', value: '', col: 'sign_name', desc: "短信签名名称" },
+        //         { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+        //     ],
+        //     tips: {
+        //         text: "阿里云短信说明", desc: "使用阿里云短信服务发送短信，需要在阿里云控制台申请短信签名和模板。<br />AccessKey请在阿里云控制台获取。"
+        //     },
+        //     taskInsRadios: [
+        //         { subLabel: 'text', content: 'text' },
+        //     ],
+        //     taskInsInputs: [
+        //         { value: '', col: 'phone_number', desc: "手机号码（接收短信的手机号）" },
+        //         { value: '', col: 'template_code', desc: "短信模板CODE（在阿里云短信控制台获取）" },
+        //     ],
+        // },
     ],
     API_VIEW_DATA: [
         { label: "curl", class: "language-shell line-numbers", code: "", func: ApiStrGenerate.getCurlString },

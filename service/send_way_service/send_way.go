@@ -56,6 +56,13 @@ type WeChatOFAccount struct {
 	TempID    string `json:"tempid" validate:"max=2000" label:"模板消息id"`
 }
 
+// WayDetailAliyunSMS 阿里云短信渠道明细字段
+type WayDetailAliyunSMS struct {
+	AccessKeyId     string `json:"access_key_id" validate:"required,max=100" label:"AccessKeyId"`
+	AccessKeySecret string `json:"access_key_secret" validate:"required,max=100" label:"AccessKeySecret"`
+	SignName        string `json:"sign_name" validate:"required,max=50" label:"短信签名"`
+}
+
 // MessageNest 自托管消息
 type MessageNest struct {
 }
@@ -182,6 +189,14 @@ func (sw *SendWay) ValidateDiffWay() (string, interface{}) {
 		}
 		_, Msg := app.CommonPlaygroundValid(wca)
 		return Msg, wca
+	} else if sw.Type == "AliyunSMS" {
+		var aliyunSMS WayDetailAliyunSMS
+		err := json.Unmarshal([]byte(sw.Auth), &aliyunSMS)
+		if err != nil {
+			return "阿里云短信auth反序列化失败！", empty
+		}
+		_, Msg := app.CommonPlaygroundValid(aliyunSMS)
+		return Msg, aliyunSMS
 	}
 	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), empty
 }
@@ -226,6 +241,10 @@ func (sw *SendWay) TestSendWay(msgObj interface{}) (string, string) {
 	_, ok = msgObj.(MessageNest)
 	if ok {
 		return "自托管消息不用测试运行，请直接添加", ""
+	}
+	_, ok = msgObj.(WayDetailAliyunSMS)
+	if ok {
+		return "阿里云短信不用测试运行，请直接添加", ""
 	}
 	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), ""
 }

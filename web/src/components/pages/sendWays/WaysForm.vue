@@ -250,20 +250,48 @@ const saveButtonText = computed(() => {
     <!-- Radio Group -->
     <div class="mb-6">
       <label class="text-lg font-medium mb-3 block">渠道类型</label>
-      <RadioGroup v-model="channelMode" @update:model-value="handleChannelModeChange" class="flex flex-wrap gap-4">
+      <RadioGroup v-model="channelMode" @update:model-value="handleChannelModeChange" class="flex flex-wrap gap-3">
         <div v-for="option in channelModeOptions" :key="option.value" class="flex items-center space-x-2">
           <RadioGroupItem :value="option.value" :id="option.value" />
           <label :for="option.value"
-            class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1.5">
             {{ option.label }}
+            <span 
+              v-if="waysConfigMap.find(item => item.type === option.value)?.dynamicRecipient?.support"
+              class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
+              :title="`支持${waysConfigMap.find(item => item.type === option.value)?.dynamicRecipient?.label || '动态接收者'}群发`"
+            >
+              群发
+            </span>
           </label>
         </div>
       </RadioGroup>
+      <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-2.5 leading-relaxed">
+        💡 带"群发"标识的渠道支持动态接收者，可在 API 调用时指定多个接收账号
+      </p>
     </div>
 
     <div class="w-full">
       <!-- 动态表单 -->
       <div v-if="currentChannelConfig" class="mt-6">
+        <!-- 动态接收者支持提示 -->
+        <div 
+          v-if="currentChannelConfig.dynamicRecipient?.support" 
+          class="mb-4 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md"
+        >
+          <div class="flex items-start gap-2">
+            <span class="text-blue-600 dark:text-blue-400 text-sm mt-0.5">📧</span>
+            <div class="flex-1 space-y-1">
+              <p class="text-xs text-blue-800 dark:text-blue-200 font-medium">
+                支持群发模式 - 可在配置实例时启用"动态接收者"，通过 API 的 <code class="px-1 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-[11px]">recipients</code> 参数指定多个{{ currentChannelConfig.dynamicRecipient.label }}
+              </p>
+              <p class="text-[11px] text-blue-600 dark:text-blue-400">
+                适用：邮件群发、公众号批量推送、营销通知等
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <!-- 基本配置输入字段 -->
         <div v-if="currentChannelConfig.inputs && currentChannelConfig.inputs.length > 0" class="mb-8">
           <h4 class="text-base font-medium mb-4 text-gray-800">基本配置</h4>

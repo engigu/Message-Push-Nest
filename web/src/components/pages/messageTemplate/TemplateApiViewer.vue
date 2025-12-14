@@ -1,12 +1,13 @@
 <script lang="ts">
-import { ref, defineComponent } from 'vue'
-import { toast } from 'vue-sonner'
+import { ref, defineComponent, watch, toRef } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 // @ts-ignore
 import { TemplateApiStrGenerate } from '@/util/viewApi'
+import { useInstanceData } from '@/composables/useInstanceData'
+import { useApiCodeViewer } from '@/composables/useApiCodeViewer'
 
 export default defineComponent({
   name: 'TemplateApiViewer',
@@ -39,58 +40,67 @@ export default defineComponent({
       emit('update:open', value)
     }
 
-    // 当前选中的标签
-    const activeTab = ref('curl')
+    // 使用实例数据管理 composable
+    const { hasDynamicRecipientInstance, enabledChannelNames } = useInstanceData(
+      'template',
+      toRef(props, 'templateData'),
+      toRef(props, 'open')
+    )
 
-    // 代码语言选项
-    const codeLanguages = [
-      { value: 'curl', label: 'cURL', icon: '🌐' },
-      { value: 'javascript', label: 'JS', icon: '🟨' },
-      { value: 'python', label: 'Python', icon: '🐍' },
-      { value: 'php', label: 'PHP', icon: '🐘' },
-      { value: 'golang', label: 'Go', icon: '🐹' },
-      { value: 'java', label: 'Java', icon: '☕' },
-      { value: 'rust', label: 'Rust', icon: '🦀' }
-    ]
+    // 使用 API 代码查看器 composable
+    const { activeTab, codeLanguages, copyToClipboard } = useApiCodeViewer()
+
+    // 可选参数选项
+    const showRecipients = ref(false)
+    
+    // 监听动态接收实例变化，自动勾选
+    watch(hasDynamicRecipientInstance, (newVal) => {
+      if (newVal) {
+        showRecipients.value = true
+      }
+    })
+    
+    // 监听弹窗关闭，重置状态
+    watch(() => props.open, (newVal) => {
+      if (!newVal) {
+        showRecipients.value = false
+      }
+    })
 
     // 生成API代码示例
     const generateApiCode = (language: string) => {
       const templateId = props.templateData?.id || 'TEMPLATE_ID'
       const placeholders = props.templateData?.placeholders || '[]'
+      const options = {
+        recipients: showRecipients.value
+      }
 
       switch (language) {
         case 'curl':
-          return TemplateApiStrGenerate.getCurlString(templateId, placeholders)
+          return TemplateApiStrGenerate.getCurlString(templateId, placeholders, options)
         case 'javascript':
-          return TemplateApiStrGenerate.getNodeString(templateId, placeholders)
+          return TemplateApiStrGenerate.getNodeString(templateId, placeholders, options)
         case 'python':
-          return TemplateApiStrGenerate.getPythonString(templateId, placeholders)
+          return TemplateApiStrGenerate.getPythonString(templateId, placeholders, options)
         case 'php':
-          return TemplateApiStrGenerate.getPHPString(templateId, placeholders)
+          return TemplateApiStrGenerate.getPHPString(templateId, placeholders, options)
         case 'golang':
-          return TemplateApiStrGenerate.getGolangString(templateId, placeholders)
+          return TemplateApiStrGenerate.getGolangString(templateId, placeholders, options)
         case 'java':
-          return TemplateApiStrGenerate.getJavaString(templateId, placeholders)
+          return TemplateApiStrGenerate.getJavaString(templateId, placeholders, options)
         case 'rust':
-          return TemplateApiStrGenerate.getRustString(templateId, placeholders)
+          return TemplateApiStrGenerate.getRustString(templateId, placeholders, options)
         default:
           return '// 请选择一种编程语言查看示例代码'
-      }
-    }
-
-    // 复制代码到剪贴板
-    const copyToClipboard = async (text: string) => {
-      try {
-        await navigator.clipboard.writeText(text)
-        toast.success('复制成功')
-      } catch (err) {
-        toast.error('复制失败')
       }
     }
 
     return {
       handleUpdateOpen,
       activeTab,
+      hasDynamicRecipientInstance,
+      enabledChannelNames,
+      showRecipients,
       codeLanguages,
       generateApiCode,
       copyToClipboard
@@ -122,6 +132,45 @@ export default defineComponent({
             <p><strong>必填参数:</strong> token (加密token), title (消息标题), placeholders (占位符键值对)</p>
             <p><strong>可选参数:</strong> 根据模板配置的@提醒字段自动应用</p>
             <p class="text-amber-600 dark:text-amber-400"><strong>⚠️ 注意:</strong> V2接口使用加密token，不支持明文ID</p>
+          </div>
+          
+          <!-- 已启用的渠道列表 -->
+          <div v-if="enabledChannelNames.length > 0" class="mt-3 pt-3 border-t">
+            <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">已启用的发送渠道：</p>
+            <div class="flex flex-wrap gap-2">
+              <Badge 
+                v-for="(name, index) in enabledChannelNames" 
+                :key="index" 
+                variant="secondary"
+                class="text-xs"
+              >
+                {{ name }}
+              </Badge>
+            </div>
+          </div>
+          <div v-else class="mt-3 pt-3 border-t">
+            <p class="text-xs text-amber-600 dark:text-amber-400">⚠️ 该模板暂无启用的发送渠道</p>
+          </div>
+        </div>
+
+        <!-- 可选参数 -->
+        <div v-if="hasDynamicRecipientInstance" class="border rounded-lg p-4 bg-gray-50 dark:bg-slate-800/50">
+          <h3 class="font-semibold mb-3">可选参数</h3>
+          <div class="flex flex-wrap gap-4">
+            <label class="flex items-center gap-2 cursor-not-allowed opacity-75">
+              <input 
+                type="checkbox" 
+                v-model="showRecipients" 
+                disabled
+                class="rounded cursor-not-allowed"
+              >
+              <span class="text-sm">动态接收者</span>
+              <Badge variant="secondary" class="text-xs">必填</Badge>
+            </label>
+          </div>
+          <div class="space-y-1 text-xs text-gray-500 dark:text-gray-400 mt-3">
+            <p>📧 动态接收者：该模板配置了动态接收实例，发送时必须通过API指定接收者列表（群发模式）</p>
+            <p class="text-amber-600 dark:text-amber-400">⚠️ 此参数已自动勾选且不可取消，因为模板已配置动态接收实例</p>
           </div>
         </div>
 

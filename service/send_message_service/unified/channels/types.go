@@ -15,6 +15,7 @@ const (
 	MessageTypeCustom          = "Custom"
 	MessageTypeWeChatOFAccount = "WeChatOFAccount"
 	MessageTypeMessageNest     = "MessageNest"
+	MessageTypeAliyunSMS       = "AliyunSMS"
 )
 
 // UnifiedMessageContent 统一的消息内容结构

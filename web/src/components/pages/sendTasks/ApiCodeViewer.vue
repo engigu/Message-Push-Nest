@@ -1,12 +1,13 @@
 <script lang="ts">
-import { ref, defineComponent } from 'vue'
-import { toast } from 'vue-sonner'
+import { ref, defineComponent, watch, toRef } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 // @ts-ignore
 import { ApiStrGenerate } from '@/util/viewApi'
+import { useInstanceData } from '@/composables/useInstanceData'
+import { useApiCodeViewer } from '@/composables/useApiCodeViewer'
 
 export default defineComponent({
   name: 'ApiCodeViewer',
@@ -39,8 +40,15 @@ export default defineComponent({
       emit('update:open', value)
     }
 
-    // 当前选中的标签
-    const activeTab = ref('curl')
+    // 使用实例数据管理 composable
+    const { hasDynamicRecipientInstance, enabledChannelNames } = useInstanceData(
+      'task',
+      toRef(props, 'taskData'),
+      toRef(props, 'open')
+    )
+
+    // 使用 API 代码查看器 composable
+    const { activeTab, codeLanguages, copyToClipboard } = useApiCodeViewer()
 
     // 可选参数选项
     const showHtml = ref(false)
@@ -49,17 +57,21 @@ export default defineComponent({
     const showAtMobiles = ref(false)
     const showAtUserIds = ref(false)
     const showAtAll = ref(false)
-
-    // 代码语言选项
-    const codeLanguages = [
-      { value: 'curl', label: 'cURL', icon: '🌐' },
-      { value: 'javascript', label: 'JS', icon: '🟨' },
-      { value: 'python', label: 'Python', icon: '🐍' },
-      { value: 'php', label: 'PHP', icon: '🐘' },
-      { value: 'golang', label: 'Go', icon: '🐹' },
-      { value: 'java', label: 'Java', icon: '☕' },
-      { value: 'rust', label: 'Rust', icon: '🦀' }
-    ]
+    const showRecipients = ref(false)
+    
+    // 监听动态接收实例变化，自动勾选
+    watch(hasDynamicRecipientInstance, (newVal) => {
+      if (newVal) {
+        showRecipients.value = true
+      }
+    })
+    
+    // 监听弹窗关闭，重置状态
+    watch(() => props.open, (newVal) => {
+      if (!newVal) {
+        showRecipients.value = false
+      }
+    })
 
     // 生成API代码示例
     const generateApiCode = (language: string) => {
@@ -70,7 +82,8 @@ export default defineComponent({
         url: showUrl.value,
         at_mobiles: showAtMobiles.value,
         at_user_ids: showAtUserIds.value,
-        at_all: showAtAll.value
+        at_all: showAtAll.value,
+        recipients: showRecipients.value
       }
 
       switch (language) {
@@ -93,25 +106,18 @@ export default defineComponent({
       }
     }
 
-    // 复制代码到剪贴板
-    const copyToClipboard = async (text: string) => {
-      try {
-        await navigator.clipboard.writeText(text)
-        toast.success('复制成功')
-      } catch (err) {
-        toast.error('复制失败')
-      }
-    }
-
     return {
       handleUpdateOpen,
       activeTab,
+      hasDynamicRecipientInstance,
+      enabledChannelNames,
       showHtml,
       showMarkdown,
       showUrl,
       showAtMobiles,
       showAtUserIds,
       showAtAll,
+      showRecipients,
       codeLanguages,
       generateApiCode,
       copyToClipboard
@@ -132,16 +138,31 @@ export default defineComponent({
 
       <div class=" space-y-2">
         <!-- API 信息概览 -->
-
-        <!-- <div class="space-y-3">
-          <div class="border rounded-lg p-4">
-            <div class="flex items-center gap-2 mb-2">
-              <Badge variant="default">POST</Badge>
-              <code class="text-sm">/sendtasks/send</code>
-            </div>
-            <p class="text-sm text-gray-600">发送消息，创建新的消息</p>
+        <div class="border rounded-lg p-4 space-y-2 bg-white dark:bg-slate-900">
+          <div class="flex items-center gap-2">
+            <Badge variant="default">POST</Badge>
+            <code class="text-sm bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded">/api/v1/message/send</code>
           </div>
-        </div> -->
+          <p class="text-sm text-gray-600 dark:text-gray-400">发送消息到任务配置的渠道</p>
+          
+          <!-- 已启用的渠道列表 -->
+          <div v-if="enabledChannelNames.length > 0" class="mt-3 pt-3 border-t">
+            <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">已启用的发送渠道：</p>
+            <div class="flex flex-wrap gap-2">
+              <Badge 
+                v-for="(name, index) in enabledChannelNames" 
+                :key="index" 
+                variant="secondary"
+                class="text-xs"
+              >
+                {{ name }}
+              </Badge>
+            </div>
+          </div>
+          <div v-else class="mt-3 pt-3 border-t">
+            <p class="text-xs text-amber-600 dark:text-amber-400">⚠️ 该任务暂无启用的发送渠道</p>
+          </div>
+        </div>
 
         <!-- 可选参数 -->
         <div class="border rounded-lg p-4 space-y-3">
@@ -174,9 +195,23 @@ export default defineComponent({
               <span class="text-sm">@所有人</span>
               <Badge variant="secondary" class="text-xs">新</Badge>
             </label>
+            <label 
+              v-if="hasDynamicRecipientInstance" 
+              class="flex items-center gap-2 cursor-not-allowed opacity-75"
+            >
+              <input 
+                type="checkbox" 
+                v-model="showRecipients" 
+                disabled
+                class="rounded cursor-not-allowed"
+              >
+              <span class="text-sm">动态接收者</span>
+              <Badge variant="secondary" class="text-xs">必填</Badge>
+            </label>
           </div>
           <div class="space-y-1 text-xs text-gray-500 dark:text-gray-400">
             <p>💡 提示：@功能仅钉钉和企业微信支持</p>
+            <p v-if="hasDynamicRecipientInstance" class="text-amber-600 dark:text-amber-400">📧 动态接收者：该任务配置了动态接收实例，发送时必须通过API指定接收者列表（此参数已自动勾选且不可取消）</p>
             <p>📋 发送顺序：实例配置的内容类型优先，若为空则按 <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">HTML → Markdown → Text</code> 顺序回退</p>
           </div>
         </div>
