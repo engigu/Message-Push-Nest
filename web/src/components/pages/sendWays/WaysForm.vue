@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineEmits, defineProps, withDefaults, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Input } from '@/components/ui/input'
@@ -247,10 +247,18 @@ const saveButtonText = computed(() => {
 
 <template>
   <div class="w-full">
-    <!-- Radio Group -->
+    <!-- Radio Group / 当前渠道展示（编辑模式下只展示当前渠道） -->
     <div class="mb-6">
       <label class="text-lg font-medium mb-3 block">渠道类型</label>
-      <RadioGroup v-model="channelMode" @update:model-value="handleChannelModeChange" class="flex flex-wrap gap-3">
+
+      <!-- 编辑模式：只展示当前渠道的简洁文本描述，并保留“群发”标识 -->
+      <div v-if="props.mode === 'edit'" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <div>当前渠道：{{ currentChannelConfig?.label || channelMode }}</div>
+        <span v-if="currentChannelConfig?.dynamicRecipient?.support" class="inline-block text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">群发</span>
+      </div>
+
+      <!-- 新增模式：保留原有的单选切换显示 -->
+      <RadioGroup v-else v-model="channelMode" @update:model-value="handleChannelModeChange" class="flex flex-wrap gap-3">
         <div v-for="option in channelModeOptions" :key="option.value" class="flex items-center space-x-2">
           <RadioGroupItem :value="option.value" :id="option.value" />
           <label :for="option.value"
@@ -266,7 +274,8 @@ const saveButtonText = computed(() => {
           </label>
         </div>
       </RadioGroup>
-      <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-2.5 leading-relaxed">
+
+      <p v-if="props.mode !== 'edit'" class="text-[11px] text-gray-500 dark:text-gray-400 mt-2.5 leading-relaxed">
         💡 带"群发"标识的渠道支持动态接收者，可在 API 调用时指定多个接收账号
       </p>
     </div>
