@@ -212,17 +212,21 @@ const formatInsConfigDisplay = (row: any) => {
   if (!row.config) {
     return ""
   }
-  if (["Email", "WeChatOFAccount"].includes(row.way_type)) {
-    let config = JSON.parse(row.config)
-    // 检查是否为动态接收者模式
-    if (config.allowMultiRecip === true) {
-      return "动态接收"
-    }
-    // 固定模式，显示接收者
-    return config.to_account || ""
-  } else {
-    return ""
+  let config = JSON.parse(row.config)
+  
+  // 检查是否为动态接收者模式
+  if (config.allowMultiRecip === true) {
+    return "动态接收"
   }
+  
+  // 固定模式，根据 constant.js 配置动态获取接收者字段
+  const channelConfig = CONSTANT.WAYS_DATA.find((item: any) => item.type === row.way_type)
+  if (channelConfig?.dynamicRecipient?.support) {
+    const recipientField = channelConfig.dynamicRecipient.field
+    return config[recipientField] || ""
+  }
+  
+  return ""
 }
 
 // 查询实例列表数据

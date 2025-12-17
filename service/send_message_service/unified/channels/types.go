@@ -1,21 +1,23 @@
 package channels
 
-// 消息格式类型常量
+import "message-nest/pkg/constant"
+
+// 重导出常量，保持向后兼容
 const (
-	FormatTypeText     = "text"
-	FormatTypeHTML     = "html"
-	FormatTypeMarkdown = "markdown"
+	FormatTypeText     = constant.FormatTypeText
+	FormatTypeHTML     = constant.FormatTypeHTML
+	FormatTypeMarkdown = constant.FormatTypeMarkdown
 )
 
-// 消息类型常量
 const (
-	MessageTypeEmail           = "Email"
-	MessageTypeDtalk           = "Dtalk"
-	MessageTypeQyWeiXin        = "QyWeiXin"
-	MessageTypeCustom          = "Custom"
-	MessageTypeWeChatOFAccount = "WeChatOFAccount"
-	MessageTypeMessageNest     = "MessageNest"
-	MessageTypeAliyunSMS       = "AliyunSMS"
+	MessageTypeEmail           = constant.MessageTypeEmail
+	MessageTypeDtalk           = constant.MessageTypeDtalk
+	MessageTypeQyWeiXin        = constant.MessageTypeQyWeiXin
+	MessageTypeFeishu          = constant.MessageTypeFeishu
+	MessageTypeCustom          = constant.MessageTypeCustom
+	MessageTypeWeChatOFAccount = constant.MessageTypeWeChatOFAccount
+	MessageTypeMessageNest     = constant.MessageTypeMessageNest
+	MessageTypeAliyunSMS       = constant.MessageTypeAliyunSMS
 )
 
 // UnifiedMessageContent 统一的消息内容结构

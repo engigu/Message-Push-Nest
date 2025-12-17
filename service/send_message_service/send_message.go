@@ -397,8 +397,9 @@ func (sm *SendMessageService) BuildTemplateContent(ins models.SendTasksIns) *uni
 func (sm *SendMessageService) supportsDynamicRecipient(wayType string) bool {
 	// 支持动态接收者的渠道类型
 	supportedTypes := map[string]bool{
-		unified.MessageTypeEmail:           true,
-		unified.MessageTypeWeChatOFAccount: true,
+		constant.MessageTypeEmail:           true,
+		constant.MessageTypeWeChatOFAccount: true,
+		constant.MessageTypeAliyunSMS:       true,
 		// 可以继续添加其他支持动态接收者的渠道
 	}
 	return supportedTypes[wayType]

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/app"
+	"message-nest/pkg/constant"
 )
 
 type SendTaskInsService struct {
@@ -22,7 +23,7 @@ type SendTaskInsService struct {
 // ValidateDiffWay 各种发信渠道具体字段校验
 func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, interface{}) {
 	var empty interface{}
-	if ins.WayType == "Email" {
+	if ins.WayType == constant.MessageTypeEmail {
 		var emailConfig models.InsEmailConfig
 		err := json.Unmarshal([]byte(ins.Config), &emailConfig)
 		if err != nil {
@@ -45,19 +46,23 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		_, Msg := app.CommonPlaygroundValid(emailConfig)
 		return Msg, emailConfig
 	}
-	if ins.WayType == "Dtalk" {
+	if ins.WayType == constant.MessageTypeDtalk {
 		var Config models.InsDtalkConfig
 		return "", Config
 	}
-	if ins.WayType == "QyWeiXin" {
+	if ins.WayType == constant.MessageTypeQyWeiXin {
 		var Config models.InsQyWeiXinConfig
 		return "", Config
 	}
-	if ins.WayType == "MessageNest" {
+	if ins.WayType == constant.MessageTypeFeishu {
+		var Config models.InsFeishuConfig
+		return "", Config
+	}
+	if ins.WayType == constant.MessageTypeMessageNest {
 		var Config models.InsQyWeiXinConfig
 		return "", Config
 	}
-	if ins.WayType == "Custom" {
+	if ins.WayType == constant.MessageTypeCustom {
 		var Config models.InsCustomConfig
 		err := json.Unmarshal([]byte(ins.Config), &Config)
 		if err != nil {
@@ -66,7 +71,7 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		_, Msg := app.CommonPlaygroundValid(Config)
 		return Msg, Config
 	}
-	if ins.WayType == "WeChatOFAccount" {
+	if ins.WayType == constant.MessageTypeWeChatOFAccount {
 		var Config models.InsWeChatAccountConfig
 		err := json.Unmarshal([]byte(ins.Config), &Config)
 		if err != nil {
@@ -89,12 +94,28 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		_, Msg := app.CommonPlaygroundValid(Config)
 		return Msg, Config
 	}
-	if ins.WayType == "AliyunSMS" {
+	if ins.WayType == constant.MessageTypeAliyunSMS {
 		var Config models.InsAliyunSMSConfig
 		err := json.Unmarshal([]byte(ins.Config), &Config)
 		if err != nil {
 			return "阿里云短信配置反序列化失败！", empty
 		}
+		
+		// 检查是否为动态接收者模式
+		var configMap map[string]interface{}
+		json.Unmarshal([]byte(ins.Config), &configMap)
+		allowMultiRecip, exists := configMap["allowMultiRecip"].(bool)
+		
+		// allowMultiRecip=true为动态模式，phone_number可以为空，但template_code仍需验证
+		if exists && allowMultiRecip && Config.PhoneNumber == "" {
+			// 动态模式，只验证template_code
+			if Config.TemplateCode == "" {
+				return "短信模板CODE不能为空", empty
+			}
+			return "", Config
+		}
+		
+		// 固定模式或有phone_number时，进行常规验证
 		_, Msg := app.CommonPlaygroundValid(Config)
 		return Msg, Config
 	}

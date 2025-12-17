@@ -251,10 +251,10 @@ const saveButtonText = computed(() => {
     <div class="mb-6">
       <label class="text-lg font-medium mb-3 block">渠道类型</label>
 
-      <!-- 编辑模式：只展示当前渠道的简洁文本描述，并保留“群发”标识 -->
-      <div v-if="props.mode === 'edit'" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-        <div>当前渠道：{{ currentChannelConfig?.label || channelMode }}</div>
-        <span v-if="currentChannelConfig?.dynamicRecipient?.support" class="inline-block text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">群发</span>
+      <!-- 编辑模式：只展示当前渠道的简洁文本描述，并保留"群发"标识 -->
+      <div v-if="props.mode === 'edit'" class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
+        <span class="font-medium">{{ currentChannelConfig?.label || channelMode }}</span>
+        <span v-if="currentChannelConfig?.dynamicRecipient?.support" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">群发</span>
       </div>
 
       <!-- 新增模式：保留原有的单选切换显示 -->

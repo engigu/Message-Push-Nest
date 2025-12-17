@@ -194,12 +194,12 @@ onMounted(async () => {
             </Button>
           </DrawerTrigger>
 
-          <DrawerContent class="w-[800px] max-w-[90vw] mx-auto h-[90vh] max-h-[90vh]">
-            <DrawerHeader>
+          <DrawerContent class="w-[800px] max-w-[90vw] mx-auto flex flex-col max-h-[96vh]">
+            <DrawerHeader class="flex-shrink-0">
               <DrawerTitle>新增发信渠道</DrawerTitle>
             </DrawerHeader>
 
-            <div class="px-4 pb-4 overflow-y-auto">
+            <div class="flex-1 overflow-y-auto px-4 pb-4">
               <AddWays v-model:open="isAddChannelDrawerOpen" @save="handleSaveChannel" />
             </div>
           </DrawerContent>
@@ -257,12 +257,12 @@ onMounted(async () => {
 
     <!-- 编辑渠道Drawer -->
     <Drawer v-model:open="isEditChannelDrawerOpen">
-      <DrawerContent class="w-[800px] max-w-[90vw] mx-auto h-[90vh] max-h-[90vh]">
-        <DrawerHeader>
+      <DrawerContent class="w-[800px] max-w-[90vw] mx-auto flex flex-col max-h-[96vh]">
+        <DrawerHeader class="flex-shrink-0">
           <DrawerTitle>编辑发信渠道</DrawerTitle>
         </DrawerHeader>
 
-        <div class="px-4 pb-4 overflow-y-auto">
+        <div class="flex-1 overflow-y-auto px-4 pb-4">
           <EditWays v-model:open="isEditChannelDrawerOpen" :edit-data="editChannelData" @save="handleEditChannel" />
         </div>
       </DrawerContent>

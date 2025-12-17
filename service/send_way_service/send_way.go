@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/app"
+	"message-nest/pkg/constant"
 	"message-nest/pkg/message"
 	"strings"
 )
@@ -23,12 +24,64 @@ type SendWay struct {
 	PageSize int
 }
 
+// WayValidator 渠道验证接口
+type WayValidator interface {
+	Validate(authJson string) (string, interface{})
+}
+
+// WayTester 渠道测试接口
+type WayTester interface {
+	Test() (string, string)
+}
+
+// 渠道注册表
+var (
+	validatorRegistry = map[string]func() WayValidator{
+		constant.MessageTypeEmail:           func() WayValidator { return &WayDetailEmail{} },
+		constant.MessageTypeDtalk:           func() WayValidator { return &WayDetailDTalk{} },
+		constant.MessageTypeQyWeiXin:        func() WayValidator { return &WayDetailQyWeiXin{} },
+		constant.MessageTypeFeishu:          func() WayValidator { return &WayDetailFeishu{} },
+		constant.MessageTypeCustom:          func() WayValidator { return &WayDetailCustom{} },
+		constant.MessageTypeWeChatOFAccount: func() WayValidator { return &WeChatOFAccount{} },
+		constant.MessageTypeMessageNest:     func() WayValidator { return &MessageNest{} },
+		constant.MessageTypeAliyunSMS:       func() WayValidator { return &WayDetailAliyunSMS{} },
+	}
+	testerRegistry = map[string]func(interface{}) WayTester{
+		constant.MessageTypeEmail:           func(m interface{}) WayTester { return m.(*WayDetailEmail) },
+		constant.MessageTypeDtalk:           func(m interface{}) WayTester { return m.(*WayDetailDTalk) },
+		constant.MessageTypeQyWeiXin:        func(m interface{}) WayTester { return m.(*WayDetailQyWeiXin) },
+		constant.MessageTypeFeishu:          func(m interface{}) WayTester { return m.(*WayDetailFeishu) },
+		constant.MessageTypeCustom:          func(m interface{}) WayTester { return m.(*WayDetailCustom) },
+		constant.MessageTypeWeChatOFAccount: func(m interface{}) WayTester { return m.(*WeChatOFAccount) },
+		constant.MessageTypeMessageNest:     func(m interface{}) WayTester { return m.(*MessageNest) },
+		constant.MessageTypeAliyunSMS:       func(m interface{}) WayTester { return m.(*WayDetailAliyunSMS) },
+	}
+)
+
 // WayDetailEmail 邮箱渠道明细字段
 type WayDetailEmail struct {
 	Server  string `validate:"required,max=50" label:"SMTP服务地址"`
 	Port    int    `validate:"required,max=65535" label:"SMTP服务端口"`
 	Account string `validate:"required,email" label:"邮箱账号"`
 	Passwd  string `validate:"required,max=50" label:"邮箱密码"`
+}
+
+func (w *WayDetailEmail) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "邮箱auth反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, *w
+}
+
+func (w *WayDetailEmail) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var emailer message.EmailMessage
+	emailer.Init(w.Server, 465, w.Account, w.Passwd)
+	errMsg := emailer.SendTextMessage(w.Account, "test email", testMsg)
+	return errMsg, ""
 }
 
 // WayDetailDTalk 钉钉渠道明细字段
@@ -38,15 +91,104 @@ type WayDetailDTalk struct {
 	Secret      string `json:"secret" validate:"max=100" label:"钉钉加签秘钥"`
 }
 
+func (w *WayDetailDTalk) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "钉钉auth反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, *w
+}
+
+func (w *WayDetailDTalk) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var cli = message.Dtalk{
+		AccessToken: w.AccessToken,
+		Secret:      w.Secret,
+	}
+	res, err := cli.SendMessageText(testMsg + w.Keys)
+	if err != nil {
+		return fmt.Sprintf("发送失败：%s", err), string(res)
+	}
+	return "", string(res)
+}
+
 // WayDetailQyWeiXin 企业微信渠道明细字段
 type WayDetailQyWeiXin struct {
 	AccessToken string `json:"access_token" validate:"required,max=100" label:"企业微信access_token"`
+}
+
+func (w *WayDetailQyWeiXin) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "企业微信auth反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, *w
+}
+
+func (w *WayDetailQyWeiXin) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var cli = message.QyWeiXin{
+		AccessToken: w.AccessToken,
+	}
+	res, err := cli.SendMessageText(testMsg)
+	if err != nil {
+		return fmt.Sprintf("发送失败：%s", err), string(res)
+	}
+	return "", string(res)
+}
+
+// WayDetailFeishu 飞书渠道明细字段
+type WayDetailFeishu struct {
+	AccessToken string `json:"access_token" validate:"required,max=100" label:"飞书access_token"`
+	Keys        string `json:"keys" validate:"max=200" label:"飞书关键字"`
+	Secret      string `json:"secret" validate:"max=100" label:"飞书加签秘钥"`
+}
+
+func (w *WayDetailFeishu) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "飞书auth反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, *w
+}
+
+func (w *WayDetailFeishu) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var cli = message.Feishu{
+		AccessToken: w.AccessToken,
+		Secret:      w.Secret,
+	}
+	res, err := cli.SendMessageText(testMsg + w.Keys)
+	if err != nil {
+		return fmt.Sprintf("发送失败：%s", err), string(res)
+	}
+	return "", string(res)
 }
 
 // WayDetailCustom 自定义渠道
 type WayDetailCustom struct {
 	Webhook string `json:"webhook" validate:"required,max=200" label:"自定义的webhook地址"`
 	Body    string `json:"body" validate:"max=2000" label:"自定义的请求体"`
+}
+
+func (w *WayDetailCustom) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "自定义参数反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, *w
+}
+
+func (w *WayDetailCustom) Test() (string, string) {
+	return "自定义webhook不用测试运行，请直接添加", ""
 }
 
 // WeChatOFAccount 微信公众号
@@ -56,6 +198,20 @@ type WeChatOFAccount struct {
 	TempID    string `json:"tempid" validate:"max=2000" label:"模板消息id"`
 }
 
+func (w *WeChatOFAccount) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "微信公众号反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, *w
+}
+
+func (w *WeChatOFAccount) Test() (string, string) {
+	return "微信公众号模板消息不用测试运行，请直接添加", ""
+}
+
 // WayDetailAliyunSMS 阿里云短信渠道明细字段
 type WayDetailAliyunSMS struct {
 	AccessKeyId     string `json:"access_key_id" validate:"required,max=100" label:"AccessKeyId"`
@@ -63,8 +219,36 @@ type WayDetailAliyunSMS struct {
 	SignName        string `json:"sign_name" validate:"required,max=50" label:"短信签名"`
 }
 
+func (w *WayDetailAliyunSMS) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "阿里云短信auth反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, *w
+}
+
+func (w *WayDetailAliyunSMS) Test() (string, string) {
+	return "阿里云短信不用测试运行，请直接添加", ""
+}
+
 // MessageNest 自托管消息
 type MessageNest struct {
+}
+
+func (w *MessageNest) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "自托管消息反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, *w
+}
+
+func (w *MessageNest) Test() (string, string) {
+	return "自托管消息不用测试运行，请直接添加", ""
 }
 
 func (sw *SendWay) GetByID() (interface{}, error) {
@@ -138,113 +322,31 @@ func (sw *SendWay) getMaps() map[string]interface{} {
 	return maps
 }
 
+// getValidator 根据渠道类型获取对应的验证器
+func (sw *SendWay) getValidator() WayValidator {
+	factory, exists := validatorRegistry[sw.Type]
+	if !exists {
+		return nil
+	}
+	return factory()
+}
+
 // ValidateDiffWay 各种发信渠道具体字段校验
 func (sw *SendWay) ValidateDiffWay() (string, interface{}) {
 	var empty interface{}
-	if sw.Type == "Email" {
-		var email WayDetailEmail
-		err := json.Unmarshal([]byte(sw.Auth), &email)
-		if err != nil {
-			return "邮箱auth反序列化失败！", empty
-		}
-		_, Msg := app.CommonPlaygroundValid(email)
-		return Msg, email
-	} else if sw.Type == "Dtalk" {
-		var dtalk WayDetailDTalk
-		err := json.Unmarshal([]byte(sw.Auth), &dtalk)
-		if err != nil {
-			return "钉钉auth反序列化失败！", empty
-		}
-		_, Msg := app.CommonPlaygroundValid(dtalk)
-		return Msg, dtalk
-	} else if sw.Type == "QyWeiXin" {
-		var config WayDetailQyWeiXin
-		err := json.Unmarshal([]byte(sw.Auth), &config)
-		if err != nil {
-			return "企业微信auth反序列化失败！", empty
-		}
-		_, Msg := app.CommonPlaygroundValid(config)
-		return Msg, config
-	} else if sw.Type == "Custom" {
-		var custom WayDetailCustom
-		err := json.Unmarshal([]byte(sw.Auth), &custom)
-		if err != nil {
-			return "自定义参数反序列化失败！", empty
-		}
-		_, Msg := app.CommonPlaygroundValid(custom)
-		return Msg, custom
-	} else if sw.Type == "WeChatOFAccount" {
-		var wca WeChatOFAccount
-		err := json.Unmarshal([]byte(sw.Auth), &wca)
-		if err != nil {
-			return "微信公众号反序列化失败！", empty
-		}
-		_, Msg := app.CommonPlaygroundValid(wca)
-		return Msg, wca
-	} else if sw.Type == "MessageNest" {
-		var wca MessageNest
-		err := json.Unmarshal([]byte(sw.Auth), &wca)
-		if err != nil {
-			return "自托管消息反序列化失败！", empty
-		}
-		_, Msg := app.CommonPlaygroundValid(wca)
-		return Msg, wca
-	} else if sw.Type == "AliyunSMS" {
-		var aliyunSMS WayDetailAliyunSMS
-		err := json.Unmarshal([]byte(sw.Auth), &aliyunSMS)
-		if err != nil {
-			return "阿里云短信auth反序列化失败！", empty
-		}
-		_, Msg := app.CommonPlaygroundValid(aliyunSMS)
-		return Msg, aliyunSMS
+	validator := sw.getValidator()
+	if validator == nil {
+		return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), empty
 	}
-	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), empty
+	return validator.Validate(sw.Auth)
 }
 
 // TestSendWay 尝试带发信测试连通性
 func (sw *SendWay) TestSendWay(msgObj interface{}) (string, string) {
-	testMsg := "This is a test message from message-nest."
-	emailAuth, ok := msgObj.(WayDetailEmail)
-	if ok {
-		var emailer message.EmailMessage
-		emailer.Init(emailAuth.Server, 465, emailAuth.Account, emailAuth.Passwd)
-		errMsg := emailer.SendTextMessage(emailAuth.Account, "test email", testMsg)
-		return errMsg, ""
+	factory, exists := testerRegistry[sw.Type]
+	if !exists {
+		return fmt.Sprintf("未知的发信渠道测试: %s", sw.Type), ""
 	}
-	dtalkAuth, ok := msgObj.(WayDetailDTalk)
-	if ok {
-		var cli = message.Dtalk{
-			AccessToken: dtalkAuth.AccessToken,
-			Secret:      dtalkAuth.Secret,
-		}
-		res, err := cli.SendMessageText(testMsg + dtalkAuth.Keys)
-		if err != nil {
-			return fmt.Sprintf("发送失败：%s", err), string(res)
-		}
-		return "", string(res)
-	}
-	qywxAuth, ok := msgObj.(WayDetailQyWeiXin)
-	if ok {
-		var cli = message.QyWeiXin{
-			AccessToken: qywxAuth.AccessToken,
-		}
-		res, err := cli.SendMessageText(testMsg)
-		if err != nil {
-			return fmt.Sprintf("发送失败：%s", err), string(res)
-		}
-		return "", string(res)
-	}
-	_, ok = msgObj.(WeChatOFAccount)
-	if ok {
-		return "微信公众号模板消息不用测试运行，请直接添加", ""
-	}
-	_, ok = msgObj.(MessageNest)
-	if ok {
-		return "自托管消息不用测试运行，请直接添加", ""
-	}
-	_, ok = msgObj.(WayDetailAliyunSMS)
-	if ok {
-		return "阿里云短信不用测试运行，请直接添加", ""
-	}
-	return fmt.Sprintf("未知的发信渠道校验: %s", sw.Type), ""
+	tester := factory(msgObj)
+	return tester.Test()
 }

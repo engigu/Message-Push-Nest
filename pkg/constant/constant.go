@@ -47,6 +47,25 @@ var HostedMsgCleanDefaultValueMap = map[string]string{
 
 const AboutSectionName = "about"
 
+// 消息格式类型常量
+const (
+	FormatTypeText     = "text"
+	FormatTypeHTML     = "html"
+	FormatTypeMarkdown = "markdown"
+)
+
+// 消息类型常量
+const (
+	MessageTypeEmail           = "Email"
+	MessageTypeDtalk           = "Dtalk"
+	MessageTypeQyWeiXin        = "QyWeiXin"
+	MessageTypeFeishu          = "Feishu"
+	MessageTypeCustom          = "Custom"
+	MessageTypeWeChatOFAccount = "WeChatOFAccount"
+	MessageTypeMessageNest     = "MessageNest"
+	MessageTypeAliyunSMS       = "AliyunSMS"
+)
+
 // 限制goroutine的最大数量
 var MaxSendTaskSemaphoreChan = make(chan string, 2048)
 

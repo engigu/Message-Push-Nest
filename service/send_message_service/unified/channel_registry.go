@@ -21,6 +21,7 @@ const (
 	MessageTypeEmail           = channels.MessageTypeEmail
 	MessageTypeDtalk           = channels.MessageTypeDtalk
 	MessageTypeQyWeiXin        = channels.MessageTypeQyWeiXin
+	MessageTypeFeishu          = channels.MessageTypeFeishu
 	MessageTypeCustom          = channels.MessageTypeCustom
 	MessageTypeWeChatOFAccount = channels.MessageTypeWeChatOFAccount
 	MessageTypeMessageNest     = channels.MessageTypeMessageNest
@@ -93,6 +94,7 @@ func GetGlobalChannelRegistry() *ChannelRegistry {
 		globalChannelRegistry.Register(channels.NewEmailChannel())
 		globalChannelRegistry.Register(channels.NewDtalkChannel())
 		globalChannelRegistry.Register(channels.NewQyWeiXinChannel())
+		globalChannelRegistry.Register(channels.NewFeishuChannel())
 		globalChannelRegistry.Register(channels.NewCustomChannel())
 		globalChannelRegistry.Register(channels.NewWeChatOFAccountChannel())
 		globalChannelRegistry.Register(channels.NewMessageNestChannel())

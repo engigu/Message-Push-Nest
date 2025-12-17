@@ -77,6 +77,24 @@ const CONSTANT = {
             ],
         },
         {
+            type: 'Feishu',
+            label: '飞书机器人',
+            inputs: [
+                { subLabel: 'access_token', value: '', col: 'access_token', desc: "飞书webhook中的access_token" },
+                { subLabel: '加签', value: '', col: 'secret', desc: "加签的签名" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "输入框说明", desc: "飞书支持加签和关键字过滤，如果是配置了关键字过滤，只需要消息里面包含了关键字，就会发送"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+                { subLabel: 'markdown', content: 'markdown' },
+            ],
+            taskInsInputs: [
+            ],
+        },
+        {
             type: 'Custom',
             label: '自定义推送',
             inputs: [
@@ -135,26 +153,33 @@ const CONSTANT = {
             ],
         },
         // 暂时屏蔽阿里云短信入口
-        // {
-        //     type: 'AliyunSMS',
-        //     label: '阿里云短信',
-        //     inputs: [
-        //         { subLabel: 'AccessKeyId', value: '', col: 'access_key_id', desc: "阿里云AccessKeyId" },
-        //         { subLabel: 'AccessKeySecret', value: '', col: 'access_key_secret', desc: "阿里云AccessKeySecret" },
-        //         { subLabel: '短信签名', value: '', col: 'sign_name', desc: "短信签名名称" },
-        //         { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
-        //     ],
-        //     tips: {
-        //         text: "阿里云短信说明", desc: "使用阿里云短信服务发送短信，需要在阿里云控制台申请短信签名和模板。<br />AccessKey请在阿里云控制台获取。"
-        //     },
-        //     taskInsRadios: [
-        //         { subLabel: 'text', content: 'text' },
-        //     ],
-        //     taskInsInputs: [
-        //         { value: '', col: 'phone_number', desc: "手机号码（接收短信的手机号）" },
-        //         { value: '', col: 'template_code', desc: "短信模板CODE（在阿里云短信控制台获取）" },
-        //     ],
-        // },
+        {
+            type: 'AliyunSMS',
+            label: '阿里云短信',
+            // 动态接收者配置
+            dynamicRecipient: {
+                support: true,              // 是否支持动态接收者
+                field: 'phone_number',      // 接收者字段名
+                label: '手机号码',           // 接收者字段标签
+                desc: '手机号码',            // 接收者字段描述
+            },
+            inputs: [
+                { subLabel: 'AccessKeyId', value: '', col: 'access_key_id', desc: "阿里云AccessKeyId" },
+                { subLabel: 'AccessKeySecret', value: '', col: 'access_key_secret', desc: "阿里云AccessKeySecret" },
+                { subLabel: '短信签名', value: '', col: 'sign_name', desc: "短信签名名称" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "阿里云短信说明", desc: "使用阿里云短信服务发送短信，需要在阿里云控制台申请短信签名和模板。<br />AccessKey请在阿里云控制台获取。"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+                { value: '', col: 'phone_number', desc: "手机号码（接收短信的手机号）", label: '手机号码' },
+                { value: '', col: 'template_code', desc: "短信模板CODE（在阿里云短信控制台获取）", label: '短信模板CODE' },
+            ],
+        },
     ],
     API_VIEW_DATA: [
         { label: "curl", class: "language-shell line-numbers", code: "", func: ApiStrGenerate.getCurlString },

@@ -33,6 +33,10 @@ type InsDtalkConfig struct {
 type InsQyWeiXinConfig struct {
 }
 
+// InsFeishuConfig 实例里面的飞书config
+type InsFeishuConfig struct {
+}
+
 // InsCustomConfig 实例里面的自定义config
 type InsCustomConfig struct {
 }
