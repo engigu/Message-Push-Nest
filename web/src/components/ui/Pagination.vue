@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center justify-between gap-2">
+  <div class="flex items-center justify-between gap-2 w-full">
     <!-- 统计信息 -->
     <div class="text-xs sm:text-sm text-muted-foreground shrink-0">
       <span>共 {{ total }} 条</span>
@@ -7,16 +7,16 @@
     </div>
     
     <!-- 分页控件 -->
-    <Pagination
-      :total="total"
-      :items-per-page="pageSize"
-      :sibling-count="1"
-      :show-edges="true"
-      :default-page="currentPage"
-      :page="currentPage"
-      @update:page="handlePageChange"
-      class="shrink-0"
-    >
+    <div class="flex justify-end shrink-0">
+      <Pagination
+        :total="total"
+        :items-per-page="pageSize"
+        :sibling-count="1"
+        :show-edges="true"
+        :default-page="currentPage"
+        :page="currentPage"
+        @update:page="handlePageChange"
+      >
       <PaginationContent class="gap-0.5 sm:gap-1">
         <PaginationItem :value="currentPage - 1">
           <PaginationPrevious 
@@ -65,7 +65,8 @@
           </PaginationNext>
         </PaginationItem>
       </PaginationContent>
-    </Pagination>
+      </Pagination>
+    </div>
   </div>
 </template>
 
@@ -101,81 +102,79 @@ type PaginationItem =
   | { type: 'page'; value: number }
   | { type: 'ellipsis' }
 
-// 生成分页项目
-const items = computed((): PaginationItem[] => {
-  const pages: PaginationItem[] = []
-  const total = totalPages.value
-  const current = props.currentPage
-  
-  if (total <= 7) {
-    // 如果总页数小于等于7，显示所有页码
-    for (let i = 1; i <= total; i++) {
-      pages.push({ type: 'page', value: i })
-    }
-  } else {
-    // 复杂分页逻辑
-    if (current <= 2) {
-      // 当前页在前面
-      for (let i = 1; i <= 3; i++) {
-        pages.push({ type: 'page', value: i })
-      }
-      pages.push({ type: 'ellipsis' })
-      pages.push({ type: 'page', value: total })
-    } else if (current >= total - 3) {
-      // 当前页在后面
-      pages.push({ type: 'page', value: 1 })
-      pages.push({ type: 'ellipsis' })
-      for (let i = total - 4; i <= total; i++) {
-        pages.push({ type: 'page', value: i })
-      }
-    } else {
-      // 当前页在中间
-      pages.push({ type: 'page', value: 1 })
-      pages.push({ type: 'ellipsis' })
-      for (let i = current - 1; i <= current + 1; i++) {
-        pages.push({ type: 'page', value: i })
-      }
-      pages.push({ type: 'ellipsis' })
-      pages.push({ type: 'page', value: total })
-    }
-  }
-  
-  return pages
-})
-
-// 小屏显示项目（更少的页码）
+// 响应式显示项目（根据屏幕大小使用不同逻辑）
 const displayItems = computed((): PaginationItem[] => {
+  const pages: PaginationItem[] = []
   const total = totalPages.value
   const current = props.currentPage
-  const pages: PaginationItem[] = []
   
-  if (total <= 5) {
-    // 总页数少，显示所有
-    for (let i = 1; i <= total; i++) {
-      pages.push({ type: 'page', value: i })
+  // 使用媒体查询判断是否为小屏
+  const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 640
+  
+  if (isSmallScreen) {
+    // 小屏逻辑：只显示关键页码
+    if (total <= 5) {
+      // 总页数少，显示所有
+      for (let i = 1; i <= total; i++) {
+        pages.push({ type: 'page', value: i })
+      }
+    } else {
+      // 只显示当前页和首尾页
+      if (current === 1) {
+        pages.push({ type: 'page', value: 1 })
+        pages.push({ type: 'page', value: 2 })
+        pages.push({ type: 'ellipsis' })
+        pages.push({ type: 'page', value: total })
+      } else if (current === total) {
+        pages.push({ type: 'page', value: 1 })
+        pages.push({ type: 'ellipsis' })
+        pages.push({ type: 'page', value: total - 1 })
+        pages.push({ type: 'page', value: total })
+      } else {
+        pages.push({ type: 'page', value: 1 })
+        if (current > 2) {
+          pages.push({ type: 'ellipsis' })
+        }
+        pages.push({ type: 'page', value: current })
+        if (current < total - 1) {
+          pages.push({ type: 'ellipsis' })
+        }
+        pages.push({ type: 'page', value: total })
+      }
     }
   } else {
-    // 只显示当前页和相邻页
-    if (current === 1) {
-      pages.push({ type: 'page', value: 1 })
-      pages.push({ type: 'page', value: 2 })
-      pages.push({ type: 'ellipsis' })
-      pages.push({ type: 'page', value: total })
-    } else if (current === total) {
-      pages.push({ type: 'page', value: 1 })
-      pages.push({ type: 'ellipsis' })
-      pages.push({ type: 'page', value: total - 1 })
-      pages.push({ type: 'page', value: total })
+    // 大屏逻辑：显示更多页码
+    if (total <= 7) {
+      // 如果总页数小于等于7，显示所有页码
+      for (let i = 1; i <= total; i++) {
+        pages.push({ type: 'page', value: i })
+      }
     } else {
-      pages.push({ type: 'page', value: 1 })
-      if (current > 2) {
+      // 复杂分页逻辑
+      if (current <= 2) {
+        // 当前页在前面
+        for (let i = 1; i <= 3; i++) {
+          pages.push({ type: 'page', value: i })
+        }
         pages.push({ type: 'ellipsis' })
-      }
-      pages.push({ type: 'page', value: current })
-      if (current < total - 1) {
+        pages.push({ type: 'page', value: total })
+      } else if (current >= total - 3) {
+        // 当前页在后面
+        pages.push({ type: 'page', value: 1 })
         pages.push({ type: 'ellipsis' })
+        for (let i = total - 4; i <= total; i++) {
+          pages.push({ type: 'page', value: i })
+        }
+      } else {
+        // 当前页在中间
+        pages.push({ type: 'page', value: 1 })
+        pages.push({ type: 'ellipsis' })
+        for (let i = current - 1; i <= current + 1; i++) {
+          pages.push({ type: 'page', value: i })
+        }
+        pages.push({ type: 'ellipsis' })
+        pages.push({ type: 'page', value: total })
       }
-      pages.push({ type: 'page', value: total })
     }
   }
   
