@@ -210,7 +210,7 @@ const insTableData = ref<any[]>([])
 // 格式化额外信息列的值
 const formatInsConfigDisplay = (row: any) => {
   if (!row.config) {
-    return ""
+    return "-"
   }
   let config = JSON.parse(row.config)
   
@@ -225,7 +225,10 @@ const formatInsConfigDisplay = (row: any) => {
     const recipientField = channelConfig.dynamicRecipient.field
     return config[recipientField] || ""
   }
-  
+
+   if (channelConfig?.taskInsInputs && Array.isArray(channelConfig.taskInsInputs) && channelConfig.taskInsInputs.length === 0) {
+    return "无需配置"
+  }
   return ""
 }
 
@@ -492,7 +495,8 @@ defineExpose({
               <Badge variant="secondary">{{ ins.content_type }}</Badge>
             </TableCell>
             <TableCell>
-              <span class="text-sm">{{ formatInsConfigDisplay(ins) }}</span>
+              <Badge v-if="formatInsConfigDisplay(ins)" variant="secondary">{{ formatInsConfigDisplay(ins) }}</Badge>
+              <span v-else class="text-sm text-muted-foreground">-</span>
             </TableCell>
             <TableCell class="text-center">
               <div class="flex items-center justify-center gap-2">
