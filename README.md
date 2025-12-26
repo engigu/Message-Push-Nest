@@ -1,4 +1,4 @@
-# Message Nest 🕊️
+# Message Nest 🕊️ [![Hits](https://hits.sh/github.com/engigu/Message-Push-Nest.svg?view=today-total)](https://hits.sh/github.com/engigu/Message-Push-Nest/)
 
 Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化并自定义多种消息通知方式。
 
@@ -8,7 +8,6 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 演示站点(演示站点的服务器比较烂，见谅) [demo](https://message-nest-demo-site.qwapi.eu.org/)
 
-[![Hits](https://hits.sh/github.com/engigu/Message-Push-Nest.svg?view=today-total)](https://hits.sh/github.com/engigu/Message-Push-Nest/)
 
 ## 特色 ✨
 
@@ -22,6 +21,8 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 项目还在不断更新中，欢迎大家提出各种建议。
 
 关于运行日志，考虑到目前多数服务以收集控制台输出为主，暂时不支持写出日志文件。
+
+这里自荐下自己开发，性能和占用都很能打的，定时任务执行面板 [baihu](https://github.com/engigu/baihu-panel/)
 
 ## 更新日志 ☕
 
