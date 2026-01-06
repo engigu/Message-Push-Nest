@@ -2,7 +2,6 @@ package statistic_service
 
 import (
 	"message-nest/models"
-	"strconv"
 )
 
 type StatisticService struct {
@@ -44,11 +43,6 @@ func (sw *StatisticService) GetSendStatsByTask() (models.SendStatsData, error) {
 	if days <= 0 {
 		days = 30 // 默认30天
 	}
-	
-	taskID, err := strconv.ParseUint(sw.TaskID, 10, 64)
-	if err != nil {
-		return models.SendStatsData{}, err
-	}
-	
-	return models.GetSendStatsByTask(uint(taskID), days)
+
+	return models.GetSendStatsByTask(sw.TaskID, days)
 }

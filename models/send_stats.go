@@ -8,7 +8,7 @@ import (
 // SendStats 发送统计表
 type SendStats struct {
 	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	TaskID   *uint  `json:"task_id" gorm:"type:bigint unsigned;index:idx_task_type_day_status"`
+	TaskID   string `json:"task_id" gorm:"type:varchar(12);default:'';index:idx_task_type_day_status"`
 	TaskType string `json:"task_type" gorm:"type:varchar(20);default:'task';index:idx_task_type_day_status;comment:'任务类型：task-发信任务，template-模板任务'"`
 	Day      string `json:"day" gorm:"type:varchar(10);index:idx_task_type_day_status;index:idx_day_status"`
 	Status   string `json:"status" gorm:"type:varchar(20);index:idx_task_type_day_status;index:idx_day_status"`
@@ -121,7 +121,7 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 }
 
 // GetSendStatsByTask 获取指定任务的统计数据
-func GetSendStatsByTask(taskID uint, days int) (SendStatsData, error) {
+func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 	var result SendStatsData
 	statsTable := GetSchema(SendStats{})
 	currDay := util.GetNowTimeStr()[:10]
@@ -185,7 +185,7 @@ func GetSendStatsByTask(taskID uint, days int) (SendStatsData, error) {
 }
 
 // IncrementSendStats 增加发送统计（用于实时更新统计数据）
-func IncrementSendStats(taskID *uint, taskType string, day string, status string, num int64) error {
+func IncrementSendStats(taskID string, taskType string, day string, status string, num int64) error {
 	statsTable := GetSchema(SendStats{})
 
 	// 使用 ON DUPLICATE KEY UPDATE 或 UPSERT 逻辑

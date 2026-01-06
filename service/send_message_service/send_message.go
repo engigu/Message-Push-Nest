@@ -347,18 +347,6 @@ func (sm *SendMessageService) UpdateSendStats() {
 	// 获取当前日期
 	currentDay := sm.getCurrentDay()
 
-	// 解析任务ID（如果是数字ID）
-	var taskID *uint
-	if sm.TaskID != "" {
-		// 尝试将字符串ID转换为uint（如果是数字ID）
-		var id uint64
-		_, err := fmt.Sscanf(sm.TaskID, "%d", &id)
-		if err == nil {
-			taskIDValue := uint(id)
-			taskID = &taskIDValue
-		}
-	}
-
 	// 确定任务类型
 	taskType := "task"
 	if sm.SendMode == SendModeTemplate {
@@ -374,7 +362,7 @@ func (sm *SendMessageService) UpdateSendStats() {
 	}
 
 	// 更新统计：每次任务执行记录为1次
-	err := models.IncrementSendStats(taskID, taskType, currentDay, status, 1)
+	err := models.IncrementSendStats(sm.TaskID, taskType, currentDay, status, 1)
 	if err != nil {
 		logrus.Errorf("更新发送统计失败：%s", err)
 	}
