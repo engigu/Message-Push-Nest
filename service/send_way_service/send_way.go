@@ -73,7 +73,7 @@ func (w *WayDetailEmail) Validate(authJson string) (string, interface{}) {
 		return "邮箱auth反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, *w
+	return msg, w
 }
 
 func (w *WayDetailEmail) Test() (string, string) {
@@ -98,7 +98,7 @@ func (w *WayDetailDTalk) Validate(authJson string) (string, interface{}) {
 		return "钉钉auth反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, *w
+	return msg, w
 }
 
 func (w *WayDetailDTalk) Test() (string, string) {
@@ -126,7 +126,7 @@ func (w *WayDetailQyWeiXin) Validate(authJson string) (string, interface{}) {
 		return "企业微信auth反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, *w
+	return msg, w
 }
 
 func (w *WayDetailQyWeiXin) Test() (string, string) {
@@ -155,7 +155,7 @@ func (w *WayDetailFeishu) Validate(authJson string) (string, interface{}) {
 		return "飞书auth反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, *w
+	return msg, w
 }
 
 func (w *WayDetailFeishu) Test() (string, string) {
@@ -184,7 +184,7 @@ func (w *WayDetailCustom) Validate(authJson string) (string, interface{}) {
 		return "自定义参数反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, *w
+	return msg, w
 }
 
 func (w *WayDetailCustom) Test() (string, string) {
@@ -205,7 +205,7 @@ func (w *WeChatOFAccount) Validate(authJson string) (string, interface{}) {
 		return "微信公众号反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, *w
+	return msg, w
 }
 
 func (w *WeChatOFAccount) Test() (string, string) {
@@ -226,7 +226,7 @@ func (w *WayDetailAliyunSMS) Validate(authJson string) (string, interface{}) {
 		return "阿里云短信auth反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, *w
+	return msg, w
 }
 
 func (w *WayDetailAliyunSMS) Test() (string, string) {
@@ -244,7 +244,7 @@ func (w *MessageNest) Validate(authJson string) (string, interface{}) {
 		return "自托管消息反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, *w
+	return msg, w
 }
 
 func (w *MessageNest) Test() (string, string) {
