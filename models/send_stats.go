@@ -8,10 +8,10 @@ import (
 // SendStats 发送统计表
 type SendStats struct {
 	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	TaskID   string `json:"task_id" gorm:"type:varchar(12);default:'';index:idx_task_type_day_status"`
-	TaskType string `json:"task_type" gorm:"type:varchar(20);default:'task';index:idx_task_type_day_status;comment:'任务类型：task-发信任务，template-模板任务'"`
-	Day      string `json:"day" gorm:"type:varchar(10);index:idx_task_type_day_status;index:idx_day_status"`
-	Status   string `json:"status" gorm:"type:varchar(20);index:idx_task_type_day_status;index:idx_day_status"`
+	TaskID   string `json:"task_id" gorm:"type:varchar(12);default:'';uniqueIndex:idx_task_type_day_status"`
+	TaskType string `json:"task_type" gorm:"type:varchar(20);default:'task';uniqueIndex:idx_task_type_day_status;comment:'任务类型：task-发信任务，template-模板任务'"`
+	Day      string `json:"day" gorm:"type:varchar(10);uniqueIndex:idx_task_type_day_status;index:idx_day_status"`
+	Status   string `json:"status" gorm:"type:varchar(20);uniqueIndex:idx_task_type_day_status;index:idx_day_status"`
 	Num      int64  `json:"num" gorm:"type:bigint;default:0"`
 }
 
