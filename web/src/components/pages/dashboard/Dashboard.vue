@@ -30,10 +30,10 @@ let state = reactive({
     today_failed_num: 0,
   },
   trendData: {
-    latest_send_data: [] as SendData[],
+    latest_send_data: [] as SendData[] | null,
   },
   channelData: {
-    way_cate_data: [] as CateData[],
+    way_cate_data: [] as CateData[] | null,
   },
   loading: {
     basic: false,
@@ -111,24 +111,25 @@ const loadAllStatisticData = async () => {
 }
 
 const renderLineChart = () => {
+  const latestSendData = state.trendData.latest_send_data || [];
   const options = {
     series: [
       {
         name: '发送总数',
-        data: state.trendData.latest_send_data.length > 0
-          ? state.trendData.latest_send_data.map(item => item.num || 0)
+        data: latestSendData.length > 0
+          ? latestSendData.map(item => item.num || 0)
           : []
       },
       {
         name: '发送成功数',
-        data: state.trendData.latest_send_data.length > 0
-          ? state.trendData.latest_send_data.map(item => item.day_succ_num || 0)
+        data: latestSendData.length > 0
+          ? latestSendData.map(item => item.day_succ_num || 0)
           : []
       },
       {
         name: '发送失败数',
-        data: state.trendData.latest_send_data.length > 0
-          ? state.trendData.latest_send_data.map(item => item.day_failed_num || 0)
+        data: latestSendData.length > 0
+          ? latestSendData.map(item => item.day_failed_num || 0)
           : []
       },
     ],
@@ -175,8 +176,8 @@ const renderLineChart = () => {
       }
     },
     xaxis: {
-      categories: state.trendData.latest_send_data.length > 0
-        ? state.trendData.latest_send_data.map(item => item.day)
+      categories: latestSendData.length > 0
+        ? latestSendData.map(item => item.day)
         : [],
       axisBorder: {
         show: false
@@ -332,9 +333,10 @@ const renderLineChart = () => {
 }
 
 const renderPieChart = () => {
+  const wayCateData = state.channelData.way_cate_data || [];
   const options = {
-    series: state.channelData.way_cate_data.length > 0
-      ? state.channelData.way_cate_data.map(item => item.count_num)
+    series: wayCateData.length > 0
+      ? wayCateData.map(item => item.count_num)
       : [],
     chart: {
       type: 'pie',
@@ -355,8 +357,8 @@ const renderPieChart = () => {
         }
       }
     },
-    labels: state.channelData.way_cate_data.length > 0
-      ? state.channelData.way_cate_data.map(item => item.way_name)
+    labels: wayCateData.length > 0
+      ? wayCateData.map(item => item.way_name)
       : [],
     colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
     legend: {

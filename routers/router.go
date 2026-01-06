@@ -88,6 +88,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 
 		// statistic
 		apiV1.GET("/statistic", v1.GetStatisticData)
+		apiV1.GET("/statistic/task", v1.GetSendStatsByTask)
 
 		// cronMessage
 		apiV1.POST("/cronmessages/addone", v1.AddCronMsgTask)

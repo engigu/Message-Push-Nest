@@ -69,6 +69,7 @@ func Setup() {
 		&models.HostedMessage{},
 		&models.LoginLog{},
 		&models.Template{},
+		&models.SendStats{},
 	}
 
 	for _, table := range tables {

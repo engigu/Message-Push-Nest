@@ -55,7 +55,7 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map
 	}
 
 	query = query.Where(maps)
-	
+
 	// 按名称搜索（搜索日志表的 name 字段）
 	if name != "" {
 		query = query.Where(fmt.Sprintf("%s.name like ?", logt), fmt.Sprintf("%%%s%%", name))
@@ -68,7 +68,7 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map
 		query = query.Offset(pageNum).Limit(pageSize)
 	}
 	query.Scan(&logs)
-	
+
 	//v1 接口的历史日志数据兼容处理
 	// 应用层处理：为历史数据（type=task 且 name 为空）补充任务名称
 	fillTaskNamesForLogs(&logs)
@@ -130,7 +130,7 @@ func fillTaskNamesForLogs(logs *[]LogsResult) {
 func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (int64, error) {
 	var total int64
 	logt := GetSchema(SendTasksLogs{})
-	
+
 	// 简化查询，只查询日志表
 	query := db.Table(logt)
 
@@ -141,7 +141,7 @@ func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (
 	}
 
 	query = query.Where(maps)
-	
+
 	// 按名称搜索（搜索日志表的 name 字段）
 	if name != "" {
 		query = query.Where(fmt.Sprintf("%s.name like ?", logt), fmt.Sprintf("%%%s%%", name))
@@ -156,7 +156,7 @@ func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (
 // GetSendLogsTotal 获取所有日志总数
 func DeleteOutDateLogs(keepNum int) (int, error) {
 	var affectedRows int
-	
+
 	// 优化方案：使用GORM的Offset和Limit找到临界ID，兼容多种数据库
 	// 1. 获取第 keepNum 条记录的ID作为临界值
 	var threshold SendTasksLogs
@@ -166,18 +166,18 @@ func DeleteOutDateLogs(keepNum int) (int, error) {
 		Offset(keepNum - 1).
 		Limit(1).
 		First(&threshold)
-	
+
 	// 如果记录总数不足keepNum条，则不需要删除
 	if result.Error != nil {
 		return 0, nil
 	}
-	
+
 	// 2. 删除ID小于临界值的记录
 	deleteResult := db.Where("id < ?", threshold.ID).Delete(&SendTasksLogs{})
 	if deleteResult.Error != nil {
 		return affectedRows, deleteResult.Error
 	}
-	
+
 	affectedRows = int(deleteResult.RowsAffected)
 	return affectedRows, nil
 }
@@ -317,27 +317,27 @@ func GetBasicStatisticData() (BasicStatisticData, error) {
 	return statistic, nil
 }
 
-// GetTrendStatisticData 获取趋势统计数据
+// GetTrendStatisticData 获取趋势统计数据（使用 send_stats 表）
 func GetTrendStatisticData() (TrendStatisticData, error) {
 	var statistic TrendStatisticData
 	var latestData []LatestSendData
-	logt := GetSchema(SendTasksLogs{})
+	statsTable := GetSchema(SendStats{})
 
 	// 最近30天数据
 	days := 30
 	now := util.GetNowTime()
 	past := now.AddDate(0, 0, -days)
 	pastDate := past.Format("2006-01-02")
-	next := now.AddDate(0, 0, 1)
-	nextDate := next.Format("2006-01-02")
+
 	queryData := db.
-		Table(logt).
+		Table(statsTable).
 		Select(`
-	CAST(DATE(created_on) AS CHAR) AS day,
-	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
-	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
-	COUNT(*) AS num`).
-		Where(fmt.Sprintf(" created_on >= '%s' and created_on <= '%s' ", pastDate, nextDate)).
+			day,
+			SUM(CASE WHEN status = 'success' THEN num ELSE 0 END) AS day_succ_num,
+			SUM(CASE WHEN status = 'failed' THEN num ELSE 0 END) AS day_failed_num,
+			SUM(num) AS num
+		`).
+		Where("day >= ?", pastDate).
 		Group("day").
 		Order("day")
 
@@ -346,21 +346,42 @@ func GetTrendStatisticData() (TrendStatisticData, error) {
 	return statistic, nil
 }
 
-// GetChannelStatisticData 获取渠道统计数据（包含任务实例和模板实例）
+// GetChannelStatisticData 获取渠道统计数据（使用 send_stats 表的任务类型统计）
 func GetChannelStatisticData() (ChannelStatisticData, error) {
 	var statistic ChannelStatisticData
 	var wayCateData []WayCateData
-	inst := GetSchema(SendTasksIns{})
-	wayst := GetSchema(SendWays{})
+	statsTable := GetSchema(SendStats{})
 
-	// 统计所有实例的渠道分布（包含任务实例和模板实例）
-	// 不区分 task_id 和 template_id，统计所有关联到渠道的实例
+	// 任务类型映射
+	taskTypeMap := map[string]string{
+		"task":     "发信任务",
+		"template": "模板任务",
+	}
+
+	// 统计任务类型分布
+	var taskTypeStats []struct {
+		TaskType string
+		Num      int64
+	}
+
 	db.
-		Table(inst).
-		Select(fmt.Sprintf("%s.name as way_name, count(%s.id) as count_num", wayst, inst)).
-		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", wayst, inst, wayst)).
-		Group(fmt.Sprintf("%s.id", wayst)).
-		Scan(&wayCateData)
+		Table(statsTable).
+		Select("task_type, SUM(num) AS num").
+		Group("task_type").
+		Order("num DESC").
+		Scan(&taskTypeStats)
+
+	// 转换为 WayCateData 格式（复用前端已有的数据结构）
+	for _, stat := range taskTypeStats {
+		wayName := taskTypeMap[stat.TaskType]
+		if wayName == "" {
+			wayName = stat.TaskType
+		}
+		wayCateData = append(wayCateData, WayCateData{
+			WayName:  wayName,
+			CountNum: int(stat.Num),
+		})
+	}
 
 	statistic.WayCateData = wayCateData
 	return statistic, nil

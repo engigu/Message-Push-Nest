@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/constant"
+	"message-nest/pkg/util"
 	"message-nest/service/send_message_service/unified"
 	"message-nest/service/send_task_service"
 	"message-nest/service/send_way_service"
@@ -294,6 +295,8 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 	sm.AppendSendContent()
 	// 日志写到数据库
 	sm.RecordSendLog()
+	// 更新统计数据（任务级别：一次任务算一次）
+	sm.UpdateSendStats()
 
 	totalOutputLog := strings.Join(sm.LogOutput, "\n")
 	if sm.Status == SendSuccess {
@@ -337,6 +340,49 @@ func (sm *SendMessageService) RecordSendLog() {
 	if err != nil {
 		sm.DefaultLogger.Errorf("添加日志失败！原因是：%s", err)
 	}
+}
+
+// UpdateSendStats 更新发送统计数据（任务级别）
+func (sm *SendMessageService) UpdateSendStats() {
+	// 获取当前日期
+	currentDay := sm.getCurrentDay()
+
+	// 解析任务ID（如果是数字ID）
+	var taskID *uint
+	if sm.TaskID != "" {
+		// 尝试将字符串ID转换为uint（如果是数字ID）
+		var id uint64
+		_, err := fmt.Sscanf(sm.TaskID, "%d", &id)
+		if err == nil {
+			taskIDValue := uint(id)
+			taskID = &taskIDValue
+		}
+	}
+
+	// 确定任务类型
+	taskType := "task"
+	if sm.SendMode == SendModeTemplate {
+		taskType = "template"
+	}
+
+	// 根据任务的最终状态更新统计（一次任务只记录一次）
+	var status string
+	if sm.Status == SendSuccess {
+		status = "success"
+	} else {
+		status = "failed"
+	}
+
+	// 更新统计：每次任务执行记录为1次
+	err := models.IncrementSendStats(taskID, taskType, currentDay, status, 1)
+	if err != nil {
+		logrus.Errorf("更新发送统计失败：%s", err)
+	}
+}
+
+// getCurrentDay 获取当前日期（YYYY-MM-DD格式）
+func (sm *SendMessageService) getCurrentDay() string {
+	return util.GetNowTimeStr()[:10]
 }
 
 // TransError 转化错误
