@@ -212,7 +212,7 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 		sm.LogsAndStatusMark(fmt.Sprintf("开始发送，实例: %s", ins.WayID), sm.Status)
 		sm.LogsAndStatusMark(fmt.Sprintf("实例渠道名: %s", way.Name), sm.Status)
 		sm.LogsAndStatusMark(fmt.Sprintf("实例类型: %s + %s", ins.WayType, ins.ContentType), sm.Status)
-		sm.LogsAndStatusMark(fmt.Sprintf("实例配置: %s", ins.Config), sm.Status)
+		// sm.LogsAndStatusMark(fmt.Sprintf("实例配置: %s", ins.Config), sm.Status)
 
 		// 发送渠道的校验
 		errStr, msgObj := wayService.ValidateDiffWay()
@@ -263,7 +263,7 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 
 		if isDynamicMode && sm.supportsDynamicRecipient(way.Type) && len(sm.Recipients) > 0 {
 			// 动态接收模式：使用API传入的Recipients列表（群发）
-			sm.LogsAndStatusMark(fmt.Sprintf("动态接收模式，共 %d 个接收者", len(sm.Recipients)), sm.Status)
+			sm.LogsAndStatusMark(fmt.Sprintf("动态接收模式[共 %d 个接收者]", len(sm.Recipients)), sm.Status)
 			for recipientIdx, recipient := range sm.Recipients {
 				sm.LogsAndStatusMark(fmt.Sprintf(">>> 接收者 %d/%d: %s", recipientIdx+1, len(sm.Recipients), recipient), sm.Status)
 
@@ -280,7 +280,7 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			}
 		} else {
 			// 固定接收模式：使用实例配置的to_account
-			sm.LogsAndStatusMark("固定接收模式，使用实例配置的接收者", sm.Status)
+			sm.LogsAndStatusMark("固定接收模式", sm.Status)
 			res, errMsg := channel.SendUnified(msgObj, ins.SendTasksIns, unifiedContent)
 			if res != "" {
 				sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s\n", res), sm.Status)
