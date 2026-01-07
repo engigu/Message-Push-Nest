@@ -54,6 +54,8 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 欢迎通过提交问题和提出改进建议。
 
+<img src="https://f.pz.al/pzal/2026/01/07/d0fad512d0346.jpg" style="width:200px;">
+
 ## Star History ⭐
 
 [![Star History Chart](https://api.star-history.com/svg?repos=engigu/Message-Push-Nest&type=Date)](https://star-history.com/#engigu/Message-Push-Nest&Date)
