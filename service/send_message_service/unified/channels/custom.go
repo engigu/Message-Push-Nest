@@ -30,7 +30,7 @@ func (c *CustomChannel) FormatContent(content *UnifiedMessageContent) (string, s
 }
 
 func (c *CustomChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, content *UnifiedMessageContent) (string, string) {
-	auth, ok := msgObj.(send_way_service.WayDetailCustom)
+	auth, ok := msgObj.(*send_way_service.WayDetailCustom)
 	if !ok {
 		return "", "类型转换失败"
 	}

@@ -20,7 +20,7 @@ func NewAliyunSMSChannel() *AliyunSMSChannel {
 }
 
 func (c *AliyunSMSChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, content *UnifiedMessageContent) (string, string) {
-	auth, ok := msgObj.(send_way_service.WayDetailAliyunSMS)
+	auth, ok := msgObj.(*send_way_service.WayDetailAliyunSMS)
 	if !ok {
 		return "", "类型转换失败"
 	}

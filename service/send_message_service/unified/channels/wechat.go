@@ -15,7 +15,7 @@ func NewWeChatOFAccountChannel() *WeChatOFAccountChannel {
 }
 
 func (c *WeChatOFAccountChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, content *UnifiedMessageContent) (string, string) {
-	auth, ok := msgObj.(send_way_service.WeChatOFAccount)
+	auth, ok := msgObj.(*send_way_service.WeChatOFAccount)
 	if !ok {
 		return "", "类型转换失败"
 	}

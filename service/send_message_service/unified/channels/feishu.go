@@ -15,7 +15,7 @@ func NewFeishuChannel() *FeishuChannel {
 }
 
 func (c *FeishuChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, content *UnifiedMessageContent) (string, string) {
-	auth, ok := msgObj.(send_way_service.WayDetailFeishu)
+	auth, ok := msgObj.(*send_way_service.WayDetailFeishu)
 	if !ok {
 		return "", "类型转换失败"
 	}

@@ -13,7 +13,7 @@ func NewMessageNestChannel() *MessageNestChannel {
 }
 
 func (c *MessageNestChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, content *UnifiedMessageContent) (string, string) {
-	_, ok := msgObj.(send_way_service.MessageNest)
+	_, ok := msgObj.(*send_way_service.MessageNest)
 	if !ok {
 		return "", "类型转换失败"
 	}

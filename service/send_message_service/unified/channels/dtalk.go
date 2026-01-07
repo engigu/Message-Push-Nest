@@ -15,7 +15,7 @@ func NewDtalkChannel() *DtalkChannel {
 }
 
 func (c *DtalkChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, content *UnifiedMessageContent) (string, string) {
-	auth, ok := msgObj.(send_way_service.WayDetailDTalk)
+	auth, ok := msgObj.(*send_way_service.WayDetailDTalk)
 	if !ok {
 		return "", "类型转换失败"
 	}
