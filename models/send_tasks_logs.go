@@ -346,40 +346,68 @@ func GetTrendStatisticData() (TrendStatisticData, error) {
 	return statistic, nil
 }
 
-// GetChannelStatisticData 获取渠道统计数据（使用 send_stats 表的任务类型统计）
+// GetChannelStatisticData 获取渠道统计数据（基于 send_stats 表统计任务，再查询渠道）
 func GetChannelStatisticData() (ChannelStatisticData, error) {
 	var statistic ChannelStatisticData
 	var wayCateData []WayCateData
 	statsTable := GetSchema(SendStats{})
+	insTable := GetSchema(SendTasksIns{})
+	waysTable := GetSchema(SendWays{})
 
-	// 任务类型映射
-	taskTypeMap := map[string]string{
-		"task":     "发信任务",
-		"template": "模板任务",
-	}
-
-	// 统计任务类型分布
-	var taskTypeStats []struct {
-		TaskType string
-		Num      int64
+	// 第一步：从 send_stats 表统计每个任务的执行次数
+	var taskStats []struct {
+		TaskID string
+		Num    int64
 	}
 
 	db.
 		Table(statsTable).
-		Select("task_type, SUM(num) AS num").
-		Group("task_type").
-		Order("num DESC").
-		Scan(&taskTypeStats)
+		Select("task_id, SUM(num) AS num").
+		Where("task_id != ''"). // 排除全局统计
+		Group("task_id").
+		Scan(&taskStats)
 
-	// 转换为 WayCateData 格式（复用前端已有的数据结构）
-	for _, stat := range taskTypeStats {
-		wayName := taskTypeMap[stat.TaskType]
-		if wayName == "" {
-			wayName = stat.TaskType
+	if len(taskStats) == 0 {
+		statistic.WayCateData = wayCateData
+		return statistic, nil
+	}
+
+	// 第二步：收集所有任务ID
+	taskIDs := make([]string, 0, len(taskStats))
+	taskNumMap := make(map[string]int64)
+	for _, stat := range taskStats {
+		taskIDs = append(taskIDs, stat.TaskID)
+		taskNumMap[stat.TaskID] = stat.Num
+	}
+
+	// 第三步：查询这些任务关联的渠道信息
+	var taskWays []struct {
+		TaskID  string
+		WayID   string
+		WayName string
+	}
+
+	db.
+		Table(insTable).
+		Select(fmt.Sprintf("%s.task_id, %s.way_id, %s.name as way_name", insTable, insTable, waysTable)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
+		Where(fmt.Sprintf("%s.task_id IN ?", insTable), taskIDs).
+		Group(fmt.Sprintf("%s.task_id, %s.way_id, %s.name", insTable, insTable, waysTable)).
+		Scan(&taskWays)
+
+	// 第四步：按渠道聚合统计
+	wayCountMap := make(map[string]int64)
+	for _, tw := range taskWays {
+		if num, exists := taskNumMap[tw.TaskID]; exists {
+			wayCountMap[tw.WayName] += num
 		}
+	}
+
+	// 第五步：转换为返回格式
+	for wayName, count := range wayCountMap {
 		wayCateData = append(wayCateData, WayCateData{
 			WayName:  wayName,
-			CountNum: int(stat.Num),
+			CountNum: int(count),
 		})
 	}
 
