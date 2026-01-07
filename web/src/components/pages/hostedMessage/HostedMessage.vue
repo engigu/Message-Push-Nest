@@ -142,7 +142,7 @@ onMounted(async () => {
         <TableRow v-for="message in state.tableData" :key="message.id">
           <TableCell>{{ message.id }}</TableCell>
           <TableCell>
-            <ClickableTruncate :text="message.title" wrapper-class="max-w-[220px] sm:max-w-[360px]" preview-title="消息标题" />
+            <ClickableTruncate :text="message.title" wrapper-class="max-w-[180px] sm:max-w-[240px]" preview-title="消息标题" />
           </TableCell>
           <TableCell>
             <ClickableTruncate :text="message.content" wrapper-class="max-w-[320px] sm:max-w-[480px]" preview-title="消息内容" />
