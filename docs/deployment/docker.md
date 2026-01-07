@@ -114,10 +114,15 @@ docker run -d \
 
 ### 使用 MySQL
 
+::: warning 重要
+使用 MySQL 时必须指定 `DB_TYPE=mysql` 环境变量，否则会默认使用 SQLite。
+:::
+
 ```bash
 # 正式运行（GHCR 镜像，推荐）
 docker run -d  \
   -p 8000:8000 \
+  -e DB_TYPE=mysql \
   -e MYSQL_HOST=192.168.64.133  \
   -e MYSQL_PORT=3308 \
   -e MYSQL_USER=root \
@@ -130,6 +135,7 @@ docker run -d  \
 # 或使用 Docker Hub 镜像
 docker run -d  \
   -p 8000:8000 \
+  -e DB_TYPE=mysql \
   -e MYSQL_HOST=192.168.64.133  \
   -e MYSQL_PORT=3308 \
   -e MYSQL_USER=root \

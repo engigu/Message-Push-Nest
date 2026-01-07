@@ -354,61 +354,118 @@ func GetChannelStatisticData() (ChannelStatisticData, error) {
 	insTable := GetSchema(SendTasksIns{})
 	waysTable := GetSchema(SendWays{})
 
-	// 第一步：从 send_stats 表统计每个任务的执行次数
+	// 第一步：从 send_stats 表统计每个任务的执行次数（按任务类型分组）
 	var taskStats []struct {
-		TaskID string
-		Num    int64
+		TaskID   string
+		TaskType string
+		Num      int64
 	}
 
-	db.
+	err := db.
 		Table(statsTable).
-		Select("task_id, SUM(num) AS num").
-		Where("task_id != ''"). // 排除全局统计
-		Group("task_id").
-		Scan(&taskStats)
+		Select("task_id, task_type, SUM(num) AS num").
+		Where("task_id != '' AND task_id IS NOT NULL"). // 排除全局统计和空值
+		Group("task_id, task_type").
+		Scan(&taskStats).Error
 
+	if err != nil {
+		fmt.Printf("[DEBUG] 查询 send_stats 表失败: %v\n", err)
+		return statistic, err
+	}
+
+	fmt.Printf("[DEBUG] send_stats 查询结果: %+v\n", taskStats)
+
+	// 如果没有任务统计数据，返回空数组而不是 nil
 	if len(taskStats) == 0 {
-		statistic.WayCateData = wayCateData
+		fmt.Println("[DEBUG] send_stats 表中没有任务统计数据")
+		statistic.WayCateData = []WayCateData{}
 		return statistic, nil
 	}
 
-	// 第二步：收集所有任务ID
-	taskIDs := make([]string, 0, len(taskStats))
-	taskNumMap := make(map[string]int64)
+	// 第二步：分别收集任务ID和模板ID
+	taskIDs := make([]string, 0)
+	templateIDs := make([]string, 0)
+	taskNumMap := make(map[string]int64) // key: task_id 或 template_id
+
 	for _, stat := range taskStats {
-		taskIDs = append(taskIDs, stat.TaskID)
+		if stat.TaskType == "template" {
+			templateIDs = append(templateIDs, stat.TaskID)
+		} else {
+			taskIDs = append(taskIDs, stat.TaskID)
+		}
 		taskNumMap[stat.TaskID] = stat.Num
 	}
 
-	// 第三步：查询这些任务关联的渠道信息
-	var taskWays []struct {
-		TaskID  string
-		WayID   string
-		WayName string
-	}
+	fmt.Printf("[DEBUG] 任务IDs: %+v, 模板IDs: %+v\n", taskIDs, templateIDs)
 
-	db.
-		Table(insTable).
-		Select(fmt.Sprintf("%s.task_id, %s.way_id, %s.name as way_name", insTable, insTable, waysTable)).
-		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
-		Where(fmt.Sprintf("%s.task_id IN ?", insTable), taskIDs).
-		Group(fmt.Sprintf("%s.task_id, %s.way_id, %s.name", insTable, insTable, waysTable)).
-		Scan(&taskWays)
-
-	// 第四步：按渠道聚合统计
+	// 第三步：查询渠道信息（分别查询任务和模板）
 	wayCountMap := make(map[string]int64)
-	for _, tw := range taskWays {
-		if num, exists := taskNumMap[tw.TaskID]; exists {
-			wayCountMap[tw.WayName] += num
+
+	// 查询任务关联的渠道
+	if len(taskIDs) > 0 {
+		var taskWays []struct {
+			TaskID  string
+			WayName string
+		}
+
+		err = db.
+			Table(insTable).
+			Select(fmt.Sprintf("%s.task_id, %s.name as way_name", insTable, waysTable)).
+			Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
+			Where(fmt.Sprintf("%s.task_id IN ?", insTable), taskIDs).
+			Scan(&taskWays).Error
+
+		if err != nil {
+			fmt.Printf("[DEBUG] 查询任务渠道关联失败: %v\n", err)
+		} else {
+			fmt.Printf("[DEBUG] 任务渠道关联查询结果: %+v\n", taskWays)
+			for _, tw := range taskWays {
+				if num, exists := taskNumMap[tw.TaskID]; exists {
+					wayCountMap[tw.WayName] += num
+				}
+			}
 		}
 	}
 
-	// 第五步：转换为返回格式
+	// 查询模板关联的渠道
+	if len(templateIDs) > 0 {
+		var templateWays []struct {
+			TemplateID string
+			WayName    string
+		}
+
+		err = db.
+			Table(insTable).
+			Select(fmt.Sprintf("%s.template_id, %s.name as way_name", insTable, waysTable)).
+			Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
+			Where(fmt.Sprintf("%s.template_id IN ?", insTable), templateIDs).
+			Scan(&templateWays).Error
+
+		if err != nil {
+			fmt.Printf("[DEBUG] 查询模板渠道关联失败: %v\n", err)
+		} else {
+			fmt.Printf("[DEBUG] 模板渠道关联查询结果: %+v\n", templateWays)
+			for _, tw := range templateWays {
+				if num, exists := taskNumMap[tw.TemplateID]; exists {
+					wayCountMap[tw.WayName] += num
+				}
+			}
+		}
+	}
+
+	fmt.Printf("[DEBUG] 渠道统计结果: %+v\n", wayCountMap)
+
+	// 第四步：转换为返回格式
 	for wayName, count := range wayCountMap {
 		wayCateData = append(wayCateData, WayCateData{
 			WayName:  wayName,
 			CountNum: int(count),
 		})
+	}
+
+	// 确保返回空数组而不是 nil
+	if len(wayCateData) == 0 {
+		wayCateData = []WayCateData{}
 	}
 
 	statistic.WayCateData = wayCateData

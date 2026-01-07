@@ -53,6 +53,10 @@ docker-compose up -d
 
 ### 使用 MySQL
 
+::: warning 重要
+使用 MySQL 时必须指定 `DB_TYPE=mysql` 环境变量，否则会默认使用 SQLite。
+:::
+
 创建 `docker-compose.yml`：
 
 ```yaml
@@ -68,6 +72,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - DB_TYPE=mysql
       - MYSQL_HOST=192.168.64.133
       - MYSQL_PORT=3308
       - MYSQL_USER=root
@@ -134,6 +139,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - DB_TYPE=mysql
       - MYSQL_HOST=mysql
       - MYSQL_PORT=3306
       - MYSQL_USER=root
