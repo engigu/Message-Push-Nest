@@ -369,15 +369,11 @@ func GetChannelStatisticData() (ChannelStatisticData, error) {
 		Scan(&taskStats).Error
 
 	if err != nil {
-		fmt.Printf("[DEBUG] 查询 send_stats 表失败: %v\n", err)
 		return statistic, err
 	}
 
-	fmt.Printf("[DEBUG] send_stats 查询结果: %+v\n", taskStats)
-
 	// 如果没有任务统计数据，返回空数组而不是 nil
 	if len(taskStats) == 0 {
-		fmt.Println("[DEBUG] send_stats 表中没有任务统计数据")
 		statistic.WayCateData = []WayCateData{}
 		return statistic, nil
 	}
@@ -396,8 +392,6 @@ func GetChannelStatisticData() (ChannelStatisticData, error) {
 		taskNumMap[stat.TaskID] = stat.Num
 	}
 
-	fmt.Printf("[DEBUG] 任务IDs: %+v, 模板IDs: %+v\n", taskIDs, templateIDs)
-
 	// 第三步：查询渠道信息（分别查询任务和模板）
 	wayCountMap := make(map[string]int64)
 
@@ -415,10 +409,7 @@ func GetChannelStatisticData() (ChannelStatisticData, error) {
 			Where(fmt.Sprintf("%s.task_id IN ?", insTable), taskIDs).
 			Scan(&taskWays).Error
 
-		if err != nil {
-			fmt.Printf("[DEBUG] 查询任务渠道关联失败: %v\n", err)
-		} else {
-			fmt.Printf("[DEBUG] 任务渠道关联查询结果: %+v\n", taskWays)
+		if err == nil {
 			for _, tw := range taskWays {
 				if num, exists := taskNumMap[tw.TaskID]; exists {
 					wayCountMap[tw.WayName] += num
@@ -441,10 +432,7 @@ func GetChannelStatisticData() (ChannelStatisticData, error) {
 			Where(fmt.Sprintf("%s.template_id IN ?", insTable), templateIDs).
 			Scan(&templateWays).Error
 
-		if err != nil {
-			fmt.Printf("[DEBUG] 查询模板渠道关联失败: %v\n", err)
-		} else {
-			fmt.Printf("[DEBUG] 模板渠道关联查询结果: %+v\n", templateWays)
+		if err == nil {
 			for _, tw := range templateWays {
 				if num, exists := taskNumMap[tw.TemplateID]; exists {
 					wayCountMap[tw.WayName] += num
@@ -452,8 +440,6 @@ func GetChannelStatisticData() (ChannelStatisticData, error) {
 			}
 		}
 	}
-
-	fmt.Printf("[DEBUG] 渠道统计结果: %+v\n", wayCountMap)
 
 	// 第四步：转换为返回格式
 	for wayName, count := range wayCountMap {
