@@ -119,6 +119,10 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		_, Msg := app.CommonPlaygroundValid(Config)
 		return Msg, Config
 	}
+	if ins.WayType == constant.MessageTypeTelegram {
+		var Config models.InsTelegramConfig
+		return "", Config
+	}
 	return "未知的渠道的config校验", empty
 }
 

@@ -64,6 +64,7 @@ const (
 	MessageTypeWeChatOFAccount = "WeChatOFAccount"
 	MessageTypeMessageNest     = "MessageNest"
 	MessageTypeAliyunSMS       = "AliyunSMS"
+	MessageTypeTelegram        = "Telegram"
 )
 
 // 限制goroutine的最大数量

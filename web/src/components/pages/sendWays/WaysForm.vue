@@ -338,8 +338,8 @@ const saveButtonText = computed(() => {
                   <span
                     class="cursor-help inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-300 hover:border-gray-400 text-xs">?</span>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p class="text-sm">{{ currentChannelConfig.tips.desc }}</p>
+                <TooltipContent class="max-w-md">
+                  <div class="text-sm" v-html="currentChannelConfig.tips.desc"></div>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

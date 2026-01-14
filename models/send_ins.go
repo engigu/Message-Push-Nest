@@ -51,6 +51,10 @@ type InsAliyunSMSConfig struct {
 	TemplateCode string `json:"template_code" validate:"required" label:"短信模板CODE"`
 }
 
+// InsTelegramConfig 实例里面的Telegram config
+type InsTelegramConfig struct {
+}
+
 // ManyAddTaskIns 批量添加实例
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()

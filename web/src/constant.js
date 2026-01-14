@@ -180,6 +180,28 @@ const CONSTANT = {
                 { value: '', col: 'template_code', desc: "短信模板CODE（在阿里云短信控制台获取）", label: '短信模板CODE' },
             ],
         },
+        {
+            type: 'Telegram',
+            label: 'Telegram机器人',
+            inputs: [
+                { subLabel: 'Bot Token', value: '', col: 'bot_token', desc: "Telegram Bot Token" },
+                { subLabel: 'Chat ID', value: '', col: 'chat_id', desc: "接收消息的Chat ID或User ID" },
+                { subLabel: '自定义API地址', value: '', col: 'api_host', desc: "可选，自定义Telegram API地址（优先级最高）" },
+                { subLabel: '代理地址', value: '', col: 'proxy_url', desc: "可选，支持 HTTP/HTTPS/SOCKS5 代理" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "Telegram机器人说明", 
+                desc: "使用Telegram Bot发送消息。<br />1. 通过 @BotFather 创建机器人获取Bot Token<br />2. Chat ID可以是用户ID、群组ID或频道ID<br />3. <strong>代理配置说明：</strong><br />&nbsp;&nbsp;• <strong>自定义API地址</strong>（优先级最高）：适用于自建代理服务器，如 https://api.example.com<br />&nbsp;&nbsp;• <strong>代理地址</strong>（优先级较低）：支持以下格式<br />&nbsp;&nbsp;&nbsp;&nbsp;- HTTP代理：http://127.0.0.1:7890<br />&nbsp;&nbsp;&nbsp;&nbsp;- HTTPS代理：https://proxy.example.com:8080<br />&nbsp;&nbsp;&nbsp;&nbsp;- SOCKS5代理：socks5://127.0.0.1:1080<br />&nbsp;&nbsp;&nbsp;&nbsp;- 带认证的SOCKS5：socks5://user:pass@host:1080<br />&nbsp;&nbsp;• 如果同时配置，将优先使用自定义API地址，代理地址会被忽略"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+                { subLabel: 'markdown', content: 'markdown' },
+                { subLabel: 'html', content: 'html' },
+            ],
+            taskInsInputs: [
+            ],
+        },
     ],
     API_VIEW_DATA: [
         { label: "curl", class: "language-shell line-numbers", code: "", func: ApiStrGenerate.getCurlString },

@@ -18,6 +18,7 @@ const (
 	MessageTypeWeChatOFAccount = constant.MessageTypeWeChatOFAccount
 	MessageTypeMessageNest     = constant.MessageTypeMessageNest
 	MessageTypeAliyunSMS       = constant.MessageTypeAliyunSMS
+	MessageTypeTelegram        = constant.MessageTypeTelegram
 )
 
 // UnifiedMessageContent 统一的消息内容结构

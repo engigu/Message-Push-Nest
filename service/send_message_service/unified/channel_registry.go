@@ -26,6 +26,7 @@ const (
 	MessageTypeWeChatOFAccount = channels.MessageTypeWeChatOFAccount
 	MessageTypeMessageNest     = channels.MessageTypeMessageNest
 	MessageTypeAliyunSMS       = channels.MessageTypeAliyunSMS
+	MessageTypeTelegram        = channels.MessageTypeTelegram
 )
 
 // ChannelRegistry 渠道注册表
@@ -99,6 +100,7 @@ func GetGlobalChannelRegistry() *ChannelRegistry {
 		globalChannelRegistry.Register(channels.NewWeChatOFAccountChannel())
 		globalChannelRegistry.Register(channels.NewMessageNestChannel())
 		globalChannelRegistry.Register(channels.NewAliyunSMSChannel())
+		globalChannelRegistry.Register(channels.NewTelegramChannel())
 	})
 	return globalChannelRegistry
 }

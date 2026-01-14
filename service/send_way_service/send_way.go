@@ -45,6 +45,7 @@ var (
 		constant.MessageTypeWeChatOFAccount: func() WayValidator { return &WeChatOFAccount{} },
 		constant.MessageTypeMessageNest:     func() WayValidator { return &MessageNest{} },
 		constant.MessageTypeAliyunSMS:       func() WayValidator { return &WayDetailAliyunSMS{} },
+		constant.MessageTypeTelegram:        func() WayValidator { return &WayDetailTelegram{} },
 	}
 	testerRegistry = map[string]func(interface{}) WayTester{
 		constant.MessageTypeEmail:           func(m interface{}) WayTester { return m.(*WayDetailEmail) },
@@ -55,6 +56,7 @@ var (
 		constant.MessageTypeWeChatOFAccount: func(m interface{}) WayTester { return m.(*WeChatOFAccount) },
 		constant.MessageTypeMessageNest:     func(m interface{}) WayTester { return m.(*MessageNest) },
 		constant.MessageTypeAliyunSMS:       func(m interface{}) WayTester { return m.(*WayDetailAliyunSMS) },
+		constant.MessageTypeTelegram:        func(m interface{}) WayTester { return m.(*WayDetailTelegram) },
 	}
 )
 
@@ -249,6 +251,39 @@ func (w *MessageNest) Validate(authJson string) (string, interface{}) {
 
 func (w *MessageNest) Test() (string, string) {
 	return "自托管消息不用测试运行，请直接添加", ""
+}
+
+// WayDetailTelegram Telegram机器人渠道明细字段
+type WayDetailTelegram struct {
+	BotToken string `json:"bot_token" validate:"required,max=100" label:"Telegram Bot Token"`
+	ChatID   string `json:"chat_id" validate:"required,max=50" label:"Chat ID"`
+	ApiHost  string `json:"api_host" validate:"max=200" label:"自定义API地址"`
+	ProxyURL string `json:"proxy_url" validate:"max=200" label:"代理地址"`
+}
+
+func (w *WayDetailTelegram) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "Telegram参数反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, w
+}
+
+func (w *WayDetailTelegram) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var cli = message.Telegram{
+		BotToken: w.BotToken,
+		ChatID:   w.ChatID,
+		ApiHost:  w.ApiHost,
+		ProxyURL: w.ProxyURL,
+	}
+	res, err := cli.SendMessageText(testMsg)
+	if err != nil {
+		return fmt.Sprintf("发送失败：%s", err), string(res)
+	}
+	return "", string(res)
 }
 
 func (sw *SendWay) GetByID() (interface{}, error) {
