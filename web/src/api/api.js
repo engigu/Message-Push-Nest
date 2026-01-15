@@ -10,8 +10,13 @@ import { toast } from "vue-sonner"
 
 const ERR_NETWORK = "ERR_NETWORK";
 
+// 获取路径前缀
+const getPathPrefix = () => {
+    return config.pathPrefix || '';
+};
+
 const request = axios.create({
-    baseURL: config.apiUrl,
+    baseURL: config.apiUrl + getPathPrefix(),
     timeout: 50000,
     withCredentials: true,
 });

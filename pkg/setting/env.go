@@ -48,6 +48,7 @@ func loadConfigFromEnv() {
 	ServerSetting.HttpPort = 8000
 	ServerSetting.ReadTimeout = 60
 	ServerSetting.WriteTimeout = 60
+	ServerSetting.UrlPrefix = getOptionEnvValue("URL_PREFIX", "")
 
 	DatabaseSetting.Type = getOptionEnvValue("DB_TYPE", "sqlite")
 	DatabaseSetting.Ssl = getOptionEnvValue("SSL", "false")

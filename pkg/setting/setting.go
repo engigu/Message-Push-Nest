@@ -25,6 +25,7 @@ type Server struct {
 	WriteTimeout time.Duration
 
 	EmbedHtml string
+	UrlPrefix string
 }
 
 var ServerSetting = &Server{}

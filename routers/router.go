@@ -2,7 +2,9 @@ package routers
 
 import (
 	"embed"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"io"
 	"io/fs"
 	"message-nest/middleware"
 	"message-nest/pkg/setting"
@@ -10,6 +12,7 @@ import (
 	"message-nest/routers/api/v1"
 	"message-nest/routers/api/v2"
 	"net/http"
+	"strings"
 )
 
 // AppendCors 添加是否跨域（debug模式开启）
@@ -19,22 +22,62 @@ func AppendCors(app *gin.Engine) {
 	}
 }
 
-// AppendServerStaticHtml 启用返回打包的静态文件
-func AppendServerStaticHtml(app *gin.Engine, f embed.FS) {
+// AppendServerStaticHtmlWithPrefix 启用返回打包的静态文件（支持路径前缀）
+func AppendServerStaticHtmlWithPrefix(router gin.IRouter, f embed.FS, pathPrefix string) {
 	if setting.ServerSetting.EmbedHtml == "disable" {
 		return
 	}
 
-	app.Use(middleware.StaticCacheMiddleware())
-
 	assets, _ := fs.Sub(f, "web/dist/assets")
 	dist, _ := fs.Sub(f, "web/dist")
 
-	app.StaticFS("assets/", http.FS(assets))
-	app.GET("/", func(ctx *gin.Context) {
-		ctx.FileFromFS("/", http.FS(dist))
-	})
+	// 根据是否有路径前缀来设置静态文件路由
+	if pathPrefix != "" {
+		// 有路径前缀时，使用相对路径
+		if r, ok := router.(*gin.RouterGroup); ok {
+			r.Use(middleware.StaticCacheMiddleware())
+			r.StaticFS("/assets", http.FS(assets))
+			r.GET("/", func(ctx *gin.Context) {
+				// 读取 index.html
+				indexFile, err := dist.Open("index.html")
+				if err != nil {
+					ctx.String(http.StatusInternalServerError, "Failed to load index.html")
+					return
+				}
+				defer indexFile.Close()
 
+				// 读取文件内容
+				content, err := io.ReadAll(indexFile)
+				if err != nil {
+					ctx.String(http.StatusInternalServerError, "Failed to read index.html")
+					return
+				}
+
+				// 注入配置脚本
+				configScript := fmt.Sprintf(`<script>window.__URL_PATH_PREFIX__ = '%s';</script>`, pathPrefix)
+				htmlContent := string(content)
+				// 在 </head> 标签前注入配置
+				htmlContent = strings.Replace(htmlContent, "</head>", configScript+"</head>", 1)
+
+				ctx.Header("Content-Type", "text/html; charset=utf-8")
+				ctx.String(http.StatusOK, htmlContent)
+			})
+		}
+	} else {
+		// 无路径前缀时，使用原有逻辑
+		if r, ok := router.(*gin.Engine); ok {
+			r.Use(middleware.StaticCacheMiddleware())
+			r.StaticFS("assets/", http.FS(assets))
+			r.GET("/", func(ctx *gin.Context) {
+				ctx.FileFromFS("/", http.FS(dist))
+			})
+		}
+	}
+}
+
+// AppendServerStaticHtml 启用返回打包的静态文件（保留向后兼容）
+func AppendServerStaticHtml(app *gin.Engine, f embed.FS) {
+	AppendServerStaticHtmlWithPrefix(app, f, "")
 }
 
 // InitRouter 初始化路由
@@ -44,10 +87,25 @@ func InitRouter(f embed.FS) *gin.Engine {
 	app.Use(gin.Recovery())
 
 	AppendCors(app)
-	AppendServerStaticHtml(app, f)
+	
+	// 获取 URL 前缀
+	pathPrefix := setting.ServerSetting.UrlPrefix
+	if pathPrefix != "" && pathPrefix[0] != '/' {
+		pathPrefix = "/" + pathPrefix
+	}
+	
+	// 如果有路径前缀，创建路由组
+	var router gin.IRouter
+	if pathPrefix != "" {
+		router = app.Group(pathPrefix)
+	} else {
+		router = app
+	}
+	
+	AppendServerStaticHtmlWithPrefix(router, f, pathPrefix)
 
-	app.POST("/auth", api.GetAuth)
-	apiV1 := app.Group("/api/v1")
+	router.POST("/auth", api.GetAuth)
+	apiV1 := router.Group("/api/v1")
 	apiV1.Use(middleware.JWT())
 	{
 		// sendways
@@ -115,7 +173,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 	}
 
 	// API v2
-	apiV2 := app.Group("/api/v2")
+	apiV2 := router.Group("/api/v2")
 	apiV2.Use(middleware.JWT())
 	{
 		// message/send - 使用模板发送消息
