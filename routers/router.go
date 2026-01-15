@@ -53,9 +53,15 @@ func AppendServerStaticHtmlWithPrefix(router gin.IRouter, f embed.FS, pathPrefix
 					return
 				}
 
-				// 注入配置脚本
-				configScript := fmt.Sprintf(`<script>window.__URL_PATH_PREFIX__ = '%s';</script>`, pathPrefix)
 				htmlContent := string(content)
+				
+				// 注入 base 标签和配置脚本
+				// base 标签必须在 head 的最前面，确保所有相对路径都基于这个 base
+				baseTag := fmt.Sprintf(`<base href="%s/">`, pathPrefix)
+				configScript := fmt.Sprintf(`<script>window.__URL_PATH_PREFIX__ = '%s';</script>`, pathPrefix)
+				
+				// 在 <head> 标签后立即插入 base 标签
+				htmlContent = strings.Replace(htmlContent, "<head>", "<head>"+baseTag, 1)
 				// 在 </head> 标签前注入配置
 				htmlContent = strings.Replace(htmlContent, "</head>", configScript+"</head>", 1)
 
