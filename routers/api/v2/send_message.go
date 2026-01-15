@@ -18,6 +18,7 @@ type SendMessageByTemplateReq struct {
 	Token        string                 `json:"token" validate:"required" label:"模板token"`
 	Title        string                 `json:"title" validate:"required" label:"消息标题"`
 	Placeholders map[string]interface{} `json:"placeholders" label:"占位符"`
+	Recipients   []string               `json:"recipients" label:"接收者列表"`
 }
 
 // DoSendMessageByTemplate 使用模板发送消息
@@ -111,6 +112,7 @@ func DoSendMessageByTemplate(c *gin.Context) {
 		AtMobiles:  atMobiles,
 		AtUserIds:  atUserIds,
 		AtAll:      template.IsAtAll,
+		Recipients: req.Recipients, // 动态接收者列表
 		DefaultLogger: logrus.WithFields(logrus.Fields{
 			"prefix": "[Template Send]",
 		}),

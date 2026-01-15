@@ -261,6 +261,11 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 		// 处理动态接收者（邮箱、微信公众号等支持群发的渠道）
 		isDynamicMode := sm.isDynamicRecipientMode(ins.SendTasksIns)
 
+		// 检查：如果提供了recipients但实例未启用动态模式，给出提示
+		if !isDynamicMode && sm.supportsDynamicRecipient(way.Type) && len(sm.Recipients) > 0 {
+			sm.LogsAndStatusMark(fmt.Sprintf("警告：提供了 %d 个接收者，但实例未启用动态接收模式（allowMultiRecip=true），将使用实例配置的固定接收者", len(sm.Recipients)), sm.Status)
+		}
+
 		if isDynamicMode && sm.supportsDynamicRecipient(way.Type) && len(sm.Recipients) > 0 {
 			// 动态接收模式：使用API传入的Recipients列表（群发）
 			sm.LogsAndStatusMark(fmt.Sprintf("动态接收模式[共 %d 个接收者]", len(sm.Recipients)), sm.Status)

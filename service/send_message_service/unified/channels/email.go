@@ -28,6 +28,11 @@ func (c *EmailChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, 
 	if !ok {
 		return "", "邮箱config校验失败"
 	}
+
+	if config.ToAccount == "" {
+		return "", "收件邮箱地址为空，请检查实例配置或启用动态接收模式"
+	}
+
 	contentType, formattedContent, err := c.FormatContent(content)
 	if err != nil {
 		return "", err.Error()

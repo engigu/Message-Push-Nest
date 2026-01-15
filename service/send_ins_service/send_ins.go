@@ -29,20 +29,24 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		if err != nil {
 			return "邮箱auth反序列化失败！", empty
 		}
-		
+
 		// 检查是否为动态接收者模式
 		var configMap map[string]interface{}
 		json.Unmarshal([]byte(ins.Config), &configMap)
 		allowMultiRecip, exists := configMap["allowMultiRecip"].(bool)
-		
-		// allowMultiRecip=true为动态模式，to_account可以为空
-		// 历史数据（不存在allowMultiRecip字段）默认为固定模式
-		if exists && allowMultiRecip && emailConfig.ToAccount == "" {
-			// 动态模式，不验证to_account
-			return "", emailConfig
+
+		// allowMultiRecip=true为动态模式，to_account可以为空（但如果有值也要验证格式）
+		if exists && allowMultiRecip {
+			// 动态模式：如果to_account为空，直接返回；如果有值，验证邮箱格式
+			if emailConfig.ToAccount == "" {
+				return "", emailConfig
+			}
+			// 有to_account值时，验证邮箱格式
+			_, Msg := app.CommonPlaygroundValid(emailConfig)
+			return Msg, emailConfig
 		}
-		
-		// 固定模式或有to_account时，进行常规验证
+
+		// 固定模式：必须验证to_account
 		_, Msg := app.CommonPlaygroundValid(emailConfig)
 		return Msg, emailConfig
 	}
@@ -77,19 +81,19 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		if err != nil {
 			return "微信公众号发送配置反序列化失败！", empty
 		}
-		
+
 		// 检查是否为动态接收者模式
 		var configMap map[string]interface{}
 		json.Unmarshal([]byte(ins.Config), &configMap)
 		allowMultiRecip, exists := configMap["allowMultiRecip"].(bool)
-		
+
 		// allowMultiRecip=true为动态模式，to_account可以为空
 		// 历史数据（不存在allowMultiRecip字段）默认为固定模式
 		if exists && allowMultiRecip && Config.ToAccount == "" {
 			// 动态模式，不验证to_account
 			return "", Config
 		}
-		
+
 		// 固定模式或有to_account时，进行常规验证
 		_, Msg := app.CommonPlaygroundValid(Config)
 		return Msg, Config
@@ -100,12 +104,12 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		if err != nil {
 			return "阿里云短信配置反序列化失败！", empty
 		}
-		
+
 		// 检查是否为动态接收者模式
 		var configMap map[string]interface{}
 		json.Unmarshal([]byte(ins.Config), &configMap)
 		allowMultiRecip, exists := configMap["allowMultiRecip"].(bool)
-		
+
 		// allowMultiRecip=true为动态模式，phone_number可以为空，但template_code仍需验证
 		if exists && allowMultiRecip && Config.PhoneNumber == "" {
 			// 动态模式，只验证template_code
@@ -114,7 +118,7 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 			}
 			return "", Config
 		}
-		
+
 		// 固定模式或有phone_number时，进行常规验证
 		_, Msg := app.CommonPlaygroundValid(Config)
 		return Msg, Config
