@@ -15,6 +15,8 @@ import { defineConfig } from 'vite'
 
 export default defineConfig(() => {
   return {
+    // 使用相对路径，这样可以在任何路径下部署
+    base: './',
     plugins: [vue(), tailwindcss()],
     resolve: {
       alias: {
