@@ -8,10 +8,9 @@
 
 ## 镜像源
 
-Message Nest 提供两个镜像源：
+Message Nest 使用 GitHub Container Registry 托管镜像：
 
-- **GitHub Container Registry (推荐)**: `ghcr.io/engigu/message-nest:latest`
-- **Docker Hub (备选)**: `engigu/message-nest:latest`
+- **镜像地址**: `ghcr.io/engigu/message-nest:latest`
 
 ## 方式一：挂载配置文件
 
@@ -54,39 +53,23 @@ Docker模式下，配置文件中的端口只能为8000，通过 `-p` 参数映�
 ### 2. 拉取镜像
 
 ```bash
-# 从 GitHub Container Registry (GHCR) 拉取（推荐）
 docker pull ghcr.io/engigu/message-nest:latest
-
-# 或从 Docker Hub 拉取
-docker pull engigu/message-nest:latest
 ```
 
 ### 3. 启动容器
 
 ```bash
-# 测试运行（GHCR 镜像，推荐）
+# 测试运行
 docker run --rm -ti \
   -p 8000:8000 \
   -v /your/path/conf:/app/conf \
   ghcr.io/engigu/message-nest:latest 
-
-# 测试运行（Docker Hub 镜像）
-docker run --rm -ti \
-  -p 8000:8000 \
-  -v /your/path/conf:/app/conf \
-  engigu/message-nest:latest 
   
-# 正式运行（GHCR 镜像，推荐）
+# 正式运行
 docker run -d \
   -p 8000:8000 \
   -v /your/path/conf:/app/conf \
   ghcr.io/engigu/message-nest:latest 
-
-# 正式运行（Docker Hub 镜像）
-docker run -d \
-  -p 8000:8000 \
-  -v /your/path/conf:/app/conf \
-  engigu/message-nest:latest 
 ```
 
 ## 方式二：环境变量（推荐）
@@ -119,7 +102,6 @@ docker run -d \
 :::
 
 ```bash
-# 正式运行（GHCR 镜像，推荐）
 docker run -d  \
   -p 8000:8000 \
   -e DB_TYPE=mysql \
@@ -131,37 +113,16 @@ docker run -d  \
   -e MYSQL_TABLE_PREFIX=message_ \
   --name message-nest  \
   ghcr.io/engigu/message-nest:latest 
-
-# 或使用 Docker Hub 镜像
-docker run -d  \
-  -p 8000:8000 \
-  -e DB_TYPE=mysql \
-  -e MYSQL_HOST=192.168.64.133  \
-  -e MYSQL_PORT=3308 \
-  -e MYSQL_USER=root \
-  -e MYSQL_PASSWORD=Aa123456 \
-  -e MYSQL_DB=test_11 \
-  -e MYSQL_TABLE_PREFIX=message_ \
-  --name message-nest  \
-  engigu/message-nest:latest 
 ```
 
 ### 使用 SQLite
 
 ```bash
-# 正式运行（GHCR 镜像，推荐）
 docker run -d  \
   -p 8000:8000 \
   -v /your/path/database.db:/app/conf/database.db  \
   --name message-nest  \
   ghcr.io/engigu/message-nest:latest 
-
-# 或使用 Docker Hub 镜像
-docker run -d  \
-  -p 8000:8000 \
-  -v /your/path/database.db:/app/conf/database.db  \
-  --name message-nest  \
-  engigu/message-nest:latest 
 ```
 
 ## 访问服务
