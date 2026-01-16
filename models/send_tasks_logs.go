@@ -318,13 +318,16 @@ func GetBasicStatisticData() (BasicStatisticData, error) {
 }
 
 // GetTrendStatisticData 获取趋势统计数据（使用 send_stats 表）
-func GetTrendStatisticData() (TrendStatisticData, error) {
+func GetTrendStatisticData(days int) (TrendStatisticData, error) {
 	var statistic TrendStatisticData
 	var latestData []LatestSendData
 	statsTable := GetSchema(SendStats{})
 
-	// 最近30天数据
-	days := 30
+	// 默认30天，如果传入参数则使用参数值
+	if days <= 0 {
+		days = 30
+	}
+	
 	now := util.GetNowTime()
 	past := now.AddDate(0, 0, -days)
 	pastDate := past.Format("2006-01-02")

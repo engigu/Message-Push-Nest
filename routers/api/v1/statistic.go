@@ -6,6 +6,7 @@ import (
 	"message-nest/pkg/app"
 	"message-nest/service/statistic_service"
 	"net/http"
+	"strconv"
 )
 
 // GetStatisticData 获取发送统计数据
@@ -28,6 +29,15 @@ func GetStatisticData(c *gin.Context) {
 		}
 		appG.CResponse(http.StatusOK, "获取基础统计成功", data)
 	case "trend":
+		// 获取 days 参数，默认30天
+		days := 30
+		if daysParam := c.Query("days"); daysParam != "" {
+			if d, err := strconv.Atoi(daysParam); err == nil && d > 0 {
+				days = d
+			}
+		}
+		
+		msgService.Days = days
 		data, err := msgService.GetTrendStatisticData()
 		if err != nil {
 			appG.CResponse(http.StatusInternalServerError, fmt.Sprintf("获取趋势统计失败！原因：%s", err), nil)

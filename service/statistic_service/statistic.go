@@ -20,7 +20,11 @@ func (sw *StatisticService) GetBasicStatisticData() (models.BasicStatisticData, 
 
 // GetTrendStatisticData 获取趋势统计数据
 func (sw *StatisticService) GetTrendStatisticData() (models.TrendStatisticData, error) {
-	return models.GetTrendStatisticData()
+	days := sw.Days
+	if days <= 0 {
+		days = 30 // 默认30天
+	}
+	return models.GetTrendStatisticData(days)
 }
 
 // GetChannelStatisticData 获取渠道统计数据

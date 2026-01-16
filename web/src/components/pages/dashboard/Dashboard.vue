@@ -63,7 +63,11 @@ const getBasicStatisticData = async () => {
 const getTrendStatisticData = async () => {
   state.loading.trend = true;
   try {
-    const rsp = await request.get('/statistic?type=trend');
+    // 根据屏幕大小决定请求的天数
+    const isSmallScreen = window.innerWidth < 768;
+    const days = isSmallScreen ? 15 : 30;
+    
+    const rsp = await request.get(`/statistic?type=trend&days=${days}`);
     if (rsp && rsp.data && rsp.data.code == 200) {
       state.trendData = rsp.data.data;
       // 数据加载完成后重新渲染折线图
@@ -112,6 +116,7 @@ const loadAllStatisticData = async () => {
 
 const renderLineChart = () => {
   const latestSendData = state.trendData.latest_send_data || [];
+  
   const options = {
     series: [
       {
@@ -321,8 +326,10 @@ const renderLineChart = () => {
           height: 300
         },
         legend: {
-          position: 'bottom',
-          offsetY: 0
+          position: 'top',
+          horizontalAlign: 'center',
+          offsetY: 0,
+          offsetX: 0
         }
       }
     }]
