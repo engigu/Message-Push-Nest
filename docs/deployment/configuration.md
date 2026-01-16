@@ -8,6 +8,8 @@ JwtSecret = message-nest
 ; 暂时无用
 RuntimeRootPath = runtime/
 LogLevel = INFO
+; 首次运行时初始化数据，设置为enable启用
+; InitData = enable
 
 [server]
 ; debug or release
@@ -20,7 +22,9 @@ WriteTimeout = 60
 ; 是否使用embed打包的静态资源
 ; 如果运行release打包后的应用，请注释这个设置。
 ; 如果取消这个注释，只会单独运行api服务，前端页面需要到web目录手动npm run dev, 运行前端服务
-; EmbedHtml = disable   
+; EmbedHtml = disable
+; URL路径前缀，用于子路径部署，如：/message
+; UrlPrefix = /message
 
 [database]
 ; 配置使用什么数据库，支持：mysql、sqlite、tidb
@@ -48,6 +52,7 @@ Ssl = true
 | JwtSecret | JWT密钥，用于token生成 | message-nest |
 | RuntimeRootPath | 运行时根路径（暂时无用） | runtime/ |
 | LogLevel | 日志级别：DEBUG/INFO/ERROR | INFO |
+| InitData | 首次运行时初始化数据，设置为enable启用 | - |
 
 ### [server] 服务器配置
 
@@ -58,6 +63,7 @@ Ssl = true
 | ReadTimeout | 读取超时时间（秒） | 60 |
 | WriteTimeout | 写入超时时间（秒） | 60 |
 | EmbedHtml | 是否使用embed打包的静态资源，注释则启用单应用模式 | - |
+| UrlPrefix | URL路径前缀，用于子路径部署，如：/message | - |
 
 ### [database] 数据库配置
 
@@ -82,6 +88,7 @@ Ssl = true
 | JWT_SECRET | jwt秘钥，可选，默认为message-nest |
 | LOG_LEVEL | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR |
 | RUN_MODE | 运行模式，可选，默认release，为debug将自动添加跨域 |
+| URL_PREFIX | URL路径前缀，用于子路径部署，如：/message |
 | DB_TYPE | 数据库类型，sqlite/mysql。默认为sqlite,存储路径为conf/database.db |
 | MYSQL_HOST | mysql-host，DB_TYPE=mysql必填 |
 | MYSQL_PORT | mysql端口，DB_TYPE=mysql必填 |

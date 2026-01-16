@@ -29,8 +29,12 @@ RunMode = release
 HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60
-; 注释EmbedHtml，启用单应用模式
+; 是否使用embed打包的静态资源
+; 如果运行release打包后的应用，请注释这个设置。
+; 如果取消这个注释，只会单独运行api服务，前端页面需要到web目录手动npm run dev, 运行前端服务
 ; EmbedHtml = disable
+; URL路径前缀，用于子路径部署，如：/message
+; UrlPrefix = /message
 
 [database]
 ; 关闭SQL打印
@@ -85,6 +89,7 @@ docker run -d \
 | JWT_SECRET | jwt秘钥，可选，默认为message-nest |
 | LOG_LEVEL | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR |
 | RUN_MODE | 运行模式，可选，默认release，为debug将自动添加跨域 |
+| URL_PREFIX | URL路径前缀，用于子路径部署，如：/message |
 | DB_TYPE | 数据库类型，sqlite/mysql。默认为sqlite,存储路径为conf/database.db |
 | MYSQL_HOST | mysql-host，DB_TYPE=mysql必填 |
 | MYSQL_PORT | mysql端口，DB_TYPE=mysql必填 |
