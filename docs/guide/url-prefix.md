@@ -54,23 +54,6 @@ http://localhost:8000/message/api/v1/sendways/list
 - API 请求会自动添加路径前缀
 - 修改配置后必须重启服务才能生效
 
-## Nginx 反向代理示例
+## Nginx 配置
 
-如果使用 Nginx 反向代理，配置示例：
-
-```nginx
-location /message/ {
-    proxy_pass http://localhost:8000/message/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-```
-
-## 技术实现
-
-- 后端使用 Gin 的路由组（RouterGroup）实现路径前缀
-- 前端使用 Vite 的 `base: './'` 配置生成相对路径
-- 后端在 HTML 中注入 `<base>` 标签和配置脚本
-- 前端 API 请求自动添加路径前缀
+如果使用 Nginx 反向代理，请参考 [Nginx 反向代理配置](/deployment/nginx) 文档。

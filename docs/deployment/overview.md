@@ -49,5 +49,6 @@ Message Nest 支持多种数据库：
 
 - [直接运行](/deployment/direct-run)
 - [开发调试](/deployment/development)
-- [Docker部署](/deployment/docker)
+- [Docker](/deployment/docker)
 - [Docker Compose](/deployment/docker-compose)
+- [Nginx](/deployment/nginx)
