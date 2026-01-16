@@ -1,4 +1,10 @@
-# Message Nest 🕊️ [![Hits](https://hits.sh/github.com/engigu/Message-Push-Nest.svg?view=today-total)](https://hits.sh/github.com/engigu/Message-Push-Nest/)
+# Message Nest 🕊️ 
+
+[![Hits](https://hits.sh/github.com/engigu/Message-Push-Nest.svg?view=today-total)](https://hits.sh/github.com/engigu/Message-Push-Nest/)
+![Latest Version](https://ghcr-badge.egpl.dev/engigu/message-nest/latest_tag?color=%2344cc11&ignore=latest%2Cmain*&label=docker+version&trim=)
+![Image Size](https://ghcr-badge.egpl.dev/engigu/message-nest/size?color=%2344cc11&tag=latest&label=docker+image&trim=)
+![Image pulls](https://img.shields.io/badge/dynamic/json?url=https://ghcr-badge.elias.eu.org/api/engigu/Message-Push-Nest/message-nest&query=downloadCount&style=flat&label=docker%20pulls&color=44cc11)
+
 
 Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化并自定义多种消息通知方式。
 
