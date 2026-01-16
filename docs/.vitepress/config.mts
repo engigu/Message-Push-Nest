@@ -52,8 +52,9 @@ export default defineConfig({
             { text: '部署概览', link: '/deployment/overview' },
             { text: '直接运行', link: '/deployment/direct-run' },
             { text: '开发调试', link: '/deployment/development' },
-            { text: 'Docker部署', link: '/deployment/docker' },
-            { text: 'Docker Compose', link: '/deployment/docker-compose' }
+            { text: 'Docker', link: '/deployment/docker' },
+            { text: 'Docker Compose', link: '/deployment/docker-compose' },
+            { text: 'Nginx', link: '/deployment/nginx' }
           ]
         },
         {
