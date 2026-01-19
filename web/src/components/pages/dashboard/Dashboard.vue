@@ -22,6 +22,7 @@ interface CateData {
 }
 
 let state = reactive({
+  trendDays: 30,
   basicData: {
     message_total_num: 0,
     hosted_message_total_num: 0,
@@ -66,7 +67,8 @@ const getTrendStatisticData = async () => {
     // 根据屏幕大小决定请求的天数
     const isSmallScreen = window.innerWidth < 768;
     const days = isSmallScreen ? 15 : 30;
-    
+    state.trendDays = days;
+
     const rsp = await request.get(`/statistic?type=trend&days=${days}`);
     if (rsp && rsp.data && rsp.data.code == 200) {
       state.trendData = rsp.data.data;
@@ -116,7 +118,7 @@ const loadAllStatisticData = async () => {
 
 const renderLineChart = () => {
   const latestSendData = state.trendData.latest_send_data || [];
-  
+
   const options = {
     series: [
       {
@@ -327,9 +329,20 @@ const renderLineChart = () => {
         },
         legend: {
           position: 'top',
-          horizontalAlign: 'center',
-          offsetY: 0,
-          offsetX: 0
+          horizontalAlign: 'right',
+          floating: true,
+          offsetY: -20,
+          offsetX: -5,
+          fontSize: '10px',
+          markers: {
+            width: 6,
+            height: 6,
+            radius: 3
+          },
+          itemMargin: {
+            horizontal: 5,
+            vertical: 0
+          }
         }
       }
     }]
@@ -443,41 +456,16 @@ onMounted(() => {
 <template>
   <div class="w-[90%] mx-auto pt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-5 gap-4">
 
-    <StatCard 
-      title="托管消息数" 
-      :value="state.basicData.hosted_message_total_num" 
-      description="" 
-      :icon="InboxIcon" 
-      route-path="/hostedmessage" 
-    />
-    <StatCard 
-      title="发送日志数" 
-      :value="state.basicData.message_total_num" 
-      description="" 
-      :icon="FileTextIcon" 
-      route-path="/sendlogs" 
-    />
-    <StatCard 
-      title="今日发送数" 
-      :value="state.basicData.today_total_num" 
-      description="" 
-      :icon="SendIcon" 
-      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({day_created_on: getTodayDate()}))}`" 
-    />
-    <StatCard 
-      title="今日成功数" 
-      :value="state.basicData.today_succ_num" 
-      description="" 
-      :icon="CheckCircleIcon" 
-      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({status: '1', day_created_on: getTodayDate()}))}`" 
-    />
-    <StatCard 
-      title="今日失败数" 
-      :value="state.basicData.today_failed_num" 
-      description="" 
-      :icon="XCircleIcon" 
-      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({status: '0', day_created_on: getTodayDate()}))}`" 
-    />
+    <StatCard title="托管消息数" :value="state.basicData.hosted_message_total_num" description="" :icon="InboxIcon"
+      route-path="/hostedmessage" />
+    <StatCard title="发送日志数" :value="state.basicData.message_total_num" description="" :icon="FileTextIcon"
+      route-path="/sendlogs" />
+    <StatCard title="今日发送数" :value="state.basicData.today_total_num" description="" :icon="SendIcon"
+      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({ day_created_on: getTodayDate() }))}`" />
+    <StatCard title="今日成功数" :value="state.basicData.today_succ_num" description="" :icon="CheckCircleIcon"
+      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({ status: '1', day_created_on: getTodayDate() }))}`" />
+    <StatCard title="今日失败数" :value="state.basicData.today_failed_num" description="" :icon="XCircleIcon"
+      :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({ status: '0', day_created_on: getTodayDate() }))}`" />
   </div>
 
   <!-- 折线图 -->
@@ -498,7 +486,7 @@ onMounted(() => {
     <Card class="w-full lg:col-span-7">
       <CardHeader>
         <CardTitle>消息发送趋势</CardTitle>
-        <CardDescription>最近30天的发送情况统计</CardDescription>
+        <CardDescription>最近{{ state.trendDays }}天的发送情况统计</CardDescription>
       </CardHeader>
       <CardContent>
         <div id="sales-chart" class="w-full h-[350px]"></div>
