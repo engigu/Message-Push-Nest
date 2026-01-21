@@ -314,6 +314,57 @@ Telegram 支持以下格式：
 4. 在返回的 JSON 中找到 `"chat":{"id":123456789}` 即为 Chat ID
 :::
 
+## Bark 推送
+
+Bark 是一款 iOS 专用的推送软件，通过此渠道您可以将消息推送到您的 iPhone 上。
+
+### 配置步骤
+
+1. **安装 Bark App**
+   - 在 iPhone 上从 App Store 下载安装 [Bark](https://apps.apple.com/cn/app/bark-customed-notifications/id1403753828)
+
+2. **获取 Push Key**
+   - 打开 Bark App，您会看到类似于 `DxHcxxxxxRxxxxxxcm` 的设备 Key
+   - 如果使用自建服务器，请使用完整的服务器地址
+
+3. **在 Message Nest 中配置**
+   - Push Key：填入您的设备 Key 或自建服务器地址
+   - 其他参数（可选）：根据需要填写分组、铃声、图标、时效性等
+
+### 配置参数
+
+| 参数 | 说明 | 必填 | 示例 |
+|------|------|------|------|
+| 渠道名称 | 自定义渠道名称 | 是 | `iPhone通知` |
+| Push Key | 设备 Key 或自建 IP | 是 | `DxHcxxxxxRxxxxxxcm` |
+| 存档 | 是否存档 (1 或 0) | 否 | `1` |
+| 分组 | 推送分组 | 否 | `MessageNest` |
+| 推送声音 | 推送铃声名称 | 否 | `glass` |
+| 推送图标 | 图标 URL | 否 | `https://example.com/icon.png` |
+| 推送时效 | active/timeSensitive/passive | 否 | `active` |
+| 跳转 URL | 点击推送跳转的网址 | 否 | `https://github.com` |
+
+### 消息格式
+
+Bark 支持以下格式：
+- **Text** - 纯文本
+
+### 使用场景
+
+- ✅ 个人即时通知
+- ✅ 监控告警提醒
+- ✅ 自动化操作反馈
+- ✅ 关键信息推送
+
+### 注意事项
+
+::: warning 注意
+- 仅支持 iOS 设备
+- 确保 iPhone 已开启 Bark 的通知权限
+- 自建服务器需要确保服务器外网可访问
+- 部分铃声可能需要 Bark App 的 Pro 版本或特定版本支持
+:::
+
 ## 微信测试公众号
 
 通过微信测试公众号发送模板消息。
