@@ -65,6 +65,7 @@ const (
 	MessageTypeMessageNest     = "MessageNest"
 	MessageTypeAliyunSMS       = "AliyunSMS"
 	MessageTypeTelegram        = "Telegram"
+	MessageTypeBark            = "Bark"
 )
 
 // 限制goroutine的最大数量

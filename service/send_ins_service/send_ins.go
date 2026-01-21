@@ -127,6 +127,10 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		var Config models.InsTelegramConfig
 		return "", Config
 	}
+	if ins.WayType == constant.MessageTypeBark {
+		var Config models.InsBarkConfig
+		return "", Config
+	}
 	return "未知的渠道的config校验", empty
 }
 

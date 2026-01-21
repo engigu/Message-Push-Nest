@@ -191,13 +191,36 @@ const CONSTANT = {
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
-                text: "Telegram机器人说明", 
+                text: "Telegram机器人说明",
                 desc: "使用Telegram Bot发送消息。<br />1. 通过 @BotFather 创建机器人获取Bot Token<br />2. Chat ID可以是用户ID、群组ID或频道ID<br />3. <strong>代理配置说明：</strong><br />&nbsp;&nbsp;• <strong>自定义API地址</strong>（优先级最高）：适用于自建代理服务器，如 https://api.example.com<br />&nbsp;&nbsp;• <strong>代理地址</strong>（优先级较低）：支持以下格式<br />&nbsp;&nbsp;&nbsp;&nbsp;- HTTP代理：http://127.0.0.1:7890<br />&nbsp;&nbsp;&nbsp;&nbsp;- HTTPS代理：https://proxy.example.com:8080<br />&nbsp;&nbsp;&nbsp;&nbsp;- SOCKS5代理：socks5://127.0.0.1:1080<br />&nbsp;&nbsp;&nbsp;&nbsp;- 带认证的SOCKS5：socks5://user:pass@host:1080<br />&nbsp;&nbsp;• 如果同时配置，将优先使用自定义API地址，代理地址会被忽略"
             },
             taskInsRadios: [
                 { subLabel: 'text', content: 'text' },
                 { subLabel: 'markdown', content: 'markdown' },
                 { subLabel: 'html', content: 'html' },
+            ],
+            taskInsInputs: [
+            ],
+        },
+        {
+            type: 'Bark',
+            label: 'Bark推送',
+            inputs: [
+                { subLabel: 'Push Key', value: '', col: 'push_key', desc: "Bark设备码或自建IP，例：DxHcxxxxxRxxxxxxcm" },
+                { subLabel: '存档', value: '', col: 'archive', desc: "1（存档）或 0（不存档），可选" },
+                { subLabel: '分组', value: '', col: 'group', desc: "推送分组，可选" },
+                { subLabel: '推送声音', value: '', col: 'sound', desc: "推送铃声，可选" },
+                { subLabel: '推送图标', value: '', col: 'icon', desc: "推送图标URL，可选" },
+                { subLabel: '推送时效', value: '', col: 'level', desc: "active/timeSensitive/passive，可选" },
+                { subLabel: '跳转URL', value: '', col: 'url', desc: "点击推送跳转的URL，可选" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "Bark推送说明",
+                desc: "Bark 是一款 iOS 专用的推送软件。<br />1. 在 iPhone 上安装 Bark App<br />2. 复制你的设备 Key 或自建服务器地址<br />3. 详细参数说明可以查看 Bark 官方文档"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
             ],
             taskInsInputs: [
             ],

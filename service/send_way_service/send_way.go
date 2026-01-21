@@ -46,6 +46,7 @@ var (
 		constant.MessageTypeMessageNest:     func() WayValidator { return &MessageNest{} },
 		constant.MessageTypeAliyunSMS:       func() WayValidator { return &WayDetailAliyunSMS{} },
 		constant.MessageTypeTelegram:        func() WayValidator { return &WayDetailTelegram{} },
+		constant.MessageTypeBark:            func() WayValidator { return &WayDetailBark{} },
 	}
 	testerRegistry = map[string]func(interface{}) WayTester{
 		constant.MessageTypeEmail:           func(m interface{}) WayTester { return m.(*WayDetailEmail) },
@@ -57,6 +58,7 @@ var (
 		constant.MessageTypeMessageNest:     func(m interface{}) WayTester { return m.(*MessageNest) },
 		constant.MessageTypeAliyunSMS:       func(m interface{}) WayTester { return m.(*WayDetailAliyunSMS) },
 		constant.MessageTypeTelegram:        func(m interface{}) WayTester { return m.(*WayDetailTelegram) },
+		constant.MessageTypeBark:            func(m interface{}) WayTester { return m.(*WayDetailBark) },
 	}
 )
 
@@ -280,6 +282,45 @@ func (w *WayDetailTelegram) Test() (string, string) {
 		ProxyURL: w.ProxyURL,
 	}
 	res, err := cli.SendMessageText(testMsg)
+	if err != nil {
+		return fmt.Sprintf("发送失败：%s", err), string(res)
+	}
+	return "", string(res)
+}
+
+// WayDetailBark Bark渠道明细字段
+type WayDetailBark struct {
+	PushKey string `json:"push_key" validate:"required,max=200" label:"Bark Push Key"`
+	Archive string `json:"archive" validate:"max=10" label:"推送是否存档"`
+	Group   string `json:"group" validate:"max=50" label:"推送分组"`
+	Sound   string `json:"sound" validate:"max=50" label:"推送声音"`
+	Icon    string `json:"icon" validate:"max=200" label:"推送图标"`
+	Level   string `json:"level" validate:"max=20" label:"推送时效性"`
+	URL     string `json:"url" validate:"max=200" label:"推送跳转URL"`
+}
+
+func (w *WayDetailBark) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "Bark参数反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, w
+}
+
+func (w *WayDetailBark) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var cli = message.Bark{
+		PushKey: w.PushKey,
+		Archive: w.Archive,
+		Group:   w.Group,
+		Sound:   w.Sound,
+		Icon:    w.Icon,
+		Level:   w.Level,
+		URL:     w.URL,
+	}
+	res, err := cli.Request("Test Message", testMsg)
 	if err != nil {
 		return fmt.Sprintf("发送失败：%s", err), string(res)
 	}

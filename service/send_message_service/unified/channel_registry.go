@@ -8,8 +8,8 @@ import (
 
 // 重导出channels包的类型，方便外部使用
 type (
-	Channel                = channels.Channel
-	UnifiedMessageContent  = channels.UnifiedMessageContent
+	Channel               = channels.Channel
+	UnifiedMessageContent = channels.UnifiedMessageContent
 )
 
 // 重导出常量
@@ -27,6 +27,7 @@ const (
 	MessageTypeMessageNest     = channels.MessageTypeMessageNest
 	MessageTypeAliyunSMS       = channels.MessageTypeAliyunSMS
 	MessageTypeTelegram        = channels.MessageTypeTelegram
+	MessageTypeBark            = channels.MessageTypeBark
 )
 
 // ChannelRegistry 渠道注册表
@@ -101,6 +102,7 @@ func GetGlobalChannelRegistry() *ChannelRegistry {
 		globalChannelRegistry.Register(channels.NewMessageNestChannel())
 		globalChannelRegistry.Register(channels.NewAliyunSMSChannel())
 		globalChannelRegistry.Register(channels.NewTelegramChannel())
+		globalChannelRegistry.Register(channels.NewBarkChannel())
 	})
 	return globalChannelRegistry
 }

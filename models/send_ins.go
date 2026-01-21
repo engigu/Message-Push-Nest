@@ -55,6 +55,10 @@ type InsAliyunSMSConfig struct {
 type InsTelegramConfig struct {
 }
 
+// InsBarkConfig 实例里面的Bark config
+type InsBarkConfig struct {
+}
+
 // ManyAddTaskIns 批量添加实例
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()

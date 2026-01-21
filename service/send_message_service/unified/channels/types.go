@@ -19,6 +19,7 @@ const (
 	MessageTypeMessageNest     = constant.MessageTypeMessageNest
 	MessageTypeAliyunSMS       = constant.MessageTypeAliyunSMS
 	MessageTypeTelegram        = constant.MessageTypeTelegram
+	MessageTypeBark            = constant.MessageTypeBark
 )
 
 // UnifiedMessageContent 统一的消息内容结构
