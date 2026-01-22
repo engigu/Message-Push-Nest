@@ -37,6 +37,8 @@ func (c *BarkChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, c
 		Icon:    auth.Icon,
 		Level:   auth.Level,
 		URL:     auth.URL,
+		Key:     auth.Key,
+		IV:      auth.IV,
 	}
 
 	res, err := cli.Request(content.Title, content.Text)

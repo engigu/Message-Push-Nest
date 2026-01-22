@@ -297,6 +297,8 @@ type WayDetailBark struct {
 	Icon    string `json:"icon" validate:"max=200" label:"推送图标"`
 	Level   string `json:"level" validate:"max=20" label:"推送时效性"`
 	URL     string `json:"url" validate:"max=200" label:"推送跳转URL"`
+	Key     string `json:"key" validate:"max=100" label:"加密Key"`
+	IV      string `json:"iv" validate:"max=100" label:"加密IV"`
 }
 
 func (w *WayDetailBark) Validate(authJson string) (string, interface{}) {
@@ -319,6 +321,8 @@ func (w *WayDetailBark) Test() (string, string) {
 		Icon:    w.Icon,
 		Level:   w.Level,
 		URL:     w.URL,
+		Key:     w.Key,
+		IV:      w.IV,
 	}
 	res, err := cli.Request("Test Message", testMsg)
 	if err != nil {
@@ -376,7 +380,7 @@ func (sw *SendWay) Delete() error {
 		for _, task := range tasks {
 			names = append(names, task.Name)
 		}
-		return errors.New(fmt.Sprintf("已经存在使用的任务，删除失败！任务名：%s", strings.Join(names, ", ")))
+		return fmt.Errorf("已经存在使用的任务，删除失败！任务名：%s", strings.Join(names, ", "))
 	}
 	return models.DeleteMsgWay(sw.ID)
 }

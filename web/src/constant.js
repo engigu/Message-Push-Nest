@@ -213,6 +213,8 @@ const CONSTANT = {
                 { subLabel: '推送图标', value: '', col: 'icon', desc: "推送图标URL，可选" },
                 { subLabel: '推送时效', value: '', col: 'level', desc: "active/timeSensitive/passive，可选" },
                 { subLabel: '跳转URL', value: '', col: 'url', desc: "点击推送跳转的URL，可选" },
+                { subLabel: '加密Key', value: '', col: 'key', desc: "AES加密Key，16位，可选" },
+                { subLabel: '加密IV', value: '', col: 'iv', desc: "AES加密IV，16位，可选" },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
