@@ -221,6 +221,7 @@ type WayDetailAliyunSMS struct {
 	AccessKeyId     string `json:"access_key_id" validate:"required,max=100" label:"AccessKeyId"`
 	AccessKeySecret string `json:"access_key_secret" validate:"required,max=100" label:"AccessKeySecret"`
 	SignName        string `json:"sign_name" validate:"required,max=50" label:"短信签名"`
+	RegionId        string `json:"region_id" validate:"required,max=50" label:"区域ID"`
 }
 
 func (w *WayDetailAliyunSMS) Validate(authJson string) (string, interface{}) {

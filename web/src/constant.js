@@ -166,6 +166,7 @@ const CONSTANT = {
             inputs: [
                 { subLabel: 'AccessKeyId', value: '', col: 'access_key_id', desc: "阿里云AccessKeyId" },
                 { subLabel: 'AccessKeySecret', value: '', col: 'access_key_secret', desc: "阿里云AccessKeySecret" },
+                { subLabel: 'RegionId', value: 'cn-hangzhou', col: 'region_id', desc: "阿里云区域ID，如cn-hangzhou" },
                 { subLabel: '短信签名', value: '', col: 'sign_name', desc: "短信签名名称" },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
