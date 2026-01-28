@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
@@ -180,30 +180,30 @@ onMounted(async () => {
             </SelectContent>
           </Select>
         </div>
-        
+
       </div>
 
       <div class="flex-shrink-0">
-        <Drawer v-model:open="isAddChannelDrawerOpen">
-          <DrawerTrigger as-child>
+        <Dialog v-model:open="isAddChannelDrawerOpen">
+          <DialogTrigger as-child>
             <Button variant="default" class="w-full sm:w-auto">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
               新增渠道
             </Button>
-          </DrawerTrigger>
+          </DialogTrigger>
 
-          <DrawerContent class="w-[800px] max-w-[90vw] mx-auto flex flex-col max-h-[96vh]">
-            <DrawerHeader class="flex-shrink-0">
-              <DrawerTitle>新增发信渠道</DrawerTitle>
-            </DrawerHeader>
+          <DialogContent class="!max-w-none w-[90vw] lg:w-[60vw] h-[80vh] flex flex-col p-0 gap-0">
+            <DialogHeader class="p-6 pb-2">
+              <DialogTitle>新增发信渠道</DialogTitle>
+            </DialogHeader>
 
-            <div class="flex-1 overflow-y-auto px-4 pb-4">
+            <div class="flex-1 overflow-y-auto px-6 pb-6">
               <AddWays v-model:open="isAddChannelDrawerOpen" @save="handleSaveChannel" />
             </div>
-          </DrawerContent>
-        </Drawer>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
 
@@ -255,18 +255,18 @@ onMounted(async () => {
     <Pagination :total="state.total" :current-page="state.currPage" :page-size="state.pageSize"
       @page-change="changePage" />
 
-    <!-- 编辑渠道Drawer -->
-    <Drawer v-model:open="isEditChannelDrawerOpen">
-      <DrawerContent class="w-[800px] max-w-[90vw] mx-auto flex flex-col max-h-[96vh]">
-        <DrawerHeader class="flex-shrink-0">
-          <DrawerTitle>编辑发信渠道</DrawerTitle>
-        </DrawerHeader>
+    <!-- 编辑渠道Dialog -->
+    <Dialog v-model:open="isEditChannelDrawerOpen">
+      <DialogContent class="sm:max-w-[800px] max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader class="p-6 pb-2">
+          <DialogTitle>编辑发信渠道</DialogTitle>
+        </DialogHeader>
 
-        <div class="flex-1 overflow-y-auto px-4 pb-4">
+        <div class="flex-1 overflow-y-auto px-6 pb-6">
           <EditWays v-model:open="isEditChannelDrawerOpen" :edit-data="editChannelData" @save="handleEditChannel" />
         </div>
-      </DrawerContent>
-    </Drawer>
+      </DialogContent>
+    </Dialog>
 
     <!-- 配置详情Sheet -->
     <Sheet v-model:open="isSheetOpen">
@@ -276,7 +276,8 @@ onMounted(async () => {
         </SheetHeader>
         <div class="mt-6">
           <div class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm">
-            <pre class="whitespace-pre-wrap text-sm font-mono leading-relaxed text-foreground">{{ selectedConfig }}</pre>
+            <pre
+              class="whitespace-pre-wrap text-sm font-mono leading-relaxed text-foreground">{{ selectedConfig }}</pre>
           </div>
         </div>
       </SheetContent>

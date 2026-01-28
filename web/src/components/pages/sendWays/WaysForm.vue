@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { CONSTANT } from '@/constant'
-import {  createValidationState } from '@/util/validation'
+import { createValidationState } from '@/util/validation'
 // import { validateForm, createValidationState, type InputConfig } from '@/util/validation'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
@@ -16,6 +16,20 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import {
+  Mail,
+  MessageSquare,
+  MessageCircle,
+  Send,
+  Webhook,
+  Smartphone,
+  Bell,
+  Inbox,
+  Check,
+
+  MessageCircleCode,
+  Globe
+} from 'lucide-vue-next'
 
 // 组件props
 interface Props {
@@ -67,7 +81,7 @@ const initFormData = () => {
   if (props.mode === 'edit' && props.editData) {
     // 设置渠道类型
     channelMode.value = props.editData.type || channelModeOptions[0]?.value || ''
-    
+
     // 解析auth数据
     let authData: Record<string, any> = {}
     try {
@@ -75,10 +89,10 @@ const initFormData = () => {
     } catch (e) {
       console.error('解析auth数据失败:', e)
     }
-    
+
     // 填充基本字段
     newFormData.name = props.editData.name || ''
-    
+
     // 填充auth中的字段
     Object.keys(authData).forEach(key => {
       newFormData[key] = authData[key]
@@ -93,7 +107,7 @@ const initFormData = () => {
       }
     })
   }
-  
+
   // 初始化任务指令输入字段
   if (config.taskInsInputs) {
     config.taskInsInputs.forEach((input: any) => {
@@ -102,14 +116,14 @@ const initFormData = () => {
       }
     })
   }
-  
+
   // 初始化任务指令单选项
   if (config.taskInsRadios && config.taskInsRadios.length > 0) {
     if (newFormData.taskInsRadio === undefined) {
       newFormData.taskInsRadio = config.taskInsRadios[0].value
     }
   }
-  
+
   formData.value = newFormData
 }
 
@@ -145,7 +159,7 @@ const initFormData = () => {
 //       maxLength: input.maxLength
 //     })))
 //   }
-  
+
 //   return configs
 // }
 
@@ -202,12 +216,12 @@ const getFinalData = () => {
     type: channelMode.value,
     name: formData.value.name,
   }
-  
+
   // 编辑时需要传递ID
   if (props.mode === 'edit' && props.editData && props.editData.id) {
     postData.id = props.editData.id
   }
-  
+
   return postData
 }
 
@@ -229,14 +243,31 @@ const handleSave = async () => {
   // 根据模式选择API路径和成功消息
   const apiUrl = props.mode === 'edit' ? '/sendways/edit' : '/sendways/add'
   const successMessage = props.mode === 'edit' ? '更新渠道成功！' : '添加渠道成功！'
-  
+
   const rsp = await request.post(apiUrl, postData);
   if (await rsp.data.code == 200) {
-    toast(successMessage )
+    toast(successMessage)
     setTimeout(() => {
       window.location.reload();
     }, 1000);
   }
+}
+
+// 渠道图标映射
+const getChannelIcon = (type: string) => {
+  const map: Record<string, any> = {
+    'Email': Mail,
+    'Dtalk': MessageSquare,
+    'QyWeiXin': MessageCircle,
+    'Feishu': Send,
+    'Custom': Webhook,
+    'WeChatOFAccount': MessageCircleCode,
+    'MessageNest': Inbox,
+    'AliyunSMS': Smartphone,
+    'Telegram': Globe, // Telegram uses Globe for now as paper plane might be confusing with Feishu
+    'Bark': Bell
+  }
+  return map[type] || MessageSquare // Default icon
 }
 
 // 计算保存按钮文本
@@ -249,50 +280,89 @@ const saveButtonText = computed(() => {
   <div class="w-full">
     <!-- Radio Group / 当前渠道展示（编辑模式下只展示当前渠道） -->
     <div class="mb-6">
-      <label class="text-lg font-medium mb-3 block">渠道类型</label>
+
 
       <!-- 编辑模式：只展示当前渠道的简洁文本描述，并保留"群发"标识 -->
       <div v-if="props.mode === 'edit'" class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
         <span class="font-medium">{{ currentChannelConfig?.label || channelMode }}</span>
-        <span v-if="currentChannelConfig?.dynamicRecipient?.support" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">群发</span>
+        <span v-if="currentChannelConfig?.dynamicRecipient?.support"
+          class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">群发</span>
       </div>
 
       <!-- 新增模式：保留原有的单选切换显示 -->
-      <RadioGroup v-else v-model="channelMode" @update:model-value="handleChannelModeChange" class="flex flex-wrap gap-3">
-        <div v-for="option in channelModeOptions" :key="option.value" class="flex items-center space-x-2">
-          <RadioGroupItem :value="option.value" :id="option.value" />
-          <label :for="option.value"
-            class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1.5">
-            {{ option.label }}
-            <span 
-              v-if="waysConfigMap.find(item => item.type === option.value)?.dynamicRecipient?.support"
-              class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
-              :title="`支持${waysConfigMap.find(item => item.type === option.value)?.dynamicRecipient?.label || '动态接收者'}群发`"
-            >
-              群发
-            </span>
-          </label>
-        </div>
-      </RadioGroup>
+      <!-- 新增模式：卡片式选择 -->
+      <!-- 新增模式：水平滚动选择 -->
+      <div v-else class="relative group/scroll-container">
 
-      <p v-if="props.mode !== 'edit'" class="text-[11px] text-gray-500 dark:text-gray-400 mt-2.5 leading-relaxed">
-        💡 带"群发"标识的渠道支持动态接收者，可在 API 调用时指定多个接收账号
-      </p>
+        <div class="flex overflow-x-auto gap-3 py-3 px-1 scrollbar-hide -mx-1 select-none">
+          <div v-for="option in channelModeOptions" :key="option.value"
+            @click="channelMode = option.value; handleChannelModeChange()" :title="option.label"
+            class="flex-shrink-0 flex flex-col items-center justify-between p-2.5 h-[95px] min-w-[90px] w-[90px] rounded-lg border cursor-pointer transition-all duration-300 relative overflow-hidden group"
+            :class="[
+              channelMode === option.value
+                ? 'border-primary border-2 bg-primary/5 shadow-md scale-[1.02]'
+                : 'border-transparent bg-secondary/30 hover:bg-secondary/60 hover:shadow-sm'
+            ]">
+            <!-- 选中时的选中标记 -->
+            <div v-if="channelMode === option.value"
+              class="absolute top-0 right-0 p-0.5 bg-primary rounded-bl-md shadow-sm z-20">
+              <Check class="w-2 h-2 text-primary-foreground" stroke-width="3" />
+            </div>
+
+            <!-- 图标容器 -->
+            <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 mt-0.5"
+              :class="[
+                channelMode === option.value
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-background text-muted-foreground group-hover:text-primary group-hover:scale-110'
+              ]">
+              <component :is="getChannelIcon(option.value)" class="w-5 h-5" />
+            </div>
+
+            <!-- 标签 -->
+            <div class="w-full text-center px-0.5">
+              <span class="text-[11px] font-medium block truncate"
+                :class="channelMode === option.value ? 'text-primary font-bold' : 'text-muted-foreground group-hover:text-foreground'">
+                {{ option.label }}
+              </span>
+            </div>
+
+            <!-- 群发指示点 -->
+            <div v-if="waysConfigMap.find(item => item.type === option.value)?.dynamicRecipient?.support"
+              class="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 ring-1 ring-background z-20"
+              title="支持群发">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部简要提示 -->
+      <div v-if="props.mode !== 'edit'"
+        class="flex items-center justify-end -mt-0.5 gap-2.5 text-[10px] text-muted-foreground px-1">
+        <div class="flex items-center gap-1 bg-secondary/50 px-1.5 py-0.5 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500 ring-1 ring-blue-200"></span>
+          <span>支持群发</span>
+        </div>
+        <div class="flex items-center gap-1 opacity-60">
+          <span class="i-lucide-arrow-left-right w-3 h-3"></span>
+          <span>左右滑动选择</span>
+        </div>
+      </div>
     </div>
 
     <div class="w-full">
       <!-- 动态表单 -->
       <div v-if="currentChannelConfig" class="mt-6">
         <!-- 动态接收者支持提示 -->
-        <div 
-          v-if="currentChannelConfig.dynamicRecipient?.support" 
-          class="mb-4 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md"
-        >
+        <div v-if="currentChannelConfig.dynamicRecipient?.support"
+          class="mb-4 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
           <div class="flex items-start gap-2">
             <span class="text-blue-600 dark:text-blue-400 text-sm mt-0.5">📧</span>
             <div class="flex-1 space-y-1">
               <p class="text-xs text-blue-800 dark:text-blue-200 font-medium">
-                支持群发模式 - 可在配置实例时启用"动态接收者"，通过 API 的 <code class="px-1 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-[11px]">recipients</code> 参数指定多个{{ currentChannelConfig.dynamicRecipient.label }}
+                支持群发模式 - 可在配置实例时启用"动态接收者"，通过 API 的 <code
+                  class="px-1 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-[11px]">recipients</code> 参数指定多个{{
+                    currentChannelConfig.dynamicRecipient.label }}
               </p>
               <p class="text-[11px] text-blue-600 dark:text-blue-400">
                 适用：邮件群发、公众号批量推送、营销通知等
@@ -300,7 +370,7 @@ const saveButtonText = computed(() => {
             </div>
           </div>
         </div>
-        
+
         <!-- 基本配置输入字段 -->
         <div v-if="currentChannelConfig.inputs && currentChannelConfig.inputs.length > 0" class="mb-8">
           <h4 class="text-base font-medium mb-4 text-gray-800">基本配置</h4>
@@ -350,7 +420,7 @@ const saveButtonText = computed(() => {
         <p class="text-gray-500">请选择一个渠道类型开始配置</p>
       </div>
     </div>
-    
+
     <div class="flex justify-end gap-2 mt-8 pt-4 border-t">
       <Button variant="outline" @click="handleClose">取消</Button>
       <Button @click="handleTest">测试</Button>

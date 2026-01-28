@@ -151,4 +151,20 @@
     background: transparent !important;
     border: none !important;
   }
+
+  /* 自定义滚动条样式 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--muted-foreground), transparent 70%);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--muted-foreground), transparent 50%);
+  }
 }
