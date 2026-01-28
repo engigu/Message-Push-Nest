@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"encoding/json"
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/app"
@@ -19,6 +20,11 @@ type SendMessageByTemplateReq struct {
 	Title        string                 `json:"title" validate:"required" label:"消息标题"`
 	Placeholders map[string]interface{} `json:"placeholders" label:"占位符"`
 	Recipients   []string               `json:"recipients" label:"接收者列表"`
+}
+
+type TemplatePlaceholder struct {
+	Key     string `json:"key"`
+	Default string `json:"default"`
 }
 
 // DoSendMessageByTemplate 使用模板发送消息
@@ -52,6 +58,24 @@ func DoSendMessageByTemplate(c *gin.Context) {
 	if template.Status != "enabled" {
 		appG.CResponse(http.StatusBadRequest, "模板已禁用", nil)
 		return
+	}
+
+	// 填充默认占位符
+	if template.Placeholders != "" {
+		var placeholderDefs []TemplatePlaceholder
+		if err := json.Unmarshal([]byte(template.Placeholders), &placeholderDefs); err == nil {
+			if req.Placeholders == nil {
+				req.Placeholders = make(map[string]interface{})
+			}
+			for _, def := range placeholderDefs {
+				// 如果请求中没有该占位符，且配置了默认值，则使用默认值
+				if _, exists := req.Placeholders[def.Key]; !exists && def.Default != "" {
+					req.Placeholders[def.Key] = def.Default
+				}
+			}
+		} else {
+			logrus.Errorf("解析模板占位符配置失败: %v", err)
+		}
 	}
 
 	// 替换占位符
