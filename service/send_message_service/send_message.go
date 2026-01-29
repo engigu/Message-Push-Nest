@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	SendSuccess = 1
-	SendFail    = 0
+	SendSuccess  = 1
+	SendFail     = 0
+	SendPartFail = 2
 )
 
 // 发送模式类型
@@ -183,6 +184,7 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 // Send 发送一个消息任务的所有实例
 func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 	sm.Status = SendSuccess
+	successCount := 0
 
 	sm.LogsAndStatusMark(fmt.Sprintf("发送标题《%s》 \n", sm.Title), sm.Status)
 	sm.LogsAndStatusMark(fmt.Sprintf("开始任务[%s]的发送", sm.TaskID), sm.Status)
@@ -276,11 +278,16 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 				modifiedIns := sm.modifyInsRecipient(ins.SendTasksIns, recipient, way.Type)
 
 				// 使用 SendUnified 方法发送
+				// 使用 SendUnified 方法发送
 				res, errMsg := channel.SendUnified(msgObj, modifiedIns, unifiedContent)
 				if res != "" {
 					sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s", res), sm.Status)
 				} else {
-					sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+					status := errStrIsSuccess(errMsg)
+					sm.LogsAndStatusMark(sm.TransError(errMsg), status)
+					if status == SendSuccess {
+						successCount++
+					}
 				}
 			}
 		} else {
@@ -290,10 +297,19 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			if res != "" {
 				sm.LogsAndStatusMark(fmt.Sprintf("返回内容：%s\n", res), sm.Status)
 			} else {
-				sm.LogsAndStatusMark(sm.TransError(errMsg), errStrIsSuccess(errMsg))
+				status := errStrIsSuccess(errMsg)
+				sm.LogsAndStatusMark(sm.TransError(errMsg), status)
+				if status == SendSuccess {
+					successCount++
+				}
 			}
 		}
 
+	}
+
+	// Determine final status
+	if sm.Status == SendFail && successCount > 0 {
+		sm.Status = SendPartFail
 	}
 
 	// 追加记录发送内容
@@ -306,6 +322,8 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 	totalOutputLog := strings.Join(sm.LogOutput, "\n")
 	if sm.Status == SendSuccess {
 		return totalOutputLog, nil
+	} else if sm.Status == SendPartFail {
+		return totalOutputLog, errors.New("发送过程中有部分失败，请检查详细日志")
 	} else {
 		return totalOutputLog, errors.New("发送过程中有失败，请检查详细日志")
 	}
@@ -362,6 +380,8 @@ func (sm *SendMessageService) UpdateSendStats() {
 	var status string
 	if sm.Status == SendSuccess {
 		status = "success"
+	} else if sm.Status == SendPartFail {
+		status = "part_failed"
 	} else {
 		status = "failed"
 	}

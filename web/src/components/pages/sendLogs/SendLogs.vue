@@ -48,6 +48,7 @@ const selectedTaskName = ref('')
 const totalPages = computed(() => Math.ceil(state.total / state.pageSize))
 
 const getStatusText = (status: number) => {
+  if (status === 2) return '部分失败'
   return status === 1 ? '成功' : '失败'
 }
 
@@ -191,6 +192,7 @@ onMounted(async () => {
             <SelectGroup>
               <SelectItem value="all">全部</SelectItem>
               <SelectItem value="1">成功</SelectItem>
+              <SelectItem value="2">部分失败</SelectItem>
               <SelectItem value="0">失败</SelectItem>
             </SelectGroup>
           </SelectContent>
@@ -246,7 +248,7 @@ onMounted(async () => {
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openLogSheet(task)">查看</Button>
             <!-- <Button size="sm" variant="destructive">删除</Button> -->
-            <Badge :class="task.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
+            <Badge :class="task.status === 1 ? 'bg-green-100 text-green-700' : (task.status === 2 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-600')">
               {{ getStatusText(task.status) }}
             </Badge>
           </TableCell>
