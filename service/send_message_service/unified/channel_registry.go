@@ -28,6 +28,7 @@ const (
 	MessageTypeAliyunSMS       = channels.MessageTypeAliyunSMS
 	MessageTypeTelegram        = channels.MessageTypeTelegram
 	MessageTypeBark            = channels.MessageTypeBark
+	MessageTypePushMe          = channels.MessageTypePushMe
 )
 
 // ChannelRegistry 渠道注册表
@@ -103,6 +104,7 @@ func GetGlobalChannelRegistry() *ChannelRegistry {
 		globalChannelRegistry.Register(channels.NewAliyunSMSChannel())
 		globalChannelRegistry.Register(channels.NewTelegramChannel())
 		globalChannelRegistry.Register(channels.NewBarkChannel())
+		globalChannelRegistry.Register(channels.NewPushMeChannel())
 	})
 	return globalChannelRegistry
 }

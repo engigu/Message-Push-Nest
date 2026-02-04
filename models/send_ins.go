@@ -59,6 +59,10 @@ type InsTelegramConfig struct {
 type InsBarkConfig struct {
 }
 
+// InsPushMeConfig 实例里面的PushMe config
+type InsPushMeConfig struct {
+}
+
 // ManyAddTaskIns 批量添加实例
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()

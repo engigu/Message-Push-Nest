@@ -228,6 +228,26 @@ const CONSTANT = {
             taskInsInputs: [
             ],
         },
+        {
+            type: 'PushMe',
+            label: 'PushMe推送',
+            inputs: [
+                { subLabel: 'Push Key', value: '', col: 'push_key', desc: "PushMe的push_key" },
+                { subLabel: '自定义API地址', value: '', col: 'url', desc: "默认: https://push.i-i.me/，可选" },
+                { subLabel: '日期', value: '', col: 'date', desc: "日期，可选" },
+                { subLabel: '类型', value: '', col: 'type', desc: "类型，可选" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "PushMe推送说明",
+                desc: "PushMe 是一款推送服务。<br />1. 获取你的 Push Key<br />2. 如果有自建服务，填写自定义 API 地址"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+            ],
+        },
     ],
     API_VIEW_DATA: [
         { label: "curl", class: "language-shell line-numbers", code: "", func: ApiStrGenerate.getCurlString },

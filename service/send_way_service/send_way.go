@@ -47,6 +47,7 @@ var (
 		constant.MessageTypeAliyunSMS:       func() WayValidator { return &WayDetailAliyunSMS{} },
 		constant.MessageTypeTelegram:        func() WayValidator { return &WayDetailTelegram{} },
 		constant.MessageTypeBark:            func() WayValidator { return &WayDetailBark{} },
+		constant.MessageTypePushMe:          func() WayValidator { return &WayDetailPushMe{} },
 	}
 	testerRegistry = map[string]func(interface{}) WayTester{
 		constant.MessageTypeEmail:           func(m interface{}) WayTester { return m.(*WayDetailEmail) },
@@ -59,6 +60,7 @@ var (
 		constant.MessageTypeAliyunSMS:       func(m interface{}) WayTester { return m.(*WayDetailAliyunSMS) },
 		constant.MessageTypeTelegram:        func(m interface{}) WayTester { return m.(*WayDetailTelegram) },
 		constant.MessageTypeBark:            func(m interface{}) WayTester { return m.(*WayDetailBark) },
+		constant.MessageTypePushMe:          func(m interface{}) WayTester { return m.(*WayDetailPushMe) },
 	}
 )
 
@@ -330,6 +332,39 @@ func (w *WayDetailBark) Test() (string, string) {
 		return fmt.Sprintf("发送失败：%s", err), string(res)
 	}
 	return "", string(res)
+}
+
+// WayDetailPushMe PushMe渠道明细字段
+type WayDetailPushMe struct {
+	PushKey string `json:"push_key" validate:"required,max=100" label:"PushMe Push Key"`
+	URL     string `json:"url" validate:"max=200" label:"自定义API地址"`
+	Date    string `json:"date" validate:"max=50" label:"日期"`
+	Type    string `json:"type" validate:"max=50" label:"类型"`
+}
+
+func (w *WayDetailPushMe) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "PushMe参数反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, w
+}
+
+func (w *WayDetailPushMe) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var cli = message.PushMe{
+		PushKey: w.PushKey,
+		URL:     w.URL,
+		Date:    w.Date,
+		Type:    w.Type,
+	}
+	res, err := cli.Request("Test Message", testMsg)
+	if err != nil {
+		return fmt.Sprintf("发送失败：%s", err), res
+	}
+	return "", res
 }
 
 func (sw *SendWay) GetByID() (interface{}, error) {
