@@ -327,9 +327,9 @@ const siteTitle = computed(() => {
 <template>
   <router-view v-if="!isAuthenticated || route.path == '/login' || route.path == 'login'"></router-view>
 
-  <div class="min-h-screen bg-background" v-else>
+  <div class="min-h-screen" v-else>
     <!-- 顶部导航栏 -->
-    <nav class="bg-background shadow-sm border-b border-border">
+    <nav class="bg-background/80 backdrop-blur-md sticky top-0 shadow-sm border-b border-border z-40">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo/品牌名称 -->

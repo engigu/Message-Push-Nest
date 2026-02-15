@@ -45,54 +45,51 @@
 }
 
 :root {
-  --background: oklch(0.99 0.005 260);
-  /* 精致的冷色调背景 */
-  --foreground: oklch(0.15 0.02 260);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 260);
+  --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 260);
-  --primary: oklch(0.25 0.02 260);
-  --primary-foreground: oklch(0.98 0.01 260);
-  --secondary: oklch(0.96 0.01 260);
-  --secondary-foreground: oklch(0.25 0.02 260);
-  --muted: oklch(0.96 0.01 260);
-  --muted-foreground: oklch(0.45 0.02 260);
-  --accent: oklch(0.96 0.01 260);
-  --accent-foreground: oklch(0.25 0.02 260);
-  --destructive: oklch(0.55 0.18 25);
-  --destructive-foreground: oklch(0.98 0.01 260);
-  --border: oklch(0.92 0.01 260);
-  --input: oklch(0.92 0.01 260);
-  --ring: oklch(0.7 0.1 260);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
   --radius: 0.75rem;
-  /* 更圆润的视觉 */
 
   --brand: oklch(0.55 0.18 260);
-  --brand-foreground: oklch(0.98 0.01 260);
+  --brand-foreground: oklch(0.985 0 0);
 }
 
 .dark {
-  --background: oklch(0.14 0.01 260);
-  /* 极简深色背景 */
-  --foreground: oklch(0.95 0.01 260);
-  --card: oklch(0.16 0.01 260);
-  --card-foreground: oklch(0.95 0.01 260);
-  --popover: oklch(0.16 0.01 260);
-  --popover-foreground: oklch(0.95 0.01 260);
-  --primary: oklch(0.95 0.01 260);
-  --primary-foreground: oklch(0.15 0.02 260);
-  --secondary: oklch(0.25 0.02 260);
-  --secondary-foreground: oklch(0.95 0.01 260);
-  --muted: oklch(0.22 0.02 260);
-  --muted-foreground: oklch(0.65 0.02 260);
-  --accent: oklch(0.25 0.02 260);
-  --accent-foreground: oklch(0.95 0.01 260);
-  --destructive: oklch(0.45 0.18 25);
-  --destructive-foreground: oklch(0.95 0.01 260);
-  --border: oklch(0.28 0.02 260);
-  --input: oklch(0.28 0.02 260);
-  --ring: oklch(0.7 0.1 260);
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.205 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.205 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.205 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.205 0 0);
+  --input: oklch(0.205 0 0);
+  --ring: oklch(0.439 0 0);
 }
 
 @layer base {
@@ -101,13 +98,25 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased min-h-screen relative;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+
+    /* 极致背景装饰：极简动态柔和渐变 */
+    background-image:
+      radial-gradient(at 0% 0%, color-mix(in oklch, var(--brand), transparent 94%) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, color-mix(in oklch, var(--brand), transparent 97%) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(at 0% 0%, color-mix(in oklch, var(--brand), transparent 92%) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, color-mix(in oklch, var(--brand), transparent 95%) 0px, transparent 50%);
   }
 
   /* 品牌色交互组件增强 */
   .btn-brand-premium {
-    @apply bg-brand text-brand-foreground shadow-[0_4px_12px_rgba(var(--brand), 0.3)] hover:shadow-[0_6px_20px_rgba(var(--brand), 0.4)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300;
+    @apply bg-brand text-brand-foreground shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300;
   }
 }
 
