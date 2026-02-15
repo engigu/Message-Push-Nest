@@ -30,6 +30,7 @@ const (
 	MessageTypeBark            = channels.MessageTypeBark
 	MessageTypePushMe          = channels.MessageTypePushMe
 	MessageTypeNtfy            = channels.MessageTypeNtfy
+	MessageTypeGotify          = channels.MessageTypeGotify
 )
 
 // ChannelRegistry 渠道注册表
@@ -107,6 +108,7 @@ func GetGlobalChannelRegistry() *ChannelRegistry {
 		globalChannelRegistry.Register(channels.NewBarkChannel())
 		globalChannelRegistry.Register(channels.NewPushMeChannel())
 		globalChannelRegistry.Register(channels.NewNtfyChannel())
+		globalChannelRegistry.Register(channels.NewGotifyChannel())
 	})
 	return globalChannelRegistry
 }

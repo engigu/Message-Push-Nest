@@ -22,6 +22,7 @@ const (
 	MessageTypeBark            = constant.MessageTypeBark
 	MessageTypePushMe          = constant.MessageTypePushMe
 	MessageTypeNtfy            = constant.MessageTypeNtfy
+	MessageTypeGotify          = constant.MessageTypeGotify
 )
 
 // UnifiedMessageContent 统一的消息内容结构

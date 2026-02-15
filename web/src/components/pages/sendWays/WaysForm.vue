@@ -29,7 +29,8 @@ import {
 
   MessageCircleCode,
   Globe,
-  Megaphone
+  Megaphone,
+  ShieldCheck
 } from 'lucide-vue-next'
 
 // 组件props
@@ -208,6 +209,9 @@ const getFinalData = () => {
         if (config.type == 'Email' && input.col == 'port') {
           authData[input.col] = parseInt(formData.value[input.col])
         }
+        if (config.type == 'Gotify' && input.col == 'priority') {
+          authData[input.col] = parseInt(formData.value[input.col])
+        }
       }
     })
   }
@@ -267,7 +271,8 @@ const getChannelIcon = (type: string) => {
     'AliyunSMS': Smartphone,
     'Telegram': Globe, // Telegram uses Globe for now as paper plane might be confusing with Feishu
     'Bark': Bell,
-    'Ntfy': Megaphone
+    'Ntfy': Megaphone,
+    'Gotify': ShieldCheck
   }
   return map[type] || MessageSquare // Default icon
 }

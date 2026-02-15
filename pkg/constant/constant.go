@@ -68,6 +68,7 @@ const (
 	MessageTypeBark            = "Bark"
 	MessageTypePushMe          = "PushMe"
 	MessageTypeNtfy            = "Ntfy"
+	MessageTypeGotify          = "Gotify"
 )
 
 // 限制goroutine的最大数量

@@ -67,6 +67,10 @@ type InsPushMeConfig struct {
 type InsNtfyConfig struct {
 }
 
+// InsGotifyConfig 实例里面的Gotify config
+type InsGotifyConfig struct {
+}
+
 // ManyAddTaskIns 批量添加实例
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()

@@ -48,6 +48,7 @@ var (
 		constant.MessageTypeBark:            func() WayValidator { return &WayDetailBark{} },
 		constant.MessageTypePushMe:          func() WayValidator { return &WayDetailPushMe{} },
 		constant.MessageTypeNtfy:            func() WayValidator { return &WayDetailNtfy{} },
+		constant.MessageTypeGotify:          func() WayValidator { return &WayDetailGotify{} },
 	}
 	testerRegistry = map[string]func(interface{}) WayTester{
 		constant.MessageTypeEmail:           func(m interface{}) WayTester { return m.(*WayDetailEmail) },
@@ -62,6 +63,7 @@ var (
 		constant.MessageTypeBark:            func(m interface{}) WayTester { return m.(*WayDetailBark) },
 		constant.MessageTypePushMe:          func(m interface{}) WayTester { return m.(*WayDetailPushMe) },
 		constant.MessageTypeNtfy:            func(m interface{}) WayTester { return m.(*WayDetailNtfy) },
+		constant.MessageTypeGotify:          func(m interface{}) WayTester { return m.(*WayDetailGotify) },
 	}
 )
 
@@ -402,6 +404,37 @@ func (w *WayDetailNtfy) Test() (string, string) {
 		Username: w.Username,
 		Password: w.Password,
 		Actions:  w.Actions,
+	}
+	res, err := cli.Request("Test Message", testMsg)
+	if err != nil {
+		return fmt.Sprintf("发送失败：%s", err), string(res)
+	}
+	return "", string(res)
+}
+
+// WayDetailGotify Gotify推送渠道明细字段
+type WayDetailGotify struct {
+	Url      string `json:"url" validate:"required,url" label:"Gotify服务地址"`
+	Token    string `json:"token" validate:"required,max=100" label:"Token"`
+	Priority int    `json:"priority" validate:"max=10" label:"优先级"`
+}
+
+func (w *WayDetailGotify) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "Gotify参数反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, w
+}
+
+func (w *WayDetailGotify) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var cli = message.Gotify{
+		Url:      w.Url,
+		Token:    w.Token,
+		Priority: w.Priority,
 	}
 	res, err := cli.Request("Test Message", testMsg)
 	if err != nil {

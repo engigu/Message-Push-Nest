@@ -273,6 +273,25 @@ const CONSTANT = {
             taskInsInputs: [
             ],
         },
+        {
+            type: 'Gotify',
+            label: 'Gotify推送',
+            inputs: [
+                { subLabel: 'Gotify服务地址', value: '', col: 'url', desc: "Gotify服务的URL，例如: https://gotify.example.com" },
+                { subLabel: 'Token', value: '', col: 'token', desc: "APP的Token" },
+                { subLabel: '优先级', value: '5', col: 'priority', desc: "消息优先级，可选" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "Gotify推送说明",
+                desc: "Gotify 是一款自托管的消息推送服务。<br />1. 在 Gotify 中创建 APP 获取 Token<br />2. 填写 Gotify 服务的完整 URL"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+            ],
+        },
     ],
     API_VIEW_DATA: [
         { label: "curl", class: "language-shell line-numbers", code: "", func: ApiStrGenerate.getCurlString },
