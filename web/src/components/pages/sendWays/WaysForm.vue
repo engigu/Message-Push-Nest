@@ -292,7 +292,7 @@ const saveButtonText = computed(() => {
       <div v-if="props.mode === 'edit'" class="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
         <span class="font-medium">{{ currentChannelConfig?.label || channelMode }}</span>
         <span v-if="currentChannelConfig?.dynamicRecipient?.support"
-          class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">群发</span>
+          class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand">群发</span>
       </div>
 
       <!-- 新增模式：保留原有的单选切换显示 -->
@@ -335,7 +335,7 @@ const saveButtonText = computed(() => {
 
             <!-- 群发指示点 -->
             <div v-if="waysConfigMap.find(item => item.type === option.value)?.dynamicRecipient?.support"
-              class="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 ring-1 ring-background z-20"
+              class="absolute top-1.5 left-1.5 w-1.5 h-1.5 rounded-full bg-brand ring-1 ring-background z-20"
               title="支持群发">
             </div>
           </div>
@@ -346,7 +346,7 @@ const saveButtonText = computed(() => {
       <div v-if="props.mode !== 'edit'"
         class="flex items-center justify-end -mt-0.5 gap-2.5 text-[10px] text-muted-foreground px-1">
         <div class="flex items-center gap-1 bg-secondary/50 px-1.5 py-0.5 rounded-full">
-          <span class="w-1.5 h-1.5 rounded-full bg-blue-500 ring-1 ring-blue-200"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-brand ring-1 ring-brand/20"></span>
           <span>支持群发</span>
         </div>
         <div class="flex items-center gap-1 opacity-60">
@@ -361,16 +361,16 @@ const saveButtonText = computed(() => {
       <div v-if="currentChannelConfig" class="mt-6">
         <!-- 动态接收者支持提示 -->
         <div v-if="currentChannelConfig.dynamicRecipient?.support"
-          class="mb-4 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+          class="mb-4 p-2.5 bg-brand/10 dark:bg-brand/5 border border-brand/20 rounded-md">
           <div class="flex items-start gap-2">
-            <span class="text-blue-600 dark:text-blue-400 text-sm mt-0.5">📧</span>
+            <span class="text-brand text-sm mt-0.5">📧</span>
             <div class="flex-1 space-y-1">
-              <p class="text-xs text-blue-800 dark:text-blue-200 font-medium">
+              <p class="text-xs text-brand font-medium">
                 支持群发模式 - 可在配置实例时启用"动态接收者"，通过 API 的 <code
-                  class="px-1 py-0.5 bg-blue-100 dark:bg-blue-800 rounded text-[11px]">recipients</code> 参数指定多个{{
+                  class="px-1 py-0.5 bg-brand/10 dark:bg-brand/20 rounded text-[11px]">recipients</code> 参数指定多个{{
                     currentChannelConfig.dynamicRecipient.label }}
               </p>
-              <p class="text-[11px] text-blue-600 dark:text-blue-400">
+              <p class="text-[11px] text-brand/80">
                 适用：邮件群发、公众号批量推送、营销通知等
               </p>
             </div>

@@ -165,7 +165,7 @@ onMounted(async () => {
   if (hidden === 'true') {
     showBanner.value = false
   }
-  
+
   // 初始化查询
   state.search = route.query.name?.toString() || '';
   await queryListData(
@@ -181,23 +181,23 @@ onMounted(async () => {
 <template>
   <div class="p-4 w-full max-w-6xl mx-auto space-y-2">
     <!-- 推荐使用模板的提示横幅 -->
-    <div v-if="showBanner" class="mb-4 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 p-4">
+    <div v-if="showBanner"
+      class="mb-4 rounded-lg border border-brand/20 bg-brand/10 dark:bg-brand/5 dark:border-brand/20 p-4">
       <div class="flex items-start gap-3">
-        <InfoIcon class="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+        <InfoIcon class="h-5 w-5 text-brand mt-0.5 flex-shrink-0" />
         <div class="flex-1">
-          <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">💡 推荐使用消息模板</h3>
-          <p class="text-sm text-blue-800 dark:text-blue-200">
-            新项目建议使用 
-            <router-link to="/templates" class="font-medium underline hover:text-blue-600">消息模板</router-link> 
+          <h3 class="text-sm font-semibold text-brand mb-1">💡 推荐使用消息模板</h3>
+          <p class="text-sm text-foreground/90">
+            新项目建议使用
+            <router-link to="/templates" class="font-medium underline hover:text-brand">消息模板</router-link>
             功能，它提供更好的内容管理和维护体验。发送任务主要用于兼容早期使用数据。
-            <a href="https://engigu.github.io/Message-Push-Nest/guide/template.html" target="_blank" 
-               class="font-medium underline hover:text-blue-600 ml-1">
+            <a href="https://engigu.github.io/Message-Push-Nest/guide/template.html" target="_blank"
+              class="font-medium underline hover:text-brand ml-1">
               了解更多 →
             </a>
           </p>
         </div>
-        <button @click="closeBanner" 
-                class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 flex-shrink-0">
+        <button @click="closeBanner" class="text-brand/70 hover:text-brand flex-shrink-0">
           <XIcon class="h-4 w-4" />
         </button>
       </div>

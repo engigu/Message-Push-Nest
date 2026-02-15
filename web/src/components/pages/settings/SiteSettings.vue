@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,7 +8,16 @@ import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 // @ts-ignore
 import { LocalStieConfigUtils } from '@/util/localSiteConfig'
-import { HelpCircleIcon } from 'lucide-vue-next'
+import { HelpCircleIcon, CheckIcon } from 'lucide-vue-next'
+import { THEMES, applyTheme, getStoredTheme } from '@/util/theme'
+
+const currentThemeColor = ref(getStoredTheme())
+
+const changeTheme = (themeKey: string) => {
+  currentThemeColor.value = themeKey
+  state.theme_color = themeKey
+  applyTheme(themeKey)
+}
 
 const state = reactive({
   title: '',
@@ -16,6 +25,7 @@ const state = reactive({
   logo: '',
   pagesize: '',
   cookieExpDays: '',
+  theme_color: getStoredTheme(),
   section: 'site_config',
 })
 
@@ -30,6 +40,7 @@ const handleSubmit = async () => {
         logo: state.logo.trim(),
         pagesize: state.pagesize.toString(),
         cookie_exp_days: state.cookieExpDays.toString(),
+        theme_color: state.theme_color,
       },
     }
     const response = await request.post('/settings/set', postData)
@@ -69,6 +80,11 @@ const getSiteConfig = async () => {
       state.slogan = data.slogan || ''
       state.pagesize = data.pagesize || ''
       state.cookieExpDays = data.cookie_exp_days || '1'
+      state.theme_color = data.theme_color || 'blue'
+
+      // 同步当前选中的主题状态
+      currentThemeColor.value = state.theme_color
+      applyTheme(state.theme_color)
 
       LocalStieConfigUtils.updateLocalConfig(data)
     }
@@ -112,12 +128,39 @@ export default {
           <!-- 站点图标 -->
           <div class="space-y-2">
             <label class="text-sm font-medium text-gray-700">站点图标(只支持svg文本)</label>
-            <Input v-model="state.logo" placeholder="请输入自定义的网站logo（svg文本）" />
-            <!-- SVG预览 -->
-            <div v-if="state.logo" class="mt-2 p-3 border border-border rounded-md bg-card">
-              <div class="text-xs text-muted-foreground mb-2">预览效果：</div>
-              <div class="flex items-center justify-center w-16 h-16 bg-white dark:bg-white border border-border rounded"
-                v-html="state.logo"></div>
+            <div class="flex items-center gap-2">
+              <div class="flex-1">
+                <Input v-model="state.logo" placeholder="请输入自定义的网站logo（svg文本）" />
+              </div>
+              <div v-if="state.logo"
+                class="flex-shrink-0 w-9 h-9 border border-border rounded bg-white dark:bg-white flex items-center justify-center p-1.5 shadow-sm overflow-hidden"
+                v-html="state.logo">
+              </div>
+            </div>
+          </div>
+
+          <!-- 主题色 -->
+          <div class="space-y-3">
+            <label class="text-sm font-medium text-gray-700">主题色</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button v-for="t in THEMES" :key="t.key" @click="changeTheme(t.key)"
+                class="group relative flex items-center gap-2.5 p-2.5 rounded-lg border transition-all duration-200"
+                :class="[
+                  currentThemeColor === t.key
+                    ? 'border-brand bg-brand/5 shadow-sm ring-1 ring-brand/20'
+                    : 'border-border hover:border-brand/40 hover:bg-muted/30'
+                ]">
+                <div class="w-4 h-4 rounded-full shadow-inner border border-white/20 flex-shrink-0"
+                  :style="{ backgroundColor: t.light }"></div>
+                <span class="text-xs font-medium truncate"
+                  :class="currentThemeColor === t.key ? 'text-brand' : 'text-foreground/80'">{{ t.name }}</span>
+
+                <!-- 选中状态标志 -->
+                <div v-if="currentThemeColor === t.key"
+                  class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-brand text-white flex items-center justify-center shadow-sm">
+                  <CheckIcon class="w-2 h-2" />
+                </div>
+              </button>
             </div>
           </div>
 
@@ -135,7 +178,7 @@ export default {
               <Input v-model="state.cookieExpDays" type="number" min="1" max="365" placeholder="Cookie过期天数（默认1天）" />
             </div>
           </div>
-          
+
         </div>
 
         <!-- 底部操作区域 -->
@@ -173,4 +216,3 @@ export default {
     </CardContent>
   </Card>
 </template>
-

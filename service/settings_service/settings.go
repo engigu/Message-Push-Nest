@@ -3,13 +3,14 @@ package settings_service
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"github.com/robfig/cron/v3"
 	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/constant"
 	"message-nest/pkg/util"
 	"message-nest/service/cron_service"
+	"strconv"
+
+	"github.com/robfig/cron/v3"
 )
 
 type UserSettings struct {
@@ -38,7 +39,7 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 			return GetSiteConfigCache(), nil
 		}
 	}
-	
+
 	result := make(map[string]string)
 	settings, err := models.GetSettingBySection(section)
 	if err != nil {
@@ -47,12 +48,12 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 	for _, setting := range settings {
 		result[setting.Key] = setting.Value
 	}
-	
+
 	// 如果是site_config，更新缓存
 	if section == constant.SiteSettingSectionName {
 		SetSiteConfigCache(result)
 	}
-	
+
 	// 版本信息单独获取
 	if section == constant.AboutSectionName {
 		result = constant.LatestVersion
@@ -127,6 +128,7 @@ type SiteConfig struct {
 	Slogan        string `json:"slogan" validate:"omitempty,min=1,max=50" label:"网站slogan"`
 	Logo          string `json:"logo" validate:"omitempty,min=1" label:"logo"`
 	CookieExpDays string `json:"cookie_exp_days" validate:"omitempty,numeric,min=1,max=365" label:"cookie过期天数"`
+	ThemeColor    string `json:"theme_color" validate:"omitempty,max=20" label:"主题颜色"`
 }
 
 type LogConfig struct {
@@ -152,7 +154,7 @@ func GetCookieExpDays() int {
 			}
 		}
 	}
-	
+
 	// 从数据库获取
 	setting, _ := models.GetSettingByKey(constant.SiteSettingSectionName, "cookie_exp_days")
 	if setting.ID > 0 && setting.Value != "" {
@@ -160,7 +162,7 @@ func GetCookieExpDays() int {
 			return days
 		}
 	}
-	
+
 	// 返回默认值
 	return 1
 }
@@ -173,6 +175,7 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		config.Slogan = data["slogan"]
 		config.Logo = data["logo"]
 		config.CookieExpDays = data["cookie_exp_days"]
+		config.ThemeColor = data["theme_color"]
 		_, errStr := app.CommonPlaygroundValid(config)
 		return errStr
 	}

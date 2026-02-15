@@ -52,7 +52,7 @@ const linkedHtml = computed(() => {
       trimmed = trimmed.slice(0, -1)
     }
     const escapedTrimmed = escapeHtml(trimmed)
-    html += `<a href="${escapedTrimmed}" target="_blank" rel="noopener noreferrer" class="underline break-all text-blue-600 dark:text-blue-400">${escapedTrimmed}</a>`
+    html += `<a href="${escapedTrimmed}" target="_blank" rel="noopener noreferrer" class="underline break-all text-brand">${escapedTrimmed}</a>`
     if (suffix) {
       html += escapeHtml(suffix)
     }
@@ -66,12 +66,8 @@ const linkedHtml = computed(() => {
 </script>
 
 <template>
-  <span
-    class="inline-block truncate align-middle cursor-pointer"
-    :class="wrapperClass"
-    :title="text"
-    @click="handleClick"
-  >
+  <span class="inline-block truncate align-middle cursor-pointer" :class="wrapperClass" :title="text"
+    @click="handleClick">
     {{ text || '-' }}
   </span>
 
@@ -81,12 +77,12 @@ const linkedHtml = computed(() => {
         <DialogTitle class="text-sm font-medium text-foreground">{{ previewTitle || '内容' }}</DialogTitle>
       </DialogHeader>
       <div class="mt-1">
-        <div class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm max-h-[65vh] overflow-auto overflow-x-hidden">
-          <pre class="whitespace-pre-wrap break-words break-all text-sm leading-relaxed text-foreground" v-html="linkedHtml"></pre>
+        <div
+          class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm max-h-[65vh] overflow-auto overflow-x-hidden">
+          <pre class="whitespace-pre-wrap break-words break-all text-sm leading-relaxed text-foreground"
+            v-html="linkedHtml"></pre>
         </div>
       </div>
     </DialogContent>
   </Dialog>
 </template>
-
-

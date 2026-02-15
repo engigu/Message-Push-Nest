@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { applyTheme, getStoredTheme } from '@/util/theme'
 // 使用 defineAsyncComponent 导入没有默认导出的组件
 // const Dashboard = defineAsyncComponent(() => import("@/components/pages/dashboard/Dashboard.vue"))
 // const SendLogs = defineAsyncComponent(() => import("@/components/pages/sendLogs/SendLogs.vue"))
@@ -56,7 +57,7 @@ const applyThemeFromPreference = () => {
   } else {
     document.documentElement.classList.remove('dark')
   }
-  try { localStorage.setItem('themePreference', themePreference.value) } catch {}
+  try { localStorage.setItem('themePreference', themePreference.value) } catch { }
 }
 
 const toggleTheme = () => {
@@ -91,23 +92,23 @@ const updateUserAccount = () => {
 }
 
 // 更新favicon
-  const updateFavicon = (logoSvg: string) => {
-    if (logoSvg) {
-      // 查找现有的favicon链接
-      let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement
-      if (!link) {
-        // 如果不存在，创建新的favicon链接
-        link = document.createElement('link')
-        link.rel = 'icon'
-        document.head.appendChild(link)
-      }
-      // 将SVG转换为data URL
-      const svgBlob = new Blob([logoSvg], { type: 'image/svg+xml' })
-      const svgUrl = URL.createObjectURL(svgBlob)
-      link.href = svgUrl
-      link.type = 'image/svg+xml'
+const updateFavicon = (logoSvg: string) => {
+  if (logoSvg) {
+    // 查找现有的favicon链接
+    let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement
+    if (!link) {
+      // 如果不存在，创建新的favicon链接
+      link = document.createElement('link')
+      link.rel = 'icon'
+      document.head.appendChild(link)
     }
+    // 将SVG转换为data URL
+    const svgBlob = new Blob([logoSvg], { type: 'image/svg+xml' })
+    const svgUrl = URL.createObjectURL(svgBlob)
+    link.href = svgUrl
+    link.type = 'image/svg+xml'
   }
+}
 
 // 获取本地配置
 const getLocalConfig = () => {
@@ -127,7 +128,11 @@ const getLocalConfig = () => {
       if (localConfig.logo) {
         updateFavicon(localConfig.logo)
       }
-      
+      // 更新主题色
+      if (localConfig.theme_color) {
+        applyTheme(localConfig.theme_color)
+      }
+
     }
   } catch (error) {
     console.error('获取本地配置失败:', error)
@@ -152,7 +157,11 @@ const getLatestConfig = async () => {
       if (latestConfig.logo) {
         updateFavicon(latestConfig.logo)
       }
-      
+      // 更新主题色
+      if (latestConfig.theme_color) {
+        applyTheme(latestConfig.theme_color)
+      }
+
     }
   } catch (error) {
     console.error('获取最新配置失败:', error)
@@ -181,6 +190,8 @@ const logout = () => {
 
 // 监听localStorage变化
 onMounted(() => {
+  // 应用存储的主题色
+  applyTheme(getStoredTheme())
   // 初始化主题并监听系统主题变化
   applyThemeFromPreference()
   try {
@@ -193,21 +204,21 @@ onMounted(() => {
       media.addEventListener('change', handleSystemChange)
     } else if ((media as any).addListener) {
       // 兼容旧浏览器
-      ;(media as any).addListener(handleSystemChange)
+      ; (media as any).addListener(handleSystemChange)
     }
-  } catch {}
+  } catch { }
 
   // 初始化用户账号信息
   updateUserAccount();
-  
+
   // 初始化配置信息
   getLocalConfig();
-  
+
   // 如果已认证，获取最新配置
   if (isAuthenticated.value) {
     getLatestConfig();
   }
-  
+
   // 定期检查token状态
   const checkAuth = () => {
     const wasAuthenticated = isAuthenticated.value;
@@ -228,7 +239,7 @@ onMounted(() => {
   window.addEventListener('storage', checkAuth);
   // 定期检查（处理同一页面内的变化）
   const interval = setInterval(checkAuth, 1000);
-  
+
   // 点击外部关闭用户菜单
   const handleClickOutside = (event: Event) => {
     const target = event.target as Element;
@@ -237,7 +248,7 @@ onMounted(() => {
     }
   };
   document.addEventListener('click', handleClickOutside);
-  
+
   // 清理函数
   return () => {
     window.removeEventListener('storage', checkAuth);
@@ -262,7 +273,7 @@ const activeTab = ref('Dashboard');
 // 处理标签点击事件，跳转到对应路由
 const handleTabClick = (tab: TabRoute) => {
   activeTab.value = tab.name;
-  
+
 
   // 使用 Vue Router 进行导航，保持单页应用状态
   // 对于根路径，直接导航；对于其他路径，使用相对路径
@@ -331,13 +342,13 @@ const siteTitle = computed(() => {
             <button v-for="tab in tabRoutes" :key="tab.name" @click="handleTabClick(tab)" :class="[
               'relative py-1.5 px-2 text-sm font-medium transition-all duration-200 rounded-md whitespace-nowrap',
               activeTab === tab.name
-                ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-400/10'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-white/5'
+                ? 'text-brand bg-brand/10 dark:text-brand dark:bg-brand/10'
+                : 'text-gray-600 hover:text-brand hover:bg-gray-50 dark:text-gray-300 dark:hover:text-brand dark:hover:bg-white/5'
             ]">
               {{ tab.name }}
               <!-- 活动状态指示器 -->
               <span v-if="activeTab === tab.name"
-                class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full"></span>
+                class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-brand rounded-full"></span>
             </button>
           </div>
 
@@ -347,21 +358,24 @@ const siteTitle = computed(() => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <button @click="toggleTheme" class="hidden md:inline-flex p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors dark:text-gray-300 dark:hover:text-blue-400 dark:hover:bg-white/5">
+                  <button @click="toggleTheme"
+                    class="hidden md:inline-flex p-2 rounded-md text-gray-600 hover:text-brand hover:bg-gray-50 transition-colors dark:text-gray-300 dark:hover:text-brand dark:hover:bg-white/5">
                     <MonitorIcon v-if="themePreference === 'system'" class="w-5 h-5" />
-                    <svg v-else-if="theme === 'dark'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    <svg v-else-if="theme === 'dark'" class="w-5 h-5" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                     </svg>
-                    <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="12" cy="12" r="5"/>
-                      <line x1="12" y1="1" x2="12" y2="3"/>
-                      <line x1="12" y1="21" x2="12" y2="23"/>
-                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                      <line x1="1" y1="12" x2="3" y2="12"/>
-                      <line x1="21" y1="12" x2="23" y2="12"/>
-                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                    <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="5" />
+                      <line x1="12" y1="1" x2="12" y2="3" />
+                      <line x1="12" y1="21" x2="12" y2="23" />
+                      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                      <line x1="1" y1="12" x2="3" y2="12" />
+                      <line x1="21" y1="12" x2="23" y2="12" />
+                      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                     </svg>
                   </button>
                 </TooltipTrigger>
@@ -372,34 +386,42 @@ const siteTitle = computed(() => {
             </TooltipProvider>
             <!-- 用户账号下拉菜单 -->
             <div class="relative user-menu-container">
-              <button @click="toggleUserMenu" class="flex items-center space-x-2 p-2 rounded-md hover:bg-muted transition-colors dark:hover:bg-white/5">
-                <div class="w-8 h-8 bg-blue-100 dark:bg-muted border border-border rounded-full flex items-center justify-center">
-                  <svg class="w-4 h-4 text-blue-600 dark:text-blue-300" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              <button @click="toggleUserMenu"
+                class="flex items-center space-x-2 p-2 rounded-md hover:bg-muted transition-colors dark:hover:bg-white/5">
+                <div
+                  class="w-8 h-8 bg-brand/10 dark:bg-muted border border-border rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-brand dark:text-brand" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clip-rule="evenodd" />
                   </svg>
                 </div>
                 <span class="hidden sm:block text-sm font-medium text-foreground">{{ userAccount }}</span>
-                <svg class="w-4 h-4 text-gray-400 dark:text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-gray-400 dark:text-muted-foreground" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              
+
               <!-- 下拉菜单 -->
-              <div v-if="isUserMenuOpen" class="absolute right-0 mt-2 w-52 bg-card text-foreground rounded-md shadow-lg border border-border z-50">
+              <div v-if="isUserMenuOpen"
+                class="absolute right-0 mt-2 w-52 bg-card text-foreground rounded-md shadow-lg border border-border z-50">
                 <div class="py-1">
                   <div class="px-4 py-2 text-sm text-muted-foreground border-b border-border">
                     <div class="font-medium text-foreground">{{ userAccount }}</div>
                     <!-- <div class="text-xs">当前登录账号</div> -->
                   </div>
                   <!-- 移动端主题切换入口 -->
-                  <button @click="toggleTheme" class="md:hidden w-full text-left px-4 py-2 text-sm hover:bg-muted dark:hover:bg-white/5 flex items-center justify-between">
+                  <button @click="toggleTheme"
+                    class="md:hidden w-full text-left px-4 py-2 text-sm hover:bg-muted dark:hover:bg-white/5 flex items-center justify-between">
                     <span class="truncate">外观</span>
                     <span class="text-xs text-muted-foreground flex-shrink-0">{{ themeLabel }}</span>
                   </button>
-                  <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted dark:hover:bg-white/5 transition-colors">
+                  <button @click="logout"
+                    class="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-muted dark:hover:bg-white/5 transition-colors">
                     <div class="flex items-center space-x-2">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
                       <span>退出登录</span>
                     </div>
@@ -410,7 +432,7 @@ const siteTitle = computed(() => {
 
             <!-- 移动端菜单按钮 -->
             <button @click="toggleMobileMenu"
-              class="md:hidden p-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors">
+              class="md:hidden p-2 rounded-md text-gray-600 hover:text-brand hover:bg-gray-50 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path v-if="!isMobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M4 6h16M4 12h16M4 18h16" />
@@ -427,8 +449,8 @@ const siteTitle = computed(() => {
               :class="[
                 'text-left py-3 px-4 text-sm font-medium transition-all duration-200 rounded-md',
                 activeTab === tab.name
-                  ? 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-400/10'
-                  : 'text-muted-foreground hover:text-blue-600 hover:bg-muted dark:hover:bg-white/5'
+                  ? 'text-brand bg-brand/10 dark:text-brand dark:bg-brand/10'
+                  : 'text-muted-foreground hover:text-brand hover:bg-muted dark:hover:bg-white/5'
               ]">
               {{ tab.name }}
             </button>
