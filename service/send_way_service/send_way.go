@@ -2,7 +2,6 @@ package send_way_service
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/app"
@@ -66,10 +65,11 @@ var (
 
 // WayDetailEmail 邮箱渠道明细字段
 type WayDetailEmail struct {
-	Server  string `validate:"required,max=50" label:"SMTP服务地址"`
-	Port    int    `validate:"required,max=65535" label:"SMTP服务端口"`
-	Account string `validate:"required,email" label:"邮箱账号"`
-	Passwd  string `validate:"required,max=50" label:"邮箱密码"`
+	Server   string `json:"server" validate:"required,max=50" label:"SMTP服务地址"`
+	Port     int    `json:"port" validate:"required,max=65535" label:"SMTP服务端口"`
+	Account  string `json:"account" validate:"required,email" label:"邮箱账号"`
+	Passwd   string `json:"passwd" validate:"required,max=50" label:"邮箱密码"`
+	FromName string `json:"from_name" validate:"max=50" label:"发信人名称"`
 }
 
 func (w *WayDetailEmail) Validate(authJson string) (string, interface{}) {
@@ -85,7 +85,7 @@ func (w *WayDetailEmail) Validate(authJson string) (string, interface{}) {
 func (w *WayDetailEmail) Test() (string, string) {
 	testMsg := "This is a test message from message-nest."
 	var emailer message.EmailMessage
-	emailer.Init(w.Server, 465, w.Account, w.Passwd)
+	emailer.Init(w.Server, w.Port, w.Account, w.Passwd, w.FromName)
 	errMsg := emailer.SendTextMessage(w.Account, "test email", testMsg)
 	return errMsg, ""
 }
@@ -378,12 +378,12 @@ func (sw *SendWay) NameIsExist(method string) error {
 	}
 	if method == "add" {
 		if len(way.ID) > 0 {
-			return errors.New(fmt.Sprintf("已经存在同名的渠道名：%s", way.Name))
+			return fmt.Errorf("已经存在同名的渠道名：%s", way.Name)
 		}
 	} else {
 		// 只允许当前的重名
 		if len(way.ID) > 0 && way.ID != sw.ID {
-			return errors.New(fmt.Sprintf("已经存在同名的渠道名：%s", way.Name))
+			return fmt.Errorf("已经存在同名的渠道名：%s", way.Name)
 		}
 	}
 	return nil

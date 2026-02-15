@@ -38,7 +38,7 @@ func (c *EmailChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, 
 		return "", err.Error()
 	}
 	var emailer message.EmailMessage
-	emailer.Init(auth.Server, auth.Port, auth.Account, auth.Passwd)
+	emailer.Init(auth.Server, auth.Port, auth.Account, auth.Passwd, auth.FromName)
 	var errMsg string
 	if contentType == FormatTypeText {
 		errMsg = emailer.SendTextMessage(config.ToAccount, content.Title, formattedContent)

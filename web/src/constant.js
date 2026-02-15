@@ -32,6 +32,7 @@ const CONSTANT = {
                 { subLabel: 'smtp服务端口', value: '', col: 'port', desc: "port" },
                 { subLabel: '邮箱账号', value: '', col: 'account', desc: "邮箱账号" },
                 { subLabel: '邮箱密码', value: '', col: 'passwd', desc: "邮箱密码" },
+                { subLabel: '发信人名称', value: '', col: 'from_name', desc: "想要设置的发信人名字" },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             taskInsRadios: [

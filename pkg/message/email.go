@@ -2,28 +2,35 @@ package message
 
 import (
 	"fmt"
+
 	"gopkg.in/gomail.v2"
 )
 
 type EmailMessage struct {
-	Server  string
-	Port    int
-	Account string
-	Passwd  string
-	GM      *gomail.Dialer
+	Server   string
+	Port     int
+	Account  string
+	Passwd   string
+	FromName string
+	GM       *gomail.Dialer
 }
 
-func (e *EmailMessage) Init(host string, port int, account string, passwd string) {
+func (e *EmailMessage) Init(host string, port int, account string, passwd string, fromName string) {
 	e.Server = host
 	e.Port = port
 	e.Account = account
 	e.Passwd = passwd
+	e.FromName = fromName
 	e.GM = gomail.NewDialer(host, port, account, passwd)
 }
 
 func (e *EmailMessage) SendTextMessage(toEmail string, title string, content string) string {
 	m := gomail.NewMessage()
-	m.SetHeader("From", e.Account)
+	if e.FromName != "" {
+		m.SetAddressHeader("From", e.Account, e.FromName)
+	} else {
+		m.SetHeader("From", e.Account)
+	}
 	m.SetHeader("To", toEmail)
 	m.SetHeader("Subject", title)
 	m.SetBody("text/html", content)
