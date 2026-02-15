@@ -3,7 +3,6 @@ package message
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -44,7 +43,7 @@ func (t *QyWeiXin) Request(msg interface{}) ([]byte, error) {
 		return body, err
 	}
 	if r.Code != 0 {
-		return body, errors.New(fmt.Sprintf("response error: %s", string(body)))
+		return body, fmt.Errorf("response error: %s", string(body))
 	}
 	return body, err
 }
@@ -57,7 +56,7 @@ func (t *QyWeiXin) SendMessageText(text string, at ...string) ([]byte, error) {
 			"content": text,
 		},
 	}
-	
+
 	// 添加@功能
 	// 企业微信支持两种@方式：
 	// 1. mentioned_list: userid列表或"@all"
@@ -65,7 +64,7 @@ func (t *QyWeiXin) SendMessageText(text string, at ...string) ([]byte, error) {
 	if len(at) > 0 {
 		mentionedList := []string{}
 		mentionedMobileList := []string{}
-		
+
 		for _, item := range at {
 			if item == "@all" || item == "all" {
 				mentionedList = append(mentionedList, "@all")
@@ -77,7 +76,7 @@ func (t *QyWeiXin) SendMessageText(text string, at ...string) ([]byte, error) {
 				mentionedList = append(mentionedList, item)
 			}
 		}
-		
+
 		textContent := msg["text"].(map[string]interface{})
 		if len(mentionedList) > 0 {
 			textContent["mentioned_list"] = mentionedList
@@ -86,7 +85,7 @@ func (t *QyWeiXin) SendMessageText(text string, at ...string) ([]byte, error) {
 			textContent["mentioned_mobile_list"] = mentionedMobileList
 		}
 	}
-	
+
 	resp, err := t.Request(msg)
 	return resp, err
 }
@@ -98,10 +97,10 @@ func (t *QyWeiXin) SendMessageMarkdown(title, text string, at ...string) ([]byte
 			"content": text,
 		},
 	}
-	
+
 	// 企业微信Markdown消息不支持@功能，但可以在内容中手动添加
 	// 如果需要@功能，建议使用text类型
-	
+
 	resp, err := t.Request(msg)
 	return resp, err
 }

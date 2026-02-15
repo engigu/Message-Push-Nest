@@ -47,6 +47,7 @@ var (
 		constant.MessageTypeTelegram:        func() WayValidator { return &WayDetailTelegram{} },
 		constant.MessageTypeBark:            func() WayValidator { return &WayDetailBark{} },
 		constant.MessageTypePushMe:          func() WayValidator { return &WayDetailPushMe{} },
+		constant.MessageTypeNtfy:            func() WayValidator { return &WayDetailNtfy{} },
 	}
 	testerRegistry = map[string]func(interface{}) WayTester{
 		constant.MessageTypeEmail:           func(m interface{}) WayTester { return m.(*WayDetailEmail) },
@@ -60,6 +61,7 @@ var (
 		constant.MessageTypeTelegram:        func(m interface{}) WayTester { return m.(*WayDetailTelegram) },
 		constant.MessageTypeBark:            func(m interface{}) WayTester { return m.(*WayDetailBark) },
 		constant.MessageTypePushMe:          func(m interface{}) WayTester { return m.(*WayDetailPushMe) },
+		constant.MessageTypeNtfy:            func(m interface{}) WayTester { return m.(*WayDetailNtfy) },
 	}
 )
 
@@ -365,6 +367,47 @@ func (w *WayDetailPushMe) Test() (string, string) {
 		return fmt.Sprintf("发送失败：%s", err), res
 	}
 	return "", res
+}
+
+// WayDetailNtfy Ntfy推送渠道明细字段
+type WayDetailNtfy struct {
+	Url      string `json:"url" validate:"max=200" label:"自定义API地址"`
+	Topic    string `json:"topic" validate:"required,max=100" label:"Topic"`
+	Priority string `json:"priority" validate:"max=10" label:"优先级"`
+	Icon     string `json:"icon" validate:"max=200" label:"图标URL"`
+	Token    string `json:"token" validate:"max=100" label:"Token"`
+	Username string `json:"username" validate:"max=100" label:"用户名"`
+	Password string `json:"password" validate:"max=100" label:"密码"`
+	Actions  string `json:"actions" validate:"max=500" label:"Actions"`
+}
+
+func (w *WayDetailNtfy) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "Ntfy参数反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, w
+}
+
+func (w *WayDetailNtfy) Test() (string, string) {
+	testMsg := "This is a test message from message-nest."
+	var cli = message.Ntfy{
+		Url:      w.Url,
+		Topic:    w.Topic,
+		Priority: w.Priority,
+		Icon:     w.Icon,
+		Token:    w.Token,
+		Username: w.Username,
+		Password: w.Password,
+		Actions:  w.Actions,
+	}
+	res, err := cli.Request("Test Message", testMsg)
+	if err != nil {
+		return fmt.Sprintf("发送失败：%s", err), string(res)
+	}
+	return "", string(res)
 }
 
 func (sw *SendWay) GetByID() (interface{}, error) {

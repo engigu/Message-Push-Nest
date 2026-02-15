@@ -249,6 +249,30 @@ const CONSTANT = {
             taskInsInputs: [
             ],
         },
+        {
+            type: 'Ntfy',
+            label: 'Ntfy推送',
+            inputs: [
+                { subLabel: 'Topic', value: '', col: 'topic', desc: "Ntfy的Topic名字，必填" },
+                { subLabel: '自定义API地址', value: '', col: 'url', desc: "默认: https://ntfy.sh/，可选" },
+                { subLabel: '优先级', value: '3', col: 'priority', desc: "1(min) 到 5(max)，可选" },
+                { subLabel: '图标URL', value: '', col: 'icon', desc: "推送显示的图标URL，可选" },
+                { subLabel: 'Token', value: '', col: 'token', desc: "认证Token，可选" },
+                { subLabel: '用户名', value: '', col: 'username', desc: "Basic认证用户名，可选" },
+                { subLabel: '密码', value: '', col: 'password', desc: "Basic认证密码，可选" },
+                { subLabel: 'Actions', value: '', col: 'actions', desc: "JSON格式的Action配置，可选" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "Ntfy推送说明",
+                desc: "Ntfy 是一款基于 HTTP 的发布-订阅通知服务。<br />1. 填写你的 Topic<br />2. 如果是自建服务，填写自定义 API 地址<br />3. 支持 Token 或 用户名密码 认证"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+            ],
+        },
     ],
     API_VIEW_DATA: [
         { label: "curl", class: "language-shell line-numbers", code: "", func: ApiStrGenerate.getCurlString },

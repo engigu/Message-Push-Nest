@@ -28,7 +28,8 @@ import {
   Check,
 
   MessageCircleCode,
-  Globe
+  Globe,
+  Megaphone
 } from 'lucide-vue-next'
 
 // 组件props
@@ -265,7 +266,8 @@ const getChannelIcon = (type: string) => {
     'MessageNest': Inbox,
     'AliyunSMS': Smartphone,
     'Telegram': Globe, // Telegram uses Globe for now as paper plane might be confusing with Feishu
-    'Bark': Bell
+    'Bark': Bell,
+    'Ntfy': Megaphone
   }
   return map[type] || MessageSquare // Default icon
 }

@@ -29,6 +29,7 @@ const (
 	MessageTypeTelegram        = channels.MessageTypeTelegram
 	MessageTypeBark            = channels.MessageTypeBark
 	MessageTypePushMe          = channels.MessageTypePushMe
+	MessageTypeNtfy            = channels.MessageTypeNtfy
 )
 
 // ChannelRegistry 渠道注册表
@@ -105,6 +106,7 @@ func GetGlobalChannelRegistry() *ChannelRegistry {
 		globalChannelRegistry.Register(channels.NewTelegramChannel())
 		globalChannelRegistry.Register(channels.NewBarkChannel())
 		globalChannelRegistry.Register(channels.NewPushMeChannel())
+		globalChannelRegistry.Register(channels.NewNtfyChannel())
 	})
 	return globalChannelRegistry
 }

@@ -21,6 +21,7 @@ const (
 	MessageTypeTelegram        = constant.MessageTypeTelegram
 	MessageTypeBark            = constant.MessageTypeBark
 	MessageTypePushMe          = constant.MessageTypePushMe
+	MessageTypeNtfy            = constant.MessageTypeNtfy
 )
 
 // UnifiedMessageContent 统一的消息内容结构

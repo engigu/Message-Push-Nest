@@ -63,6 +63,10 @@ type InsBarkConfig struct {
 type InsPushMeConfig struct {
 }
 
+// InsNtfyConfig 实例里面的Ntfy config
+type InsNtfyConfig struct {
+}
+
 // ManyAddTaskIns 批量添加实例
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
 	tx := db.Begin()

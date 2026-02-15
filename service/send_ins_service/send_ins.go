@@ -135,6 +135,10 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		var Config models.InsPushMeConfig
 		return "", Config
 	}
+	if ins.WayType == constant.MessageTypeNtfy {
+		var Config models.InsNtfyConfig
+		return "", Config
+	}
 	return "未知的渠道的config校验", empty
 }
 

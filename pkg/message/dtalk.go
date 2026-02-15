@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -49,7 +48,7 @@ func (t *Dtalk) Request(msg interface{}) ([]byte, error) {
 		return body, err
 	}
 	if r.Code != 0 {
-		return body, errors.New(fmt.Sprintf("response error: %s", string(body)))
+		return body, fmt.Errorf("response error: %s", string(body))
 	}
 	return body, err
 }
@@ -62,12 +61,12 @@ func (t *Dtalk) SendMessageText(text string, at ...string) ([]byte, error) {
 			"content": text,
 		},
 	}
-	
+
 	// 添加@功能
 	if len(at) > 0 {
 		atMobiles := []string{}
 		isAtAll := false
-		
+
 		for _, mobile := range at {
 			if mobile == "all" || mobile == "@all" {
 				isAtAll = true
@@ -75,13 +74,13 @@ func (t *Dtalk) SendMessageText(text string, at ...string) ([]byte, error) {
 				atMobiles = append(atMobiles, mobile)
 			}
 		}
-		
+
 		msg["at"] = map[string]interface{}{
 			"atMobiles": atMobiles,
 			"isAtAll":   isAtAll,
 		}
 	}
-	
+
 	resp, err := t.Request(msg)
 	return resp, err
 }
@@ -94,12 +93,12 @@ func (t *Dtalk) SendMessageMarkdown(title, text string, at ...string) ([]byte, e
 			"text":  text,
 		},
 	}
-	
+
 	// 添加@功能
 	if len(at) > 0 {
 		atMobiles := []string{}
 		isAtAll := false
-		
+
 		for _, mobile := range at {
 			if mobile == "all" || mobile == "@all" {
 				isAtAll = true
@@ -107,13 +106,13 @@ func (t *Dtalk) SendMessageMarkdown(title, text string, at ...string) ([]byte, e
 				atMobiles = append(atMobiles, mobile)
 			}
 		}
-		
+
 		msg["at"] = map[string]interface{}{
 			"atMobiles": atMobiles,
 			"isAtAll":   isAtAll,
 		}
 	}
-	
+
 	resp, err := t.Request(msg)
 	return resp, err
 }
