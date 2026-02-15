@@ -18,17 +18,16 @@ import {
 } from '@/components/ui/tooltip'
 import {
   Mail,
-  MessageSquare,
-  MessageCircle,
-  Send,
-  Webhook,
+  Zap,
+  Building2,
+  Bird,
+  PlugZap,
   Smartphone,
-  Bell,
-  Inbox,
+  BellRing,
+  Server,
   Check,
-
-  MessageCircleCode,
-  Globe,
+  QrCode,
+  Send,
   Megaphone,
   ShieldCheck
 } from 'lucide-vue-next'
@@ -262,19 +261,19 @@ const handleSave = async () => {
 const getChannelIcon = (type: string) => {
   const map: Record<string, any> = {
     'Email': Mail,
-    'Dtalk': MessageSquare,
-    'QyWeiXin': MessageCircle,
-    'Feishu': Send,
-    'Custom': Webhook,
-    'WeChatOFAccount': MessageCircleCode,
-    'MessageNest': Inbox,
+    'Dtalk': Zap,
+    'QyWeiXin': Building2,
+    'Feishu': Bird,
+    'Custom': PlugZap,
+    'WeChatOFAccount': QrCode,
+    'MessageNest': Server,
     'AliyunSMS': Smartphone,
-    'Telegram': Globe, // Telegram uses Globe for now as paper plane might be confusing with Feishu
-    'Bark': Bell,
+    'Telegram': Send,
+    'Bark': BellRing,
     'Ntfy': Megaphone,
     'Gotify': ShieldCheck
   }
-  return map[type] || MessageSquare // Default icon
+  return map[type] || Send // Default icon
 }
 
 // 计算保存按钮文本
