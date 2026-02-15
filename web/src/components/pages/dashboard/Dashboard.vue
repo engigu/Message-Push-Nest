@@ -198,6 +198,9 @@ const renderLineChart = () => {
           fontSize: '12px',
           fontFamily: 'Inter, sans-serif'
         }
+      },
+      tooltip: {
+        enabled: false
       }
     },
     yaxis: {
