@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-// @ts-ignore
 import { TemplateApiStrGenerate } from '@/util/viewApi'
 import { useInstanceData } from '@/composables/useInstanceData'
 import { useApiCodeViewer } from '@/composables/useApiCodeViewer'

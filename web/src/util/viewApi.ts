@@ -6,7 +6,7 @@ const gethttpOrigin = () => {
 
 class TokenEncryption {
     // 根据字符串内容生成确定性 salt（范围 0~255）
-    static getDeterministicSalt(text) {
+    static getDeterministicSalt(text: string) {
         let sum = 0;
         for (let i = 0; i < text.length; i++) {
             sum = (sum + text.charCodeAt(i) * (i + 1)) & 0xFF;
@@ -15,7 +15,7 @@ class TokenEncryption {
     }
 
     // 加密：首字节为salt，后续为按位异或后的数据
-    static encryptHex(text, key) {
+    static encryptHex(text: string, key: number) {
         const salt = TokenEncryption.getDeterministicSalt(text);
         let result = salt.toString(16).padStart(2, '0');
         for (let i = 0; i < text.length; i++) {
@@ -29,13 +29,13 @@ class TokenEncryption {
 // ==================== 公共代码模板生成器 ====================
 
 class CodeTemplates {
-    static getCurl(url, dataStr) {
+    static getCurl(url: string, dataStr: string) {
         return `curl -X POST --location '${url}' \\
 --header 'Content-Type: application/json' \\
 --data '${dataStr}'`;
     }
 
-    static getGolang(url, dataStr) {
+    static getGolang(url: string, dataStr: string) {
         return `package main
 
 import (
@@ -67,7 +67,7 @@ func main() {
 }`;
     }
 
-    static getPython(url, dataStr) {
+    static getPython(url: string, dataStr: string) {
         return `import requests
 
 headers = {
@@ -79,7 +79,7 @@ response = requests.post('${url}', headers=headers, json=json_data)
 print("response:", response.json())`;
     }
 
-    static getJava(url, dataStr) {
+    static getJava(url: string, dataStr: string) {
         return `import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -93,14 +93,14 @@ HttpClient client = HttpClient.newBuilder()
 
 HttpRequest request = HttpRequest.newBuilder()
     .uri(URI.create("${url}"))
-    .POST(BodyPublishers.ofString(${JSON.stringify(dataStr).trim('"')}))
+    .POST(BodyPublishers.ofString(${JSON.stringify(dataStr).slice(1, -1)}))
     .setHeader("Content-Type", "application/json")
     .build();
 
 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());`;
     }
 
-    static getRust(url, dataStr) {
+    static getRust(url: string, dataStr: string) {
         return `extern crate reqwest;
 use reqwest::header;
 
@@ -123,7 +123,7 @@ ${dataStr}
 }`;
     }
 
-    static getPHP(url, dataStr) {
+    static getPHP(url: string, dataStr: string) {
         return `<?php
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, '${url}');
@@ -132,7 +132,7 @@ curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     'Content-Type: application/json',
 ]);
-curl_setopt($ch, CURLOPT_POSTFIELDS, ${JSON.stringify(dataStr).trim('"')});
+curl_setopt($ch, CURLOPT_POSTFIELDS, ${JSON.stringify(dataStr).slice(1, -1)});
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
 $response = curl_exec($ch);
@@ -140,14 +140,14 @@ $response = curl_exec($ch);
 curl_close($ch);`;
     }
 
-    static getNode(url, dataStr) {
+    static getNode(url: string, dataStr: string) {
         return `var request = require('request');
 
 var headers = {
     'Content-Type': 'application/json'
 };
 
-var dataString = ${JSON.stringify(dataStr).trim('"')};
+var dataString = ${JSON.stringify(dataStr).slice(1, -1)};
 
 var options = {
     url: '${url}',
@@ -168,9 +168,9 @@ request(options, callback);`;
 
 // ==================== 发信任务 API (V1) ====================
 
-class ApiStrGenerate {
-    static getDataString(task_id, options) {
-        let data = { token: TokenEncryption.encryptHex(task_id, 71) };
+export class ApiStrGenerate {
+    static getDataString(task_id: string, options: any) {
+        let data: any = { token: TokenEncryption.encryptHex(task_id, 71) };
         data.title = 'message title';
         data.text = 'Hello World!';
         if (options.html) data.html = '<h1> Hello World! </h1>';
@@ -188,45 +188,45 @@ class ApiStrGenerate {
         return `${gethttpOrigin()}/api/v1/message/send`;
     }
 
-    static getCurlString(task_id, options) {
+    static getCurlString(task_id: string, options: any) {
         return CodeTemplates.getCurl(this.getApiUrl(), this.getDataString(task_id, options));
     }
 
-    static getGolangString(task_id, options) {
+    static getGolangString(task_id: string, options: any) {
         return CodeTemplates.getGolang(this.getApiUrl(), this.getDataString(task_id, options));
     }
 
-    static getPythonString(task_id, options) {
+    static getPythonString(task_id: string, options: any) {
         return CodeTemplates.getPython(this.getApiUrl(), this.getDataString(task_id, options));
     }
 
-    static getJaveString(task_id, options) {
+    static getJaveString(task_id: string, options: any) {
         return CodeTemplates.getJava(this.getApiUrl(), this.getDataString(task_id, options));
     }
 
-    static getRustString(task_id, options) {
+    static getRustString(task_id: string, options: any) {
         return CodeTemplates.getRust(this.getApiUrl(), this.getDataString(task_id, options));
     }
 
-    static getPHPString(task_id, options) {
+    static getPHPString(task_id: string, options: any) {
         return CodeTemplates.getPHP(this.getApiUrl(), this.getDataString(task_id, options));
     }
 
-    static getNodeString(task_id, options) {
+    static getNodeString(task_id: string, options: any) {
         return CodeTemplates.getNode(this.getApiUrl(), this.getDataString(task_id, options));
     }
 }
 
 // ==================== 模板 API (V2) ====================
 
-class TemplateApiStrGenerate {
-    static getTemplateDataString(template_id, placeholders_json, options = {}) {
+export class TemplateApiStrGenerate {
+    static getTemplateDataString(template_id: string, placeholders_json: string, options: any = {}) {
         // 解析占位符配置
-        let placeholders = {};
+        let placeholders: any = {};
         try {
             const placeholdersList = JSON.parse(placeholders_json || '[]');
             // 根据占位符配置生成示例值
-            placeholdersList.forEach(p => {
+            placeholdersList.forEach((p: any) => {
                 placeholders[p.key] = p.default || `mock_${p.key}`;
             });
         } catch (e) {
@@ -238,17 +238,17 @@ class TemplateApiStrGenerate {
             };
         }
 
-        let data = {
+        let data: any = {
             token: TokenEncryption.encryptHex(template_id, 71),
             title: 'message title',
             placeholders: placeholders
         };
-        
+
         // 添加动态接收者字段（如果需要）
         if (options.recipients) {
             data.recipients = ['user1@example.com', 'user2@example.com'];
         }
-        
+
         return JSON.stringify(data, null, 4);
     }
 
@@ -256,33 +256,31 @@ class TemplateApiStrGenerate {
         return `${gethttpOrigin()}/api/v2/message/send`;
     }
 
-    static getCurlString(template_id, placeholders_json, options = {}) {
+    static getCurlString(template_id: string, placeholders_json: string, options: any = {}) {
         return CodeTemplates.getCurl(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getGolangString(template_id, placeholders_json, options = {}) {
+    static getGolangString(template_id: string, placeholders_json: string, options: any = {}) {
         return CodeTemplates.getGolang(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getPythonString(template_id, placeholders_json, options = {}) {
+    static getPythonString(template_id: string, placeholders_json: string, options: any = {}) {
         return CodeTemplates.getPython(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getJavaString(template_id, placeholders_json, options = {}) {
+    static getJavaString(template_id: string, placeholders_json: string, options: any = {}) {
         return CodeTemplates.getJava(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getRustString(template_id, placeholders_json, options = {}) {
+    static getRustString(template_id: string, placeholders_json: string, options: any = {}) {
         return CodeTemplates.getRust(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getPHPString(template_id, placeholders_json, options = {}) {
+    static getPHPString(template_id: string, placeholders_json: string, options: any = {}) {
         return CodeTemplates.getPHP(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 
-    static getNodeString(template_id, placeholders_json, options = {}) {
+    static getNodeString(template_id: string, placeholders_json: string, options: any = {}) {
         return CodeTemplates.getNode(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
     }
 }
-
-export { ApiStrGenerate, TemplateApiStrGenerate };

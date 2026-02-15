@@ -1,5 +1,14 @@
 
-export const THEMES = [
+export interface Theme {
+    name: string;
+    key: string;
+    light: string;
+    dark: string;
+    oklch_light: string;
+    oklch_dark: string;
+}
+
+export const THEMES: Theme[] = [
     {
         name: '雅致蓝',
         key: 'blue',
@@ -58,7 +67,7 @@ export const THEMES = [
     }
 ]
 
-export const applyTheme = (themeKey) => {
+export const applyTheme = (themeKey: string) => {
     const theme = THEMES.find(t => t.key === themeKey) || THEMES[0]
     const root = document.documentElement
 
@@ -70,7 +79,7 @@ export const applyTheme = (themeKey) => {
     // 由于 index.css 中的 --brand 在 .dark 下有覆盖，我们需要分别处理
 
     // 创建或更新全局样式块来覆盖 .dark 下的变量
-    let styleEl = document.getElementById('dynamic-theme-style')
+    let styleEl = document.getElementById('dynamic-theme-style') as HTMLStyleElement | null
     if (!styleEl) {
         styleEl = document.createElement('style')
         styleEl.id = 'dynamic-theme-style'
@@ -89,6 +98,6 @@ export const applyTheme = (themeKey) => {
     localStorage.setItem('themeColor', themeKey)
 }
 
-export const getStoredTheme = () => {
+export const getStoredTheme = (): string => {
     return localStorage.getItem('themeColor') || 'blue'
 }
