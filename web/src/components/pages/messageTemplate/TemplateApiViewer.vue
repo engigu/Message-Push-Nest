@@ -110,7 +110,7 @@ export default defineComponent({
 
 <template>
   <Dialog :open="open" @update:open="handleUpdateOpen">
-    <DialogContent class="w-[800px] sm:w-[900px] lg:w-[1000px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
+    <DialogContent class="w-[800px] sm:w-[900px] lg:w-[1000px] max-w-[90vw] max-h-[90vh] overflow-hidden flex flex-col">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
           <span>模板API接口</span>
@@ -118,7 +118,7 @@ export default defineComponent({
         </DialogTitle>
       </DialogHeader>
 
-      <div class="space-y-4">
+      <div class="space-y-4 flex-1 overflow-y-auto pr-2">
         <!-- API 信息概览 -->
         <div class="border rounded-lg p-4 space-y-2 bg-white dark:bg-slate-900">
           <div class="flex items-center gap-2">

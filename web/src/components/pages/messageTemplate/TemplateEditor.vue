@@ -320,11 +320,11 @@ watch(() => props.open, (newVal) => {
 
 <template>
   <Dialog :open="open" @update:open="(value) => $emit('update:open', value)">
-    <DialogContent class="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <DialogContent class="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
       <DialogHeader>
         <DialogTitle>{{ isEditing ? '编辑模板' : '新建模板' }}</DialogTitle>
       </DialogHeader>
-      <div class="space-y-4 py-4">
+      <div class="space-y-4 py-4 flex-1 overflow-y-auto pr-2">
         <!-- 基本信息 -->
         <div class="grid grid-cols-10 gap-4">
           <div class="col-span-7 space-y-2">

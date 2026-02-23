@@ -133,9 +133,8 @@
 
   /* 极致滚动条 */
   ::-webkit-scrollbar {
-    width: 4px;
-    /* 更纤细 */
-    height: 4px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -143,15 +142,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--brand);
-    opacity: 0.3;
+    background: color-mix(in srgb, var(--foreground) 20%, transparent);
     border-radius: 10px;
-    filter: brightness(0.8);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--brand);
-    opacity: 0.6;
+    background: color-mix(in srgb, var(--foreground) 40%, transparent);
   }
 
   /* 修复 ApexCharts tooltip */

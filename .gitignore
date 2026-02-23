@@ -33,3 +33,4 @@ go.work
 .idea/
 .release_version
 conf/database.db
+tmp/
