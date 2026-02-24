@@ -51,6 +51,7 @@ export default defineComponent({
 
     // 可选参数选项
     const showRecipients = ref(false)
+    const codeStyle = ref('script') // 'script' or 'function'
     
     // 监听动态接收实例变化，自动勾选
     watch(hasDynamicRecipientInstance, (newVal) => {
@@ -74,21 +75,23 @@ export default defineComponent({
         recipients: showRecipients.value
       }
 
+      const isFunction = codeStyle.value === 'function'
+
       switch (language) {
         case 'curl':
-          return TemplateApiStrGenerate.getCurlString(templateId, placeholders, options)
+          return TemplateApiStrGenerate.getCurlString(templateId, placeholders, options, isFunction)
         case 'javascript':
-          return TemplateApiStrGenerate.getNodeString(templateId, placeholders, options)
+          return TemplateApiStrGenerate.getNodeString(templateId, placeholders, options, isFunction)
         case 'python':
-          return TemplateApiStrGenerate.getPythonString(templateId, placeholders, options)
+          return TemplateApiStrGenerate.getPythonString(templateId, placeholders, options, isFunction)
         case 'php':
-          return TemplateApiStrGenerate.getPHPString(templateId, placeholders, options)
+          return TemplateApiStrGenerate.getPHPString(templateId, placeholders, options, isFunction)
         case 'golang':
-          return TemplateApiStrGenerate.getGolangString(templateId, placeholders, options)
+          return TemplateApiStrGenerate.getGolangString(templateId, placeholders, options, isFunction)
         case 'java':
-          return TemplateApiStrGenerate.getJavaString(templateId, placeholders, options)
+          return TemplateApiStrGenerate.getJavaString(templateId, placeholders, options, isFunction)
         case 'rust':
-          return TemplateApiStrGenerate.getRustString(templateId, placeholders, options)
+          return TemplateApiStrGenerate.getRustString(templateId, placeholders, options, isFunction)
         default:
           return '// 请选择一种编程语言查看示例代码'
       }
@@ -101,6 +104,7 @@ export default defineComponent({
       enabledChannelNames,
       showRecipients,
       codeLanguages,
+      codeStyle,
       generateApiCode,
       copyToClipboard
     }
@@ -175,7 +179,15 @@ export default defineComponent({
 
         <!-- 代码示例 -->
         <div class="space-y-4">
-          <h3 class="font-semibold">代码示例</h3>
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold">代码示例</h3>
+            <Tabs v-model="codeStyle" class="w-40">
+              <TabsList class="grid w-full grid-cols-2">
+                <TabsTrigger value="script">脚本</TabsTrigger>
+                <TabsTrigger value="function">函数封装</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
           <Tabs v-model="activeTab" class="w-full">
             <TabsList class="grid w-full grid-cols-7 gap-1">

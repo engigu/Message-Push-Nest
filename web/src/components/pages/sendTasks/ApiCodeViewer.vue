@@ -57,6 +57,7 @@ export default defineComponent({
     const showAtUserIds = ref(false)
     const showAtAll = ref(false)
     const showRecipients = ref(false)
+    const codeStyle = ref('script') // 'script' or 'function'
     
     // 监听动态接收实例变化，自动勾选
     watch(hasDynamicRecipientInstance, (newVal) => {
@@ -85,21 +86,23 @@ export default defineComponent({
         recipients: showRecipients.value
       }
 
+      const isFunction = codeStyle.value === 'function'
+
       switch (language) {
         case 'curl':
-          return ApiStrGenerate.getCurlString(taskId, options)
+          return ApiStrGenerate.getCurlString(taskId, options, isFunction)
         case 'javascript':
-          return ApiStrGenerate.getNodeString(taskId, options)
+          return ApiStrGenerate.getNodeString(taskId, options, isFunction)
         case 'python':
-          return ApiStrGenerate.getPythonString(taskId, options)
+          return ApiStrGenerate.getPythonString(taskId, options, isFunction)
         case 'php':
-          return ApiStrGenerate.getPHPString(taskId, options)
+          return ApiStrGenerate.getPHPString(taskId, options, isFunction)
         case 'golang':
-          return ApiStrGenerate.getGolangString(taskId, options)
+          return ApiStrGenerate.getGolangString(taskId, options, isFunction)
         case 'java':
-          return ApiStrGenerate.getJaveString(taskId, options)
+          return ApiStrGenerate.getJaveString(taskId, options, isFunction)
         case 'rust':
-          return ApiStrGenerate.getRustString(taskId, options)
+          return ApiStrGenerate.getRustString(taskId, options, isFunction)
         default:
           return '// 请选择一种编程语言查看示例代码'
       }
@@ -118,6 +121,7 @@ export default defineComponent({
       showAtAll,
       showRecipients,
       codeLanguages,
+      codeStyle,
       generateApiCode,
       copyToClipboard
     }
@@ -217,7 +221,15 @@ export default defineComponent({
 
         <!-- 代码示例 -->
         <div class="space-y-4">
-          <h3 class="font-semibold">代码示例</h3>
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold">代码示例</h3>
+            <Tabs v-model="codeStyle" class="w-40">
+              <TabsList class="grid w-full grid-cols-2">
+                <TabsTrigger value="script">脚本</TabsTrigger>
+                <TabsTrigger value="function">函数封装</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
           <Tabs v-model="activeTab" class="w-full">
             <TabsList class="grid w-full grid-cols-7 gap-1">

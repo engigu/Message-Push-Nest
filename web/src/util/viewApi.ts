@@ -1,3 +1,5 @@
+import { CodeTemplates } from './code-templates';
+
 const gethttpOrigin = () => {
     return window.location.origin
 }
@@ -26,145 +28,7 @@ class TokenEncryption {
     }
 }
 
-// ==================== 公共代码模板生成器 ====================
-
-class CodeTemplates {
-    static getCurl(url: string, dataStr: string) {
-        return `curl -X POST --location '${url}' \\
---header 'Content-Type: application/json' \\
---data '${dataStr}'`;
-    }
-
-    static getGolang(url: string, dataStr: string) {
-        return `package main
-
-import (
-    "fmt"
-    "io"
-    "log"
-    "net/http"
-    "strings"
-)
-
-func main() {
-    client := &http.Client{}
-    var data = strings.NewReader(\`${dataStr}\`)
-    req, err := http.NewRequest("POST", "${url}", data)
-    if err != nil {
-        log.Fatal(err)
-    }
-    req.Header.Set("Content-Type", "application/json")
-    resp, err := client.Do(req)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer resp.Body.Close()
-    bodyText, err := io.ReadAll(resp.Body)
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Printf("%s\\n", bodyText)
-}`;
-    }
-
-    static getPython(url: string, dataStr: string) {
-        return `import requests
-
-headers = {
-    'Content-Type': 'application/json',
-}
-json_data = ${dataStr}
-response = requests.post('${url}', headers=headers, json=json_data)
-
-print("response:", response.json())`;
-    }
-
-    static getJava(url: string, dataStr: string) {
-        return `import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpResponse;
-
-HttpClient client = HttpClient.newBuilder()
-    .followRedirects(HttpClient.Redirect.NORMAL)
-    .build();
-
-HttpRequest request = HttpRequest.newBuilder()
-    .uri(URI.create("${url}"))
-    .POST(BodyPublishers.ofString(${JSON.stringify(dataStr).slice(1, -1)}))
-    .setHeader("Content-Type", "application/json")
-    .build();
-
-HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());`;
-    }
-
-    static getRust(url: string, dataStr: string) {
-        return `extern crate reqwest;
-use reqwest::header;
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut headers = header::HeaderMap::new();
-    headers.insert("Content-Type", "application/json".parse().unwrap());
-
-    let client = reqwest::blocking::Client::new();
-    let res = client.post("${url}")
-        .headers(headers)
-        .body(r#"
-${dataStr}
-"#
-        )
-        .send()?
-        .text()?;
-    println!("{}", res);
-
-    Ok(())
-}`;
-    }
-
-    static getPHP(url: string, dataStr: string) {
-        return `<?php
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, '${url}');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'Content-Type: application/json',
-]);
-curl_setopt($ch, CURLOPT_POSTFIELDS, ${JSON.stringify(dataStr).slice(1, -1)});
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-$response = curl_exec($ch);
-
-curl_close($ch);`;
-    }
-
-    static getNode(url: string, dataStr: string) {
-        return `var request = require('request');
-
-var headers = {
-    'Content-Type': 'application/json'
-};
-
-var dataString = ${JSON.stringify(dataStr).slice(1, -1)};
-
-var options = {
-    url: '${url}',
-    method: 'POST',
-    headers: headers,
-    body: dataString
-};
-
-function callback(error, response, body) {
-    if (!error && response.statusCode == 200) {
-        console.log(body);
-    }
-}
-
-request(options, callback);`;
-    }
-}
+// ==================== 公共代码模板生成器 (已移至分离的模块) ====================
 
 // ==================== 发信任务 API (V1) ====================
 
@@ -188,32 +52,32 @@ export class ApiStrGenerate {
         return `${gethttpOrigin()}/api/v1/message/send`;
     }
 
-    static getCurlString(task_id: string, options: any) {
-        return CodeTemplates.getCurl(this.getApiUrl(), this.getDataString(task_id, options));
+    static getCurlString(task_id: string, options: any, isFunction: boolean = false) {
+        return CodeTemplates.getCurl(this.getApiUrl(), this.getDataString(task_id, options), isFunction);
     }
 
-    static getGolangString(task_id: string, options: any) {
-        return CodeTemplates.getGolang(this.getApiUrl(), this.getDataString(task_id, options));
+    static getGolangString(task_id: string, options: any, isFunction: boolean = false) {
+        return CodeTemplates.getGolang(this.getApiUrl(), this.getDataString(task_id, options), isFunction);
     }
 
-    static getPythonString(task_id: string, options: any) {
-        return CodeTemplates.getPython(this.getApiUrl(), this.getDataString(task_id, options));
+    static getPythonString(task_id: string, options: any, isFunction: boolean = false) {
+        return CodeTemplates.getPython(this.getApiUrl(), this.getDataString(task_id, options), isFunction);
     }
 
-    static getJaveString(task_id: string, options: any) {
-        return CodeTemplates.getJava(this.getApiUrl(), this.getDataString(task_id, options));
+    static getJaveString(task_id: string, options: any, isFunction: boolean = false) {
+        return CodeTemplates.getJava(this.getApiUrl(), this.getDataString(task_id, options), isFunction);
     }
 
-    static getRustString(task_id: string, options: any) {
-        return CodeTemplates.getRust(this.getApiUrl(), this.getDataString(task_id, options));
+    static getRustString(task_id: string, options: any, isFunction: boolean = false) {
+        return CodeTemplates.getRust(this.getApiUrl(), this.getDataString(task_id, options), isFunction);
     }
 
-    static getPHPString(task_id: string, options: any) {
-        return CodeTemplates.getPHP(this.getApiUrl(), this.getDataString(task_id, options));
+    static getPHPString(task_id: string, options: any, isFunction: boolean = false) {
+        return CodeTemplates.getPHP(this.getApiUrl(), this.getDataString(task_id, options), isFunction);
     }
 
-    static getNodeString(task_id: string, options: any) {
-        return CodeTemplates.getNode(this.getApiUrl(), this.getDataString(task_id, options));
+    static getNodeString(task_id: string, options: any, isFunction: boolean = false) {
+        return CodeTemplates.getNode(this.getApiUrl(), this.getDataString(task_id, options), isFunction);
     }
 }
 
@@ -256,31 +120,31 @@ export class TemplateApiStrGenerate {
         return `${gethttpOrigin()}/api/v2/message/send`;
     }
 
-    static getCurlString(template_id: string, placeholders_json: string, options: any = {}) {
-        return CodeTemplates.getCurl(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
+    static getCurlString(template_id: string, placeholders_json: string, options: any = {}, isFunction: boolean = false) {
+        return CodeTemplates.getCurl(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options), isFunction);
     }
 
-    static getGolangString(template_id: string, placeholders_json: string, options: any = {}) {
-        return CodeTemplates.getGolang(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
+    static getGolangString(template_id: string, placeholders_json: string, options: any = {}, isFunction: boolean = false) {
+        return CodeTemplates.getGolang(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options), isFunction);
     }
 
-    static getPythonString(template_id: string, placeholders_json: string, options: any = {}) {
-        return CodeTemplates.getPython(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
+    static getPythonString(template_id: string, placeholders_json: string, options: any = {}, isFunction: boolean = false) {
+        return CodeTemplates.getPython(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options), isFunction);
     }
 
-    static getJavaString(template_id: string, placeholders_json: string, options: any = {}) {
-        return CodeTemplates.getJava(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
+    static getJavaString(template_id: string, placeholders_json: string, options: any = {}, isFunction: boolean = false) {
+        return CodeTemplates.getJava(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options), isFunction);
     }
 
-    static getRustString(template_id: string, placeholders_json: string, options: any = {}) {
-        return CodeTemplates.getRust(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
+    static getRustString(template_id: string, placeholders_json: string, options: any = {}, isFunction: boolean = false) {
+        return CodeTemplates.getRust(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options), isFunction);
     }
 
-    static getPHPString(template_id: string, placeholders_json: string, options: any = {}) {
-        return CodeTemplates.getPHP(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
+    static getPHPString(template_id: string, placeholders_json: string, options: any = {}, isFunction: boolean = false) {
+        return CodeTemplates.getPHP(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options), isFunction);
     }
 
-    static getNodeString(template_id: string, placeholders_json: string, options: any = {}) {
-        return CodeTemplates.getNode(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options));
+    static getNodeString(template_id: string, placeholders_json: string, options: any = {}, isFunction: boolean = false) {
+        return CodeTemplates.getNode(this.getApiUrl(), this.getTemplateDataString(template_id, placeholders_json, options), isFunction);
     }
 }
