@@ -71,25 +71,25 @@
 }
 
 .dark {
-  --background: oklch(0.15 0.02 260);
-  --foreground: oklch(0.92 0.01 260);
-  --card: oklch(0.20 0.03 260);
-  --card-foreground: oklch(0.95 0.01 260);
-  --popover: oklch(0.20 0.03 260);
-  --popover-foreground: oklch(0.95 0.01 260);
-  --primary: oklch(0.98 0.01 260);
-  --primary-foreground: oklch(0.15 0.02 260);
-  --secondary: oklch(0.25 0.04 260);
-  --secondary-foreground: oklch(0.98 0.01 260);
-  --muted: oklch(0.23 0.04 260);
-  --muted-foreground: oklch(0.70 0.02 260);
-  --accent: oklch(0.25 0.04 260);
-  --accent-foreground: oklch(0.98 0.01 260);
+  --background: oklch(0.13 0 0);
+  --foreground: oklch(0.92 0 0);
+  --card: oklch(0.17 0 0);
+  --card-foreground: oklch(0.92 0 0);
+  --popover: oklch(0.17 0 0);
+  --popover-foreground: oklch(0.92 0 0);
+  --primary: oklch(0.96 0 0);
+  --primary-foreground: oklch(0.13 0 0);
+  --secondary: oklch(0.22 0 0);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.70 0 0);
+  --accent: oklch(0.22 0 0);
+  --accent-foreground: oklch(0.96 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.28 0.04 260);
-  --input: oklch(0.28 0.04 260);
-  --ring: oklch(0.55 0.18 260);
+  --border: oklch(0.26 0 0);
+  --input: oklch(0.26 0 0);
+  --ring: oklch(0.40 0 0);
 }
 
 @layer base {
@@ -110,8 +110,8 @@
 
   .dark body {
     background-image:
-      radial-gradient(ellipse at 15% 0%, color-mix(in oklch, var(--brand), transparent 85%) 0px, transparent 65%),
-      radial-gradient(ellipse at 85% 100%, color-mix(in oklch, var(--brand), transparent 88%) 0px, transparent 70%);
+      radial-gradient(ellipse at 15% 0%, color-mix(in oklch, var(--brand), transparent 93%) 0px, transparent 65%),
+      radial-gradient(ellipse at 85% 100%, color-mix(in oklch, var(--brand), transparent 95%) 0px, transparent 70%);
   }
 
   /* 品牌色交互组件增强 */
@@ -124,7 +124,12 @@
 
   /* 高级渐变/磨砂效果 */
   .glass-premium {
-    @apply bg-white/70 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_0_rgba(0, 0, 0, 0.3)] dark:shadow-[0_8px_32px_0_rgba(0, 0, 0, 0.5)];
+    @apply bg-white/70 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .dark .glass-premium {
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
   }
 
   .text-gradient-brand {
