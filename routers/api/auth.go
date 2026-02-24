@@ -30,6 +30,24 @@ const (
 	LockDurationTime = 30 * time.Minute
 )
 
+func init() {
+	// 启动一个后台 goroutine 每 30 分钟清理一次过期的记录，防止恶意攻击导致内存泄漏
+	go func() {
+		for {
+			time.Sleep(30 * time.Minute)
+			now := time.Now()
+			loginAttempts.Range(func(key, value interface{}) bool {
+				info := value.(*AttemptInfo)
+				// 如果距离上次尝试已经超过了重置时间，且也没有在锁定中，就可以清理掉了
+				if now.Sub(info.LastAttempt) > FailResetTime && now.After(info.LockUntil) {
+					loginAttempts.Delete(key)
+				}
+				return true
+			})
+		}
+	}()
+}
+
 type auth struct {
 	Username string `valid:"Required; MaxSize(50)"`
 	Password string `valid:"Required; MaxSize(50)"`

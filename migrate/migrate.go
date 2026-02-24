@@ -34,7 +34,7 @@ func InitAuthTableData() {
 		logrus.Error(fmt.Sprintf("添加初始化admin账号失败！"))
 		return
 	} else {
-		logrus.Error(fmt.Sprintf("初始化admin账号成功！您的账号：%s 密码：%s", initAccount, initAccountPasswd))
+		logrus.Info(fmt.Sprintf("初始化admin账号成功！您的账号：%s 密码：%s", initAccount, initAccountPasswd))
 	}
 
 	err = models.AddOneSetting(models.Settings{Section: initSection, Key: initAuthKey, Value: "1"})
