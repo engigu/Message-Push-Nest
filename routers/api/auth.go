@@ -1,17 +1,33 @@
 package api
 
 import (
-    "fmt"
-    "net/http"
+	"fmt"
+	"net/http"
+	"sync"
+	"time"
 
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 
-    "message-nest/pkg/app"
-    "message-nest/pkg/e"
-    "message-nest/pkg/util"
-    "message-nest/service/auth_service"
-    "message-nest/service/settings_service"
-    "message-nest/models"
+	"message-nest/models"
+	"message-nest/pkg/app"
+	"message-nest/pkg/e"
+	"message-nest/pkg/util"
+	"message-nest/service/auth_service"
+	"message-nest/service/settings_service"
+)
+
+type AttemptInfo struct {
+	Count       int
+	LastAttempt time.Time
+	LockUntil   time.Time
+}
+
+var loginAttempts sync.Map
+
+const (
+	MaxFailures      = 5
+	FailResetTime    = 10 * time.Minute
+	LockDurationTime = 30 * time.Minute
 )
 
 type auth struct {
@@ -36,6 +52,17 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
+	ip := c.ClientIP()
+	now := time.Now()
+	var info *AttemptInfo
+	if val, ok := loginAttempts.Load(ip); ok {
+		info = val.(*AttemptInfo)
+		if now.Before(info.LockUntil) {
+			appG.CResponse(http.StatusForbidden, fmt.Sprintf("登录失败次数过多，请于%d分钟后再试！", int(info.LockUntil.Sub(now).Minutes())+1), nil)
+			return
+		}
+	}
+
 	authService := auth_service.Auth{Username: req.Username, Password: req.Password}
 	isExist, err := authService.Check()
 	if err != nil {
@@ -43,9 +70,26 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 	if !isExist {
+		if info == nil {
+			info = &AttemptInfo{}
+		}
+		// 如果距离上次失败超过设定时间，且没有处于锁定状态，则重置计数
+		if now.Sub(info.LastAttempt) > FailResetTime && now.After(info.LockUntil) {
+			info.Count = 0
+		}
+		info.Count++
+		info.LastAttempt = now
+		if info.Count >= MaxFailures {
+			info.LockUntil = now.Add(LockDurationTime)
+		}
+		loginAttempts.Store(ip, info)
+
 		appG.CResponse(http.StatusUnauthorized, "账号或密码不正确！", nil)
 		return
 	}
+
+	// 成功登录则清除失败记录
+	loginAttempts.Delete(ip)
 
 	// 获取配置的 cookie 过期天数
 	expDays := settings_service.GetCookieExpDays()
@@ -55,12 +99,12 @@ func GetAuth(c *gin.Context) {
 		return
 	}
 
-    // 查询用户ID并记录登录日志
-    if u, _ := models.GetUserByUsername(req.Username); u != nil {
-        _ = models.AddLoginLog(u.ID, req.Username, c.ClientIP(), c.GetHeader("User-Agent"))
-    }
+	// 查询用户ID并记录登录日志
+	if u, _ := models.GetUserByUsername(req.Username); u != nil {
+		_ = models.AddLoginLog(u.ID, req.Username, c.ClientIP(), c.GetHeader("User-Agent"))
+	}
 
-    appG.CResponse(http.StatusOK, "登录成功!", map[string]string{
+	appG.CResponse(http.StatusOK, "登录成功!", map[string]string{
 		"token": token,
 	})
 }

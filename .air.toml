@@ -8,12 +8,12 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main ."
+  cmd = "go run main.go"
   delay = 1000
   entrypoint = ["./tmp/main"]
-  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "node_modules", "web/node_modules", "docs/node_modules"]
   exclude_file = []
-  exclude_regex = ["_test.go"]
+  exclude_regex = ["_test\\.go", ".*node_modules.*"]
   exclude_unchanged = false
   follow_symlink = false
   full_bin = ""

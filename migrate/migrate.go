@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"message-nest/models"
+	"message-nest/pkg/util"
 	"message-nest/service/settings_service"
 
 	"github.com/sirupsen/logrus"
@@ -15,7 +16,6 @@ func InitAuthTableData() {
 	initSection := "init"
 	initAuthKey := "account"
 	initAccount := "admin"
-	initAccountPasswd := "123456"
 
 	settingO, err := models.GetSettingByKey(initSection, initAuthKey)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -26,6 +26,9 @@ func InitAuthTableData() {
 		// 已经初始化过
 		return
 	}
+	
+	initAccountPasswd := util.GenerateRandomString(10)
+	
 	err = models.AddUser(initAccount, initAccountPasswd)
 	if err != nil {
 		logrus.Error(fmt.Sprintf("添加初始化admin账号失败！"))
