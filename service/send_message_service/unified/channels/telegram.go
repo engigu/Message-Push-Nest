@@ -15,7 +15,7 @@ func NewTelegramChannel() *TelegramChannel {
 }
 
 func (c *TelegramChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, content *UnifiedMessageContent) (string, string) {
-	auth, ok := msgObj.(send_way_service.WayDetailTelegram)
+	auth, ok := msgObj.(*send_way_service.WayDetailTelegram)
 	if !ok {
 		return "", "类型转换失败"
 	}
