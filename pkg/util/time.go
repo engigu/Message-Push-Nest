@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"time"
+	_ "time/tzdata"
 )
 
 const timeFormat = "2006-01-02 15:04:05"
