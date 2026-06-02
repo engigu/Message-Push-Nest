@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -112,6 +113,11 @@
     background-image:
       radial-gradient(ellipse at 15% 0%, color-mix(in oklch, var(--brand), transparent 93%) 0px, transparent 65%),
       radial-gradient(ellipse at 85% 100%, color-mix(in oklch, var(--brand), transparent 95%) 0px, transparent 70%);
+  }
+
+  /* Windows 专属字体优化 */
+  html.is-windows {
+    font-family: "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 
   /* 品牌色交互组件增强 */

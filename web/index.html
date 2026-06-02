@@ -5,6 +5,11 @@
     <link rel="icon" type="image/svg+xml"  />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
+    <script>
+      if (navigator.userAgent.indexOf('Windows') !== -1) {
+        document.documentElement.classList.add('is-windows');
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
