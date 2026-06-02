@@ -79,7 +79,7 @@ const linkedHtml = computed(() => {
       <div class="mt-1">
         <div
           class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm max-h-[65vh] overflow-auto overflow-x-hidden">
-          <pre class="whitespace-pre-wrap break-words break-all text-sm leading-relaxed text-foreground"
+          <pre class="font-sans whitespace-pre-wrap break-words break-all text-sm leading-relaxed text-foreground"
             v-html="linkedHtml"></pre>
         </div>
       </div>
