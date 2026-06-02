@@ -119,7 +119,7 @@ const loadAllStatisticData = async () => {
 const renderLineChart = () => {
   const latestSendData = state.trendData.latest_send_data || [];
 
-  const options = {
+  const options: any = {
     series: [
       {
         name: '发送总数',
@@ -350,14 +350,16 @@ const renderLineChart = () => {
       }
     }]
   }
-  const chart = new ApexCharts(document.querySelector("#sales-chart"), options)
+  const chartElement = document.querySelector("#sales-chart") as HTMLElement;
+  if (!chartElement) return;
+  const chart = new ApexCharts(chartElement, options);
   chart.render();
 
 }
 
 const renderPieChart = () => {
   const wayCateData = state.channelData.way_cate_data || [];
-  const options = {
+  const options: any = {
     series: wayCateData.length > 0
       ? wayCateData.map(item => item.count_num)
       : [],
@@ -438,7 +440,9 @@ const renderPieChart = () => {
       }
     }]
   }
-  const pieChart = new ApexCharts(document.querySelector("#pie-chart"), options)
+  const pieChartElement = document.querySelector("#pie-chart") as HTMLElement;
+  if (!pieChartElement) return;
+  const pieChart = new ApexCharts(pieChartElement, options);
   pieChart.render();
 }
 
