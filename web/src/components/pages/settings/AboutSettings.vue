@@ -134,7 +134,7 @@ export default {
                       <div v-for="(line, index) in state.versionLog.split('\n').reverse().filter(line => line.trim())" :key="index" 
                            class="flex items-start gap-3 p-3 rounded-lg border bg-background hover:bg-accent/50 transition-colors">
                         <div class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
-                        <div class="text-sm text-foreground leading-relaxed font-mono">
+                        <div class="text-sm text-foreground leading-relaxed font-sans">
                           {{ line }}
                         </div>
                       </div>

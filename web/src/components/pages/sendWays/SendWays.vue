@@ -277,7 +277,7 @@ onMounted(async () => {
         <div class="mt-6">
           <div class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm">
             <pre
-              class="whitespace-pre-wrap text-sm font-mono leading-relaxed text-foreground">{{ selectedConfig }}</pre>
+              class="whitespace-pre-wrap text-sm font-sans leading-relaxed text-foreground">{{ selectedConfig }}</pre>
           </div>
         </div>
       </SheetContent>

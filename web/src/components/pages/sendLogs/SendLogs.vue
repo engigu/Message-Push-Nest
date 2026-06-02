@@ -270,7 +270,7 @@ onMounted(async () => {
         </SheetHeader>
         <div class="mt-4">
           <div class="rounded-lg p-4 bg-muted/40 dark:bg-white/5 ring-1 ring-border/50 shadow-sm max-h-[82vh] overflow-y-auto break-words">
-            <pre class="whitespace-pre-wrap text-sm font-mono leading-relaxed text-foreground">{{ selectedLog }}</pre>
+            <pre class="whitespace-pre-wrap text-sm font-sans leading-relaxed text-foreground">{{ selectedLog }}</pre>
           </div>
         </div>
       </SheetContent>

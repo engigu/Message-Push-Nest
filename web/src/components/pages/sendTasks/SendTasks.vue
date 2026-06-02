@@ -303,7 +303,7 @@ onMounted(async () => {
         </SheetHeader>
         <div class="mt-6">
           <div class="bg-card p-4 rounded-lg border border-border">
-            <pre class="whitespace-pre-wrap text-sm font-mono text-foreground">{{ selectedConfig }}</pre>
+            <pre class="whitespace-pre-wrap text-sm font-sans text-foreground">{{ selectedConfig }}</pre>
           </div>
         </div>
       </SheetContent>
