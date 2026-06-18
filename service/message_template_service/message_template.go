@@ -3,7 +3,9 @@ package message_template_service
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"message-nest/models"
+	"message-nest/pkg/util"
 	"strings"
 )
 
@@ -19,6 +21,8 @@ type TemplateService struct {
 	AtUserIds        string
 	IsAtAll          bool
 	Status           string
+	SourceTemplateID string
+	CopyInstances    bool
 	Text             string
 	
 	PageNum  int
@@ -55,7 +59,26 @@ func (s *TemplateService) Add() error {
 		Status:           s.Status,
 	}
 	
-	return model.Add()
+	err := model.Add()
+	if err != nil {
+		return err
+	}
+
+	s.ID = newUUID
+
+	if s.CopyInstances && s.SourceTemplateID != "" {
+		insList, err := models.GetRawTemplateInsList(s.SourceTemplateID)
+		if err == nil && len(insList) > 0 {
+			for i := range insList {
+				insList[i].ID = fmt.Sprintf("IN%s", util.GenerateUniqueID())
+				insList[i].TemplateID = s.ID
+				insList[i].TaskID = ""
+			}
+			_ = models.ManyAddTaskIns(insList)
+		}
+	}
+
+	return nil
 }
 
 // Update 更新消息模板

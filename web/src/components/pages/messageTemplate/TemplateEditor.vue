@@ -88,6 +88,9 @@ const previewData = ref({
 // 是否显示预览
 const showPreview = ref(false)
 
+// 是否复制发送实例
+const copyInstances = ref(false)
+
 // 预览防抖定时器
 let previewDebounceTimer: number | null = null
 
@@ -231,6 +234,7 @@ const resetForm = () => {
     status: 'enabled'
   }
   placeholdersList.value = []
+  copyInstances.value = false
 }
 
 // 加载模板数据
@@ -293,8 +297,14 @@ const saveTemplate = async () => {
   formData.value.placeholders = JSON.stringify(placeholdersList.value)
 
   try {
+    const payload: any = { ...formData.value }
+    if (!props.isEditing && props.templateData) {
+      payload.source_template_id = props.templateData.id
+      payload.copy_instances = copyInstances.value
+    }
+
     const url = props.isEditing ? '/templates/edit' : '/templates/add'
-    const response = await request.post(url, formData.value)
+    const response = await request.post(url, payload)
     if (response.data.code === 200) {
       toast.success(props.isEditing ? '更新模板成功' : '添加模板成功')
       emit('update:open', false)
@@ -316,6 +326,7 @@ watch(() => props.open, (newVal) => {
       if (!props.isEditing) {
         formData.value.id = undefined
         formData.value.name = formData.value.name + ' - 副本'
+        copyInstances.value = false
       }
     } else {
       resetForm()
@@ -567,9 +578,20 @@ watch(() => props.open, (newVal) => {
           </TabsContent>
         </Tabs>
       </div>
-      <DialogFooter>
-        <Button variant="outline" @click="$emit('update:open', false)">取消</Button>
-        <Button @click="saveTemplate">保存</Button>
+      <DialogFooter class="flex items-center justify-between sm:justify-between w-full">
+        <div class="flex items-center" v-if="!isEditing && templateData">
+          <Checkbox 
+            id="copy_instances" 
+            :model-value="copyInstances"
+            @update:model-value="(newVal: boolean | 'indeterminate') => copyInstances = newVal === true"
+          />
+          <Label for="copy_instances" class="ml-2 cursor-pointer text-sm">同时复制关联的发送实例</Label>
+        </div>
+        <div v-else></div>
+        <div class="flex gap-2">
+          <Button variant="outline" @click="$emit('update:open', false)">取消</Button>
+          <Button @click="saveTemplate">保存</Button>
+        </div>
       </DialogFooter>
     </DialogContent>
   </Dialog>

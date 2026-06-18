@@ -136,3 +136,13 @@ func GetTemplateInsList(templateID string) ([]SendTasksInsRes, error) {
 	}
 	return insList, nil
 }
+
+// GetRawTemplateInsList 获取模板关联的原始实例列表
+func GetRawTemplateInsList(templateID string) ([]SendTasksIns, error) {
+	var insList []SendTasksIns
+	err := db.Where("template_id = ?", templateID).Find(&insList).Error
+	if err != nil {
+		return nil, err
+	}
+	return insList, nil
+}

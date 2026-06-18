@@ -88,6 +88,8 @@ func AddMessageTemplate(c *gin.Context) {
 		AtUserIds        string `json:"at_user_ids"`
 		IsAtAll          bool   `json:"is_at_all"`
 		Status           string `json:"status"`
+		SourceTemplateID string `json:"source_template_id"`
+		CopyInstances    bool   `json:"copy_instances"`
 	}
 	
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -115,6 +117,8 @@ func AddMessageTemplate(c *gin.Context) {
 		AtUserIds:        req.AtUserIds,
 		IsAtAll:          req.IsAtAll,
 		Status:           req.Status,
+		SourceTemplateID: req.SourceTemplateID,
+		CopyInstances:    req.CopyInstances,
 	}
 	
 	if err := templateService.Add(); err != nil {
