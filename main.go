@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
 	"message-nest/migrate"
 	"message-nest/models"
@@ -26,7 +27,7 @@ var (
 	rf embed.FS
 )
 
-func init() {
+func setup() {
 	constant.InitReleaseInfo(rf)
 	setting.Setup()
 	logging.Setup()
@@ -41,6 +42,17 @@ func init() {
 }
 
 func main() {
+	var showVersion bool
+	flag.BoolVar(&showVersion, "v", false, "print version and exit")
+	flag.Parse()
+
+	if showVersion {
+		constant.InitReleaseInfo(rf)
+		fmt.Printf("Message-Push-Nest version %s\n", constant.LatestVersion["version"])
+		return
+	}
+
+	setup()
 	gin.SetMode(setting.ServerSetting.RunMode)
 	routersInit := routers.InitRouter(f)
 	readTimeout := setting.ServerSetting.ReadTimeout
