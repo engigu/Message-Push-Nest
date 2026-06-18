@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { MoreHorizontal } from 'lucide-vue-next'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
 import ClickableTruncate from '@/components/ui/ClickableTruncate.vue'
@@ -87,6 +89,12 @@ const openAddDialog = () => {
 
 const openEditDialog = (template: MessageTemplate) => {
   isEditing.value = true
+  selectedTemplateForEdit.value = template
+  isEditorOpen.value = true
+}
+
+const copyTemplate = (template: MessageTemplate) => {
+  isEditing.value = false
   selectedTemplateForEdit.value = template
   isEditorOpen.value = true
 }
@@ -221,12 +229,24 @@ onMounted(async () => {
             </Badge>
           </TableCell>
           <TableCell class="whitespace-nowrap w-[160px]">{{ item.created_on }}</TableCell>
-          <TableCell class="text-center space-x-2">
-            <Button size="sm" variant="outline" @click="handleViewLogs(item)">日志</Button>
-            <Button size="sm" variant="outline" @click="handleViewApi(item)">接口</Button>
-            <Button size="sm" variant="outline" @click="openEditDialog(item)">编辑</Button>
-            <Button size="sm" variant="outline" @click="handleConfigInstance(item)">实例</Button>
-            <Button size="sm" variant="destructive" @click="deleteTemplate(item.id)">删除</Button>
+          <TableCell class="text-center">
+            <div class="flex items-center justify-center space-x-2">
+              <Button size="sm" variant="outline" @click="handleViewLogs(item)">日志</Button>
+              <Button size="sm" variant="outline" @click="handleViewApi(item)">接口</Button>
+              <Button size="sm" variant="outline" @click="handleConfigInstance(item)">实例</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button size="sm" variant="outline" class="w-8 h-8 p-0">
+                    <MoreHorizontal class="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem @click="openEditDialog(item)">编辑</DropdownMenuItem>
+                  <DropdownMenuItem @click="copyTemplate(item)">复制</DropdownMenuItem>
+                  <DropdownMenuItem @click="deleteTemplate(item.id)" class="text-destructive focus:text-destructive">删除</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </TableCell>
         </TableRow>
       </TableBody>

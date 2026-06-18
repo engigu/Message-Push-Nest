@@ -310,8 +310,13 @@ const saveTemplate = async () => {
 // 监听对话框打开状态
 watch(() => props.open, (newVal) => {
   if (newVal) {
-    if (props.isEditing && props.templateData) {
+    if (props.templateData) {
       loadTemplateData(props.templateData)
+      // 如果不是处于编辑模式，说明是复制模板
+      if (!props.isEditing) {
+        formData.value.id = undefined
+        formData.value.name = formData.value.name + ' - 副本'
+      }
     } else {
       resetForm()
     }
