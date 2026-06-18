@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
+import { Trash2 } from 'lucide-vue-next'
 
 interface Placeholder {
   key: string
@@ -320,7 +321,7 @@ watch(() => props.open, (newVal) => {
 
 <template>
   <Dialog :open="open" @update:open="(value) => $emit('update:open', value)">
-    <DialogContent class="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <DialogContent class="sm:max-w-4xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
       <DialogHeader>
         <DialogTitle>{{ isEditing ? '编辑模板' : '新建模板' }}</DialogTitle>
       </DialogHeader>
@@ -358,15 +359,15 @@ watch(() => props.open, (newVal) => {
             <Label>占位符配置</Label>
             <Button size="sm" variant="outline" @click="addPlaceholder">添加占位符</Button>
           </div>
-          <div v-for="(placeholder, index) in placeholdersList" :key="index" class="flex flex-col gap-1">
-            <div class="flex gap-2 items-center">
+          <div v-for="(placeholder, index) in placeholdersList" :key="index" class="flex flex-col gap-1 mb-2">
+            <div class="flex gap-2 items-start">
               <div class="flex-1 relative">
                 <Input
                   v-model="placeholder.key"
                   placeholder="key (如: username)"
                   :class="{ 'border-red-500 focus-visible:ring-red-500': isDuplicateKey(placeholder.key, index) }"
                 />
-                <p v-if="isDuplicateKey(placeholder.key, index)" class="text-xs text-red-500 mt-1">
+                <p v-if="isDuplicateKey(placeholder.key, index)" class="text-[10px] text-red-500 mt-1 absolute -bottom-5">
                   该 key 已存在
                 </p>
               </div>
@@ -380,7 +381,9 @@ watch(() => props.open, (newVal) => {
                 placeholder="默认值"
                 class="flex-1"
               />
-              <Button size="sm" variant="ghost" @click="removePlaceholder(index)">删除</Button>
+              <Button size="icon" variant="ghost" class="text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0" @click="removePlaceholder(index)">
+                <Trash2 class="w-4 h-4" />
+              </Button>
             </div>
           </div>
           <p class="text-xs text-muted-foreground">
