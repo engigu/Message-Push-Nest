@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"log"
@@ -67,6 +68,23 @@ func Setup() *gorm.DB {
 		db, err = gorm.Open(mysql.Open(connStr), config)
 	case "sqlite":
 		db, err = gorm.Open(sqlite.Open("conf/database.db"), config)
+	case "postgres":
+		connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=Asia/Shanghai",
+			setting.DatabaseSetting.Host,
+			setting.DatabaseSetting.User,
+			setting.DatabaseSetting.Password,
+			setting.DatabaseSetting.Name,
+			setting.DatabaseSetting.Port,
+			setting.DatabaseSetting.Ssl)
+		if setting.DatabaseSetting.Ssl == "false" || setting.DatabaseSetting.Ssl == "" {
+			connStr = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
+				setting.DatabaseSetting.Host,
+				setting.DatabaseSetting.User,
+				setting.DatabaseSetting.Password,
+				setting.DatabaseSetting.Name,
+				setting.DatabaseSetting.Port)
+		}
+		db, err = gorm.Open(postgres.Open(connStr), config)
 	}
 
 	if err != nil {

@@ -30,7 +30,7 @@ func EditSetting(id uint, data interface{}) error {
 
 // DeleteMsgTaskIns 删除一条设置
 func DeleteSettingByKey(section string, key string) error {
-	if err := db.Where("`section` = ? and `key` = ? ", section, key).Delete(&Settings{}).Error; err != nil {
+	if err := db.Where(&Settings{Section: section, Key: key}).Delete(&Settings{}).Error; err != nil {
 		return err
 	}
 	return nil
@@ -38,7 +38,7 @@ func DeleteSettingByKey(section string, key string) error {
 
 func GetSettingByKey(section string, key string) (Settings, error) {
 	var setting Settings
-	err := db.Where("`section` = ? and `key` = ? ", section, key).Limit(1).Find(&setting).Error
+	err := db.Where(&Settings{Section: section, Key: key}).Limit(1).Find(&setting).Error
 	if err != nil {
 		return setting, err
 	}
@@ -47,7 +47,7 @@ func GetSettingByKey(section string, key string) (Settings, error) {
 
 func GetSettingBySection(section string) ([]Settings, error) {
 	var settings []Settings
-	err := db.Table(GetSchema(Settings{})).Where("`section` = ? ", section).Scan(&settings).Error
+	err := db.Table(GetSchema(Settings{})).Where(&Settings{Section: section}).Scan(&settings).Error
 	if err != nil {
 		return settings, err
 	}

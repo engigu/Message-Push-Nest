@@ -61,6 +61,14 @@ func loadConfigFromEnv() {
 		DatabaseSetting.Name = getMustEnvValue("MYSQL_DB")
 	}
 
+	if DatabaseSetting.Type == "postgres" {
+		DatabaseSetting.Host = getMustEnvValue("POSTGRES_HOST")
+		DatabaseSetting.Port = com.StrTo(getMustEnvValue("POSTGRES_PORT")).MustInt()
+		DatabaseSetting.User = getMustEnvValue("POSTGRES_USER")
+		DatabaseSetting.Password = getMustEnvValue("POSTGRES_PASSWORD")
+		DatabaseSetting.Name = getMustEnvValue("POSTGRES_DB")
+	}
+
 	DatabaseSetting.TablePrefix = getOptionEnvValue("MYSQL_TABLE_PREFIX", "message_")
 	DatabaseSetting.SqlDebug = getOptionEnvValue("SQL_DEBUG", "disable")
 	printOptionValue()

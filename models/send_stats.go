@@ -1,7 +1,8 @@
 package models
 
 import (
-	"fmt"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"message-nest/pkg/util"
 )
 
@@ -186,14 +187,16 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 
 // IncrementSendStats 增加发送统计（用于实时更新统计数据）
 func IncrementSendStats(taskID string, taskType string, day string, status string, num int64) error {
-	statsTable := GetSchema(SendStats{})
-
-	// 使用 ON DUPLICATE KEY UPDATE 或 UPSERT 逻辑
-	query := fmt.Sprintf(`
-		INSERT INTO %s (task_id, task_type, day, status, num)
-		VALUES (?, ?, ?, ?, ?)
-		ON DUPLICATE KEY UPDATE num = num + ?
-	`, statsTable)
-
-	return db.Exec(query, taskID, taskType, day, status, num, num).Error
+	return db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "task_id"}, {Name: "task_type"}, {Name: "day"}, {Name: "status"}},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"num": gorm.Expr("num + ?", num),
+		}),
+	}).Create(&SendStats{
+		TaskID:   taskID,
+		TaskType: taskType,
+		Day:      day,
+		Status:   status,
+		Num:      num,
+	}).Error
 }

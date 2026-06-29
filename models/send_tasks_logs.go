@@ -262,13 +262,19 @@ func GetStatisticData() (StatisticData, error) {
 	pastDate := past.Format("2006-01-02")
 	next := now.AddDate(0, 0, 1)
 	nextDate := next.Format("2006-01-02")
+	var dayExpr string
+	if db.Dialector.Name() == "postgres" {
+		dayExpr = "CAST(DATE(created_on) AS VARCHAR)"
+	} else {
+		dayExpr = "CAST(DATE(created_on) AS CHAR)"
+	}
 	queryData := db.
 		Table(logt).
-		Select(`
-	CAST(DATE(created_on) AS CHAR) AS day,
+		Select(fmt.Sprintf(`
+	%s AS day,
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
-	COUNT(*) AS num`).
+	COUNT(*) AS num`, dayExpr)).
 		Where(fmt.Sprintf(" created_on >= '%s' and created_on <= '%s' ", pastDate, nextDate)).
 		Group("day").
 		Order("day")
