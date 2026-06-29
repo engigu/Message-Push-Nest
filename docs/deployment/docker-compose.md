@@ -52,7 +52,7 @@ docker-compose up -d
 ### 使用 MySQL
 
 ::: warning 重要
-使用 MySQL 时必须指定 `DB_TYPE=mysql` 环境变量，否则会默认使用 SQLite。
+使用 MySQL 或是 PostgreSQL 时必须分别指定 `DB_TYPE=mysql` 或 `DB_TYPE=postgres` 环境变量，否则会默认使用 SQLite。
 :::
 
 创建 `docker-compose.yml`：

@@ -90,20 +90,25 @@ docker run -d \
 | LOG_LEVEL | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR |
 | RUN_MODE | 运行模式，可选，默认release，为debug将自动添加跨域 |
 | URL_PREFIX | URL路径前缀，用于子路径部署，如：/message |
-| DB_TYPE | 数据库类型，sqlite/mysql。默认为sqlite,存储路径为conf/database.db |
+| DB_TYPE | 数据库类型，sqlite/mysql/postgres。默认为sqlite,存储路径为conf/database.db |
 | MYSQL_HOST | mysql-host，DB_TYPE=mysql必填 |
 | MYSQL_PORT | mysql端口，DB_TYPE=mysql必填 |
 | MYSQL_USER | mysql用户名，DB_TYPE=mysql必填 |
 | MYSQL_PASSWORD | mysql数据库密码，DB_TYPE=mysql必填 |
 | MYSQL_DB | mysql数据库名字，DB_TYPE=mysql必填 |
-| MYSQL_TABLE_PREFIX | mysql数据表前缀，DB_TYPE=mysql必填 |
+| MYSQL_TABLE_PREFIX | mysql数据表前缀，可选 |
+| POSTGRES_HOST | postgres-host，DB_TYPE=postgres必填 |
+| POSTGRES_PORT | postgres端口，DB_TYPE=postgres必填 |
+| POSTGRES_USER | postgres用户名，DB_TYPE=postgres必填 |
+| POSTGRES_PASSWORD | postgres数据库密码，DB_TYPE=postgres必填 |
+| POSTGRES_DB | postgres数据库名字，DB_TYPE=postgres必填 |
 | SSL | 是否开启SSL |
 | SQL_DEBUG | 是否打印SQL，可选，默认关，设置enable为开启 |
 
 ### 使用 MySQL
 
 ::: warning 重要
-使用 MySQL 时必须指定 `DB_TYPE=mysql` 环境变量，否则会默认使用 SQLite。
+使用 MySQL 或是 PostgreSQL 时必须分别指定 `DB_TYPE=mysql` 或 `DB_TYPE=postgres` 环境变量，否则会默认使用 SQLite。
 :::
 
 ```bash
