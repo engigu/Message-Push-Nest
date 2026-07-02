@@ -2,21 +2,26 @@ package models
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 	"message-nest/pkg/util"
 )
 
 type HostedMessage struct {
-	ID      int    `gorm:"primaryKey" json:"id" `
-	Title   string `json:"title" gorm:"type:text ;"`
-	Content string `json:"content" gorm:"type:text ;"`
-	Type    string `json:"type" gorm:"type:varchar(100) ;default:'';index"`
+	ID        int    `gorm:"primaryKey" json:"id"`
+	Title     string `json:"title" gorm:"type:text;"`
+	Content   string `json:"content" gorm:"type:text;"`
+	Type      string `json:"type" gorm:"type:varchar(100);default:'';index"`
+	UniqueKey string `json:"unique_key" gorm:"type:varchar(50);uniqueIndex;default:''"`
 
-	CreatedAt util.Time `json:"created_on" gorm:"column:created_on;autoCreateTime "`
-	UpdatedAt util.Time `json:"modified_on" gorm:"column:modified_on;autoUpdateTime ;"`
+	CreatedAt util.Time `json:"created_on" gorm:"column:created_on;autoCreateTime"`
+	UpdatedAt util.Time `json:"modified_on" gorm:"column:modified_on;autoUpdateTime;"`
 }
 
 // Add 添加托管消息
 func (message *HostedMessage) Add() error {
+	if message.UniqueKey == "" {
+		message.UniqueKey = util.GenerateRandomString(16)
+	}
 	if err := db.Create(&message).Error; err != nil {
 		return err
 	}
@@ -29,6 +34,7 @@ type HostMessageResult struct {
 	Title      string    `json:"title"`
 	Content    string    `json:"content"`
 	Type       string    `json:"type"`
+	UniqueKey  string    `json:"unique_key"`
 	CreatedOn  util.Time `json:"created_on"`
 	ModifiedOn util.Time `json:"modified_on"`
 }
@@ -107,4 +113,18 @@ func DeleteOutDateHostedMessages(keepNum int) (int, error) {
 	
 	affectedRows = int(deleteResult.RowsAffected)
 	return affectedRows, nil
+}
+
+// GetHostMessageByUniqueKey 根据 unique_key 获取托管消息
+func GetHostMessageByUniqueKey(uniqueKey string) (*HostMessageResult, error) {
+	var data HostMessageResult
+	hostMessageT := GetSchema(HostedMessage{})
+	err := db.Table(hostMessageT).Where("unique_key = ?", uniqueKey).Limit(1).Find(&data).Error
+	if err != nil {
+		return nil, err
+	}
+	if data.UniqueKey == "" {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &data, nil
 }

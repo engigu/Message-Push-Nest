@@ -34,16 +34,17 @@ func errStrIsSuccess(errStr string) int {
 }
 
 type SendMessageService struct {
-	SendMode   string // 发送模式：task(任务模式) 或 template(模板模式)
-	TaskID     string // 任务ID（任务模式）或模板ID（模板模式，用于日志记录）
-	TemplateID string // 模板ID（仅模板模式使用）
-	Name       string // 任务或模板名称（用于日志记录）
-	Title      string
-	Text       string
-	HTML       string
-	URL        string
-	MarkDown   string
-	CallerIp   string
+	SendMode     string // 发送模式：task(任务模式) 或 template(模板模式)
+	TaskID       string // 任务ID（任务模式）或模板ID（模板模式，用于日志记录）
+	TemplateID   string // 模板ID（仅模板模式使用）
+	Name         string // 任务或模板名称（用于日志记录）
+	Title        string
+	Text         string
+	HTML         string
+	URL          string
+	MarkDown     string
+	CallerIp     string
+	HostedMsgKey string // 预生成的托管消息唯一 key (如开启预览)
 
 	// @提及相关字段
 	AtMobiles []string
@@ -256,6 +257,13 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 				AtUserIds: sm.AtUserIds,
 				AtAll:     sm.AtAll,
 			}
+		}
+
+		if unifiedContent.Extra == nil {
+			unifiedContent.Extra = make(map[string]interface{})
+		}
+		if sm.HostedMsgKey != "" {
+			unifiedContent.Extra["HostedMsgKey"] = sm.HostedMsgKey
 		}
 
 		// 处理动态接收者（邮箱、微信公众号等支持群发的渠道）
@@ -511,4 +519,26 @@ func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) (string, strin
 	} else {
 		return strings.ToLower(ins.ContentType), content
 	}
+}
+
+// CheckAndGenerateHostedKey 检查发信任务是否包含已启用的 MessageNest 托管渠道，并预先生成 key 和预览 URL
+func CheckAndGenerateHostedKey(task models.TaskIns, isTls bool, host string) (string, string) {
+	hasMessageNest := false
+	for _, ins := range task.InsData {
+		if ins.WayType == constant.MessageTypeMessageNest && ins.Enable == 1 {
+			hasMessageNest = true
+			break
+		}
+	}
+	if !hasMessageNest {
+		return "", ""
+	}
+
+	hostedMsgKey := util.GenerateRandomString(16)
+	scheme := "http"
+	if isTls {
+		scheme = "https"
+	}
+	url := fmt.Sprintf("%s://%s/#/hostedmessages/preview/%s", scheme, host, hostedMsgKey)
+	return hostedMsgKey, url
 }

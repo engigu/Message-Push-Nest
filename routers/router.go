@@ -111,6 +111,8 @@ func InitRouter(f embed.FS) *gin.Engine {
 	AppendServerStaticHtmlWithPrefix(router, f, pathPrefix)
 
 	router.POST("/auth", api.GetAuth)
+	router.GET("/hostedmessages/preview", v1.GetHostMessagePreview)
+	
 	apiV1 := router.Group("/api/v1")
 	apiV1.Use(middleware.JWT())
 	{

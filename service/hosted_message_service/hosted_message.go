@@ -5,11 +5,12 @@ import (
 )
 
 type HostMessageService struct {
-	ID      int
-	Text    string
-	Title   string
-	Type    string
-	Content string
+	ID        int
+	Text      string
+	Title     string
+	Type      string
+	Content   string
+	UniqueKey string
 
 	PageNum  int
 	PageSize int
@@ -17,9 +18,10 @@ type HostMessageService struct {
 
 func (st *HostMessageService) Add() error {
 	model := models.HostedMessage{
-		Title:   st.Title,
-		Content: st.Content,
-		Type:    st.Type,
+		Title:     st.Title,
+		Content:   st.Content,
+		Type:      st.Type,
+		UniqueKey: st.UniqueKey,
 	}
 	return model.Add()
 }

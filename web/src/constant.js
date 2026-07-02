@@ -15,6 +15,7 @@ const CONSTANT = {
     STORE_CUSTOM_NAME: '__message_nest_custom_site__',
     NO_AUTH_URL: [
         '/auth',
+        '/hostedmessages/preview',
     ],
     WAYS_DATA: [
         {

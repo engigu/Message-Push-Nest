@@ -70,6 +70,11 @@ const router = createRouter({
     //   component: () => import('../views/tabsTools/hostedMessage/hostedMessage.vue')
     // },
     {
+      path: '/preview/:key',
+      name: 'preview',
+      component: () => import('../components/pages/hostedMessage/MessagePreview.vue')
+    },
+    {
       path: '/:catchAll(.*)',
       name: '404',
       component: () => import('../components/404.vue')
@@ -82,8 +87,8 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem(CONSTANT.STORE_TOKEN_NAME);
   const isAuthenticated = Boolean(token && token.trim() !== '');
 
-  // 404页面不需要登录验证
-  if (to.name === '404') {
+  // 404页面 or 公开预览页面不需要登录验证
+  if (to.name === '404' || to.name === 'preview') {
     next();
     return;
   }

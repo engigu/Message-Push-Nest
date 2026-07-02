@@ -102,3 +102,7 @@ func GetSchema(table any) string {
 	stmt.Parse(table)
 	return stmt.Schema.Table
 }
+
+func GetDB() *gorm.DB {
+	return db
+}

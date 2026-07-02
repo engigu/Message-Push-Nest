@@ -149,12 +149,23 @@ func DoSendMessageByTemplate(c *gin.Context) {
 		return
 	}
 
-	// 异步发送
-	msgService.AsyncSend(task)
-	appG.CResponse(http.StatusOK, "success", map[string]interface{}{
+	// 检查是否包含 MessageNest 类型的启用实例，并生成托管键与链接
+	hostedMsgKey, hostMessageUrl := send_message_service.CheckAndGenerateHostedKey(task, c.Request.TLS != nil, c.Request.Host)
+
+	responseData := map[string]interface{}{
 		"token": req.Token,
 		"count": enabledCount,
-	})
+	}
+	if hostMessageUrl != "" {
+		responseData["hostMessageUrl"] = hostMessageUrl
+	}
+
+	// 传导预生成的 key 到后台协程
+	msgService.HostedMsgKey = hostedMsgKey
+
+	// 异步发送
+	msgService.AsyncSend(task)
+	appG.CResponse(http.StatusOK, "success", responseData)
 }
 
 // replacePlaceholders 替换模板中的占位符

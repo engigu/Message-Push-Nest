@@ -10,6 +10,7 @@ import { request } from '@/api/api'
 import { LocalStieConfigUtils } from '@/util/localSiteConfig'
 import { HelpCircleIcon, CheckIcon } from 'lucide-vue-next'
 import { THEMES, applyTheme, getStoredTheme } from '@/util/theme'
+import { Switch } from '@/components/ui/switch'
 
 const currentThemeColor = ref(getStoredTheme())
 
@@ -26,6 +27,7 @@ const state = reactive({
   pagesize: '',
   cookieExpDays: '',
   theme_color: getStoredTheme(),
+  enable_public_preview: 'true',
   section: 'site_config',
 })
 
@@ -41,6 +43,7 @@ const handleSubmit = async () => {
         pagesize: state.pagesize.toString(),
         cookie_exp_days: state.cookieExpDays.toString(),
         theme_color: state.theme_color,
+        enable_public_preview: state.enable_public_preview,
       },
     }
     const response = await request.post('/settings/set', postData)
@@ -81,6 +84,7 @@ const getSiteConfig = async () => {
       state.pagesize = data.pagesize || ''
       state.cookieExpDays = data.cookie_exp_days || '1'
       state.theme_color = data.theme_color || 'blue'
+      state.enable_public_preview = data.enable_public_preview !== undefined ? data.enable_public_preview : 'true'
 
       // 同步当前选中的主题状态
       currentThemeColor.value = state.theme_color
@@ -177,6 +181,18 @@ export default {
               <label class="text-sm font-medium text-gray-700">Cookie过期天数</label>
               <Input v-model="state.cookieExpDays" type="number" min="1" max="365" placeholder="Cookie过期天数（默认1天）" />
             </div>
+          </div>
+
+          <!-- 是否启用公开预览 -->
+          <div class="flex items-center justify-between p-3 border border-dashed rounded-lg bg-slate-50/50 dark:bg-slate-900/30">
+            <div class="space-y-0.5">
+              <label class="text-sm font-semibold text-foreground">公开预览功能</label>
+              <p class="text-xs text-muted-foreground">允许未登录用户通过防遍历的公开 URL 访问预览托管消息</p>
+            </div>
+            <Switch 
+              :modelValue="state.enable_public_preview === 'true'" 
+              @update:modelValue="(val: boolean) => state.enable_public_preview = val ? 'true' : 'false'" 
+            />
           </div>
 
         </div>

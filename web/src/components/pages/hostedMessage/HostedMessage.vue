@@ -12,6 +12,8 @@ import { useRoute } from 'vue-router';
 import { request } from '@/api/api';
 // @ts-ignore
 import { getPageSize } from '@/util/pageUtils';
+import { toast } from 'vue-sonner'
+import { CopyIcon } from 'lucide-vue-next'
 
 
 interface HostedMessageItem {
@@ -19,6 +21,7 @@ interface HostedMessageItem {
   title: string
   content: string
   url?: string
+  unique_key?: string
   created_on: string
   modified_on: string
   status: number
@@ -78,6 +81,37 @@ const formatMessageDisplayHtml = (message: HostedMessageItem) => {
 //触发过滤筛选
 const filterFunc = async () => {
   await queryListData(state.currPage, state.pageSize, state.search, state.optionValue);
+}
+
+// 复制公开预览链接
+const copyPreviewLink = (message: HostedMessageItem) => {
+  if (!message.unique_key) {
+    toast.error('该消息不支持公开预览（可能未生成唯一Key）')
+    return
+  }
+  
+  // 拼接哈希路由下的预览地址
+  const origin = window.location.origin
+  const pathname = window.location.pathname
+  const prefix = window.__URL_PATH_PREFIX__ || ''
+  
+  // pathPrefix 可能已经包含斜杠，这里做规范化处理
+  let base = `${origin}${pathname}`
+  if (prefix) {
+    const cleanPrefix = prefix.startsWith('/') ? prefix : '/' + prefix
+    base = `${origin}${cleanPrefix}${pathname.endsWith('/') ? '' : '/'}`
+  }
+  
+  const previewUrl = `${base}#/preview/${message.unique_key}`
+  
+  navigator.clipboard.writeText(previewUrl)
+    .then(() => {
+      toast.success('公开预览链接已复制到剪贴板！')
+    })
+    .catch((err) => {
+      console.error('复制失败:', err)
+      toast.error('复制失败，请手动选择复制。')
+    })
 }
   
 
@@ -150,6 +184,9 @@ onMounted(async () => {
           <TableCell class="whitespace-nowrap w-[160px]">{{ message.created_on }}</TableCell>
           <TableCell class="text-center space-x-2">
             <Button size="sm" variant="outline" @click="openMessageSheet(message)">查看</Button>
+            <Button size="sm" variant="outline" class="w-8 h-8 p-0" title="复制公开预览链接" @click="copyPreviewLink(message)">
+              <CopyIcon class="w-4 h-4" />
+            </Button>
           </TableCell>
         </TableRow>
       </TableBody>

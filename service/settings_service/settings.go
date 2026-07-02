@@ -124,11 +124,12 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 
 // 站点自定义的结构
 type SiteConfig struct {
-	Title         string `json:"title" validate:"omitempty,min=1,max=50" label:"网站标题"`
-	Slogan        string `json:"slogan" validate:"omitempty,min=1,max=50" label:"网站slogan"`
-	Logo          string `json:"logo" validate:"omitempty,min=1" label:"logo"`
-	CookieExpDays string `json:"cookie_exp_days" validate:"omitempty,numeric,min=1,max=365" label:"cookie过期天数"`
-	ThemeColor    string `json:"theme_color" validate:"omitempty,max=20" label:"主题颜色"`
+	Title               string `json:"title" validate:"omitempty,min=1,max=50" label:"网站标题"`
+	Slogan              string `json:"slogan" validate:"omitempty,min=1,max=50" label:"网站slogan"`
+	Logo                string `json:"logo" validate:"omitempty,min=1" label:"logo"`
+	CookieExpDays       string `json:"cookie_exp_days" validate:"omitempty,numeric,min=1,max=365" label:"cookie过期天数"`
+	ThemeColor          string `json:"theme_color" validate:"omitempty,max=20" label:"主题颜色"`
+	EnablePublicPreview string `json:"enable_public_preview" validate:"omitempty,oneof=true false" label:"是否启用公开消息预览"`
 }
 
 type LogConfig struct {
@@ -176,6 +177,7 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		config.Logo = data["logo"]
 		config.CookieExpDays = data["cookie_exp_days"]
 		config.ThemeColor = data["theme_color"]
+		config.EnablePublicPreview = data["enable_public_preview"]
 		_, errStr := app.CommonPlaygroundValid(config)
 		return errStr
 	}

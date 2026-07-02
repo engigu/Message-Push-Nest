@@ -26,6 +26,12 @@ func (c *MessageNestChannel) SendUnified(msgObj interface{}, ins models.SendTask
 		Content: formattedContent,
 		Type:    contentType,
 	}
+	
+	if content.Extra != nil {
+		if key, ok := content.Extra["HostedMsgKey"].(string); ok {
+			messageService.UniqueKey = key
+		}
+	}
 	err = messageService.Add()
 	var res, errMsg string
 	if err != nil {

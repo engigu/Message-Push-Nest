@@ -85,6 +85,19 @@ func DoSendMassage(c *gin.Context) {
 		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("发送检查不通过：%s", err), nil)
 		return
 	}
+
+	// 检查是否包含 MessageNest 类型的启用实例，并生成托管键与链接
+	hostedMsgKey, hostMessageUrl := send_message_service.CheckAndGenerateHostedKey(task, c.Request.TLS != nil, c.Request.Host)
+	var responseData map[string]interface{}
+	if hostMessageUrl != "" {
+		responseData = map[string]interface{}{
+			"hostMessageUrl": hostMessageUrl,
+		}
+	}
+
+	// 传导预生成的 key 到后台协程
+	msgService.HostedMsgKey = hostedMsgKey
+
 	if req.Mode == "sync" {
 		// 同步发送
 		_, err := msgService.Send(task)
@@ -92,10 +105,10 @@ func DoSendMassage(c *gin.Context) {
 			appG.CResponse(http.StatusBadRequest, "发送失败！", nil)
 			return
 		}
-		appG.CResponse(http.StatusOK, "发送成功！", nil)
+		appG.CResponse(http.StatusOK, "发送成功！", responseData)
 	} else {
 		// 异步发送
 		msgService.AsyncSend(task)
-		appG.CResponse(http.StatusOK, "提交成功！", nil)
+		appG.CResponse(http.StatusOK, "提交成功！", responseData)
 	}
 }
