@@ -539,6 +539,6 @@ func CheckAndGenerateHostedKey(task models.TaskIns, isTls bool, host string) (st
 	if isTls {
 		scheme = "https"
 	}
-	url := fmt.Sprintf("%s://%s/#/hostedmessages/preview/%s", scheme, host, hostedMsgKey)
+	url := fmt.Sprintf("%s://%s/#/preview/%s", scheme, host, hostedMsgKey)
 	return hostedMsgKey, url
 }
