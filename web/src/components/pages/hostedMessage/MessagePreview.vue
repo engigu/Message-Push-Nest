@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { AlertCircleIcon, ShieldAlertIcon } from 'lucide-vue-next'
 
 import CryptoJS from 'crypto-js'
+import { decompress } from 'fzstd'
 import { applyTheme } from '@/util/theme'
 
 const route = useRoute()
@@ -35,7 +36,7 @@ interface PreviewMessage {
 const message = ref<PreviewMessage | null>(null)
 
 // 3DES 解密函数，接收 Base64 的密文和 Base64 的密钥
-const decryptTripleDes = (cipherTextBase64: string, keyBase64: string): string => {
+const decryptTripleDes = (cipherTextBase64: string, keyBase64: string): Uint8Array | null => {
   try {
     const key = CryptoJS.enc.Base64.parse(keyBase64)
     const iv = CryptoJS.lib.WordArray.create(key.words.slice(0, 2)) 
@@ -49,10 +50,18 @@ const decryptTripleDes = (cipherTextBase64: string, keyBase64: string): string =
         padding: CryptoJS.pad.Pkcs7
       }
     )
-    return decrypted.toString(CryptoJS.enc.Utf8)
+    
+    // Convert CryptoJS WordArray to Uint8Array
+    const words = decrypted.words
+    const sigBytes = decrypted.sigBytes
+    const u8 = new Uint8Array(sigBytes)
+    for (let i = 0; i < sigBytes; i++) {
+      u8[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff
+    }
+    return u8
   } catch (e) {
     console.error('解密失败:', e)
-    return ''
+    return null
   }
 }
 
@@ -134,8 +143,30 @@ const fetchPreviewData = async () => {
       const realKey = deobfuscateKey(data.s)
       
       // 前端解密密文
-      const decryptedTitle = decryptTripleDes(data.title, realKey)
-      const decryptedContent = decryptTripleDes(data.content, realKey)
+      const decryptedTitleBytes = decryptTripleDes(data.title, realKey)
+      const decryptedContentBytes = decryptTripleDes(data.content, realKey)
+      
+      const decoder = new TextDecoder('utf-8')
+      let decryptedTitle = ''
+      let decryptedContent = ''
+
+      if (decryptedTitleBytes) {
+        try {
+          const decompressedTitle = decompress(decryptedTitleBytes)
+          decryptedTitle = decoder.decode(decompressedTitle)
+        } catch (e) {
+          console.error('Title 解压失败:', e)
+        }
+      }
+
+      if (decryptedContentBytes) {
+        try {
+          const decompressedContent = decompress(decryptedContentBytes)
+          decryptedContent = decoder.decode(decompressedContent)
+        } catch (e) {
+          console.error('Content 解压失败:', e)
+        }
+      }
       
       message.value = {
         title: decryptedTitle,

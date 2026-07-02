@@ -101,14 +101,16 @@ func GetHostMessagePreview(c *gin.Context) {
 	// 3. 生成随机 24 字节 3DES 密钥
 	rawKey := []byte(util.GenerateRandomString(24))
 
-	// 4. 对 Title 和 Content 进行 3DES 加密
-	encryptedTitle, err := util.TripleDesEncrypt([]byte(msg.Title), rawKey)
+	// 4. 对 Title 和 Content 进行 3DES 加密前先使用 zstd 压缩
+	compressedTitle := util.ZstdCompress([]byte(msg.Title))
+	encryptedTitle, err := util.TripleDesEncrypt(compressedTitle, rawKey)
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "消息数据处理失败！", nil)
 		return
 	}
 
-	encryptedContent, err := util.TripleDesEncrypt([]byte(msg.Content), rawKey)
+	compressedContent := util.ZstdCompress([]byte(msg.Content))
+	encryptedContent, err := util.TripleDesEncrypt(compressedContent, rawKey)
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "消息数据处理失败！", nil)
 		return

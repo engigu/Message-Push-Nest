@@ -5,6 +5,8 @@ import (
 	"crypto/cipher"
 	"crypto/des"
 	"encoding/base64"
+
+	"github.com/klauspost/compress/zstd"
 )
 
 // TripleDesEncrypt 3DES 加密，使用 PKCS5Padding
@@ -24,4 +26,10 @@ func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
+}
+
+// ZstdCompress 使用 zstd 压缩字节
+func ZstdCompress(src []byte) []byte {
+	var encoder, _ = zstd.NewWriter(nil, zstd.WithEncoderLevel(zstd.SpeedDefault))
+	return encoder.EncodeAll(src, make([]byte, 0, len(src)))
 }
