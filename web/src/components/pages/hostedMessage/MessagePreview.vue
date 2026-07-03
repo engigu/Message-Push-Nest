@@ -263,9 +263,14 @@ onMounted(() => {
           </div>
         </div>
         
-        <!-- 右侧优雅时间戳展示 -->
-        <div v-if="message" class="hidden sm:flex px-4 py-1.5 bg-card border border-border rounded-full shadow-sm text-xs font-semibold text-foreground/80 tracking-wider">
-          {{ message.created_on }}
+        <!-- 右侧优雅时间戳与类型展示 -->
+        <div v-if="message" class="hidden sm:flex items-center space-x-3">
+          <Badge variant="secondary" class="font-bold bg-brand/10 text-brand border border-brand/20 px-3 py-1.5 text-xs rounded-full shadow-sm select-none">
+            # {{ typeLabel }}
+          </Badge>
+          <div class="px-4 py-1.5 bg-card border border-border rounded-full shadow-sm text-xs font-semibold text-foreground/80 tracking-wider">
+            {{ message.created_on }}
+          </div>
         </div>
       </div>
 
@@ -302,21 +307,17 @@ onMounted(() => {
       </Card>
 
       <!-- 核心设计感主体卡片 -->
-      <div v-else class="flex flex-col space-y-6">
-        <!-- 移动端额外呈现时间戳 -->
-        <div class="flex sm:hidden justify-end px-1">
+      <div v-else class="flex flex-col space-y-4 sm:space-y-6">
+        <!-- 移动端额外呈现时间戳与类型 -->
+        <div class="flex sm:hidden justify-start px-2 items-center space-x-2">
+          <Badge variant="secondary" class="font-bold bg-brand/10 text-brand border border-brand/20 px-3 py-1 text-xs rounded-full shadow-sm select-none">
+            # {{ typeLabel }}
+          </Badge>
           <span class="text-xs font-semibold text-muted-foreground/80 bg-card border border-border px-3 py-1 rounded-full shadow-sm">{{ message.created_on }}</span>
         </div>
 
         <Card class="w-full border border-border/80 bg-card/65 backdrop-blur-xl shadow-2xl overflow-hidden rounded-3xl transition-all duration-300 hover:shadow-brand/5">
-          <CardContent class="p-8 md:p-12 space-y-6">
-            
-            <!-- 标签分类徽章 -->
-            <div class="flex items-center space-x-2">
-              <Badge variant="secondary" class="font-bold bg-brand/10 text-brand border border-brand/20 px-3 py-1 text-xs rounded-lg select-none">
-                # {{ typeLabel }}
-              </Badge>
-            </div>
+          <CardContent class="p-6 md:p-8 flex flex-col space-y-4">
             
             <!-- 标题展示（仅在不是无意义默认标题时渲染） -->
             <h2 v-if="message.title && message.title !== message.content" class="text-lg sm:text-xl font-bold text-foreground leading-snug break-all tracking-tight pb-2 border-b border-border/40">

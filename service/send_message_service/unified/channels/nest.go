@@ -34,12 +34,9 @@ func (c *MessageNestChannel) SendUnified(msgObj interface{}, ins models.SendTask
 
 	// 匹配黑名单正则，满足则不记录
 	if nestConfig.BlacklistRegex != "" {
-		reg, err := regexp.Compile(nestConfig.BlacklistRegex)
-		if err != nil {
-			return "", "黑名单正则表达式解析错误: " + err.Error()
-		}
-		if reg.MatchString(formattedContent) || reg.MatchString(content.Title) {
-			return "消息匹配黑名单正则，未记录", ""
+		matched, err := regexp.MatchString(nestConfig.BlacklistRegex, formattedContent)
+		if err == nil && matched {
+			return "消息匹配黑名单正则[" + nestConfig.BlacklistRegex + "]，未记录", ""
 		}
 	}
 
