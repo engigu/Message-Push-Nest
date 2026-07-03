@@ -13,7 +13,7 @@ import { request } from '@/api/api';
 // @ts-ignore
 import { getPageSize } from '@/util/pageUtils';
 import { toast } from 'vue-sonner'
-import { CopyIcon } from 'lucide-vue-next'
+import { CopyIcon, ExternalLink } from 'lucide-vue-next'
 
 
 interface HostedMessageItem {
@@ -83,6 +83,21 @@ const filterFunc = async () => {
   await queryListData(state.currPage, state.pageSize, state.search, state.optionValue);
 }
 
+// 获取公开预览链接
+const getPreviewLinkUrl = (message: HostedMessageItem) => {
+  const origin = window.location.origin
+  const pathname = window.location.pathname
+  const prefix = window.__URL_PATH_PREFIX__ || ''
+  
+  let base = `${origin}${pathname}`
+  if (prefix) {
+    const cleanPrefix = prefix.startsWith('/') ? prefix : '/' + prefix
+    base = `${origin}${cleanPrefix}${pathname.endsWith('/') ? '' : '/'}`
+  }
+  
+  return `${base}#/preview/${message.unique_key}`
+}
+
 // 复制公开预览链接
 const copyPreviewLink = (message: HostedMessageItem) => {
   if (!message.unique_key) {
@@ -90,19 +105,7 @@ const copyPreviewLink = (message: HostedMessageItem) => {
     return
   }
   
-  // 拼接哈希路由下的预览地址
-  const origin = window.location.origin
-  const pathname = window.location.pathname
-  const prefix = window.__URL_PATH_PREFIX__ || ''
-  
-  // pathPrefix 可能已经包含斜杠，这里做规范化处理
-  let base = `${origin}${pathname}`
-  if (prefix) {
-    const cleanPrefix = prefix.startsWith('/') ? prefix : '/' + prefix
-    base = `${origin}${cleanPrefix}${pathname.endsWith('/') ? '' : '/'}`
-  }
-  
-  const previewUrl = `${base}#/preview/${message.unique_key}`
+  const previewUrl = getPreviewLinkUrl(message)
   
   navigator.clipboard.writeText(previewUrl)
     .then(() => {
@@ -112,6 +115,16 @@ const copyPreviewLink = (message: HostedMessageItem) => {
       console.error('复制失败:', err)
       toast.error('复制失败，请手动选择复制。')
     })
+}
+
+// 在新标签页打开公开预览链接
+const openPreviewLink = (message: HostedMessageItem) => {
+  if (!message.unique_key) {
+    toast.error('该消息不支持公开预览（可能未生成唯一Key）')
+    return
+  }
+  const previewUrl = getPreviewLinkUrl(message)
+  window.open(previewUrl, '_blank')
 }
   
 
@@ -186,6 +199,9 @@ onMounted(async () => {
             <Button size="sm" variant="outline" @click="openMessageSheet(message)">查看</Button>
             <Button size="sm" variant="outline" class="w-8 h-8 p-0" title="复制公开预览链接" @click="copyPreviewLink(message)">
               <CopyIcon class="w-4 h-4" />
+            </Button>
+            <Button size="sm" variant="outline" class="w-8 h-8 p-0" title="在浏览器打开公开预览链接" @click="openPreviewLink(message)">
+              <ExternalLink class="w-4 h-4" />
             </Button>
           </TableCell>
         </TableRow>
