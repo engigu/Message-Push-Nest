@@ -6,7 +6,7 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircleIcon, ShieldAlertIcon } from 'lucide-vue-next'
+import { AlertCircleIcon, ShieldAlertIcon, MonitorIcon, MoonIcon, SunIcon } from 'lucide-vue-next'
 
 import CryptoJS from 'crypto-js'
 import { decompress } from 'fzstd'
@@ -204,30 +204,48 @@ const fetchPreviewData = async () => {
   }
 }
 
+const themePreference = ref<'light' | 'dark' | 'system'>('system')
+const theme = ref<'light' | 'dark'>('light')
+
 // 初始化并应用深色/浅色偏好（与主站保持一致）
 const initThemePreference = () => {
   try {
-    const storedPref = localStorage.getItem('themePreference')
-    const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    
-    let effectiveDark = false
-    if (storedPref === 'dark') {
-      effectiveDark = true
-    } else if (storedPref === 'light') {
-      effectiveDark = false
-    } else {
-      effectiveDark = systemDark
-    }
-    
-    if (effectiveDark) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
+    const storedPref = localStorage.getItem('themePreference') as 'light' | 'dark' | 'system' | null
+    if (storedPref) {
+      themePreference.value = storedPref
     }
   } catch (e) {
     console.warn('获取主题偏好失败', e)
   }
+  applyThemeFromPreference()
 }
+
+const applyThemeFromPreference = () => {
+  const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+  const effective: 'light' | 'dark' = themePreference.value === 'system'
+    ? (systemDark ? 'dark' : 'light')
+    : themePreference.value
+  
+  theme.value = effective
+  
+  if (effective === 'dark') {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
+  
+  try { localStorage.setItem('themePreference', themePreference.value) } catch { }
+}
+
+const toggleTheme = () => {
+  themePreference.value = themePreference.value === 'light' ? 'dark' : (themePreference.value === 'dark' ? 'system' : 'light')
+  applyThemeFromPreference()
+}
+
+const themeLabel = computed(() => {
+  if (themePreference.value === 'system') return '跟随系统'
+  return theme.value === 'dark' ? '深色' : '浅色'
+})
 
 onMounted(() => {
   initThemePreference()
@@ -264,13 +282,23 @@ onMounted(() => {
         </div>
         
         <!-- 右侧优雅时间戳与类型展示 -->
-        <div v-if="message" class="hidden sm:flex items-center space-x-3">
-          <Badge variant="secondary" class="font-bold bg-brand/10 text-brand border border-brand/20 px-3 py-1.5 text-xs rounded-full shadow-sm select-none">
-            # {{ typeLabel }}
-          </Badge>
-          <div class="px-4 py-1.5 bg-card border border-border rounded-full shadow-sm text-xs font-semibold text-foreground/80 tracking-wider">
-            {{ message.created_on }}
+        <div class="flex items-center space-x-3">
+          <div v-if="message" class="hidden sm:flex items-center space-x-3">
+            <Badge variant="secondary" class="font-bold bg-brand/10 text-brand border border-brand/20 px-3 py-1.5 text-xs rounded-full shadow-sm select-none">
+              # {{ typeLabel }}
+            </Badge>
+            <div class="px-4 py-1.5 bg-card border border-border rounded-full shadow-sm text-xs font-semibold text-foreground/80 tracking-wider">
+              {{ message.created_on }}
+            </div>
           </div>
+          
+          <!-- 主题切换按钮 -->
+          <button @click="toggleTheme" :title="'切换主题（当前：' + themeLabel + '）'"
+            class="p-2 rounded-full border border-border bg-card text-muted-foreground hover:text-brand hover:bg-muted/50 transition-colors">
+            <MonitorIcon v-if="themePreference === 'system'" class="w-4 h-4" />
+            <MoonIcon v-else-if="theme === 'dark'" class="w-4 h-4" />
+            <SunIcon v-else class="w-4 h-4" />
+          </button>
         </div>
       </div>
 
