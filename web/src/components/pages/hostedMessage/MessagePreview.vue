@@ -180,8 +180,16 @@ const fetchPreviewData = async () => {
         const siteRsp = await request.get('/settings/getsetting', { params: { section: 'site_config' } })
         if (siteRsp.data.code === 200) {
           siteConfig.value = siteRsp.data.data
-          if (siteConfig.value && siteConfig.value.theme_color) {
-            applyTheme(siteConfig.value.theme_color)
+          if (siteConfig.value) {
+            if (siteConfig.value.title) {
+              document.title = `${siteConfig.value.title} - 托管消息`
+            }
+            if (siteConfig.value.logo) {
+              updateFavicon(siteConfig.value.logo)
+            }
+            if (siteConfig.value.theme_color) {
+              applyTheme(siteConfig.value.theme_color)
+            }
           }
         }
       } catch (e) {
@@ -235,6 +243,26 @@ const applyThemeFromPreference = () => {
   }
   
   try { localStorage.setItem('themePreference', themePreference.value) } catch { }
+}
+
+// 更新favicon
+const updateFavicon = (logoSvg: string) => {
+  if (logoSvg) {
+    let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement
+    if (!link) {
+      link = document.createElement('link')
+      link.type = 'image/svg+xml'
+      link.rel = 'shortcut icon'
+      document.getElementsByTagName('head')[0].appendChild(link)
+    }
+    
+    if (logoSvg.startsWith('data:') || logoSvg.startsWith('http')) {
+      link.href = logoSvg
+    } else {
+      const encodedSvg = encodeURIComponent(logoSvg)
+      link.href = `data:image/svg+xml,${encodedSvg}`
+    }
+  }
 }
 
 const toggleTheme = () => {
