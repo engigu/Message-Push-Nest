@@ -1,9 +1,11 @@
 package channels
 
 import (
+	"encoding/json"
 	"message-nest/models"
 	"message-nest/service/hosted_message_service"
 	"message-nest/service/send_way_service"
+	"regexp"
 )
 
 type MessageNestChannel struct{ *BaseChannel }
@@ -21,6 +23,26 @@ func (c *MessageNestChannel) SendUnified(msgObj interface{}, ins models.SendTask
 	if err != nil {
 		return "", err.Error()
 	}
+
+	// 解析配置
+	var nestConfig models.InsMessageNestConfig
+	if ins.Config != "" {
+		if err := json.Unmarshal([]byte(ins.Config), &nestConfig); err != nil {
+			return "", "解析自托管消息配置失败: " + err.Error()
+		}
+	}
+
+	// 匹配黑名单正则，满足则不记录
+	if nestConfig.BlacklistRegex != "" {
+		reg, err := regexp.Compile(nestConfig.BlacklistRegex)
+		if err != nil {
+			return "", "黑名单正则表达式解析错误: " + err.Error()
+		}
+		if reg.MatchString(formattedContent) || reg.MatchString(content.Title) {
+			return "消息匹配黑名单正则，未记录", ""
+		}
+	}
+
 	messageService := hosted_message_service.HostMessageService{
 		Title:   content.Title,
 		Content: formattedContent,

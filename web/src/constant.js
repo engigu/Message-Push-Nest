@@ -153,6 +153,7 @@ const CONSTANT = {
                 { subLabel: 'text', content: 'text' },
             ],
             taskInsInputs: [
+                { value: '', col: 'blacklist_regex', desc: '过滤黑名单正则表达式，匹配的内容不会记录', label: '黑名单正则' },
             ],
         },
         // 暂时屏蔽阿里云短信入口

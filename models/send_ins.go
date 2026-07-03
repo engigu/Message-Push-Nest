@@ -43,6 +43,7 @@ type InsCustomConfig struct {
 
 // InsMessageNestConfig 实例里面的托管消息config
 type InsMessageNestConfig struct {
+	BlacklistRegex string `json:"blacklist_regex" label:"黑名单正则表达式"`
 }
 
 // InsAliyunSMSConfig 实例里面的阿里云短信config

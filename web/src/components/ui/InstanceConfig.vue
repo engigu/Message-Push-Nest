@@ -226,6 +226,17 @@ const formatInsConfigDisplay = (row: any) => {
     return config[recipientField] || ""
   }
 
+  // 通用逻辑：对于没有 dynamicRecipient 但有其他输入配置的渠道，将其展示为 "标签: 值"
+  if (channelConfig?.taskInsInputs && Array.isArray(channelConfig.taskInsInputs) && channelConfig.taskInsInputs.length > 0) {
+    return channelConfig.taskInsInputs
+      .map((inp: any) => {
+        const val = config[inp.col]
+        return val ? `${inp.label || inp.desc}: ${val}` : ''
+      })
+      .filter(Boolean)
+      .join(' | ') || "-"
+  }
+
    if (channelConfig?.taskInsInputs && Array.isArray(channelConfig.taskInsInputs) && channelConfig.taskInsInputs.length === 0) {
     return "无需配置"
   }
@@ -348,6 +359,11 @@ watch(() => props.data?.id, (newVal) => {
   }
 }, { immediate: true })
 
+// 监听搜索词变化，触发防抖搜索
+watch(searchQuery, (newVal) => {
+  handleSearch(newVal)
+})
+
 // 暴露方法供父组件调用
 defineExpose({
   queryInsListData
@@ -376,7 +392,6 @@ defineExpose({
             <ComboboxAnchor class="w-full">
               <ComboboxInput 
                 v-model="inputDisplayValue" 
-                @input="handleSearch(inputDisplayValue)"
                 class="flex h-10 w-full" 
                 placeholder="搜索或选择渠道类型进行实例的添加..." 
               />
@@ -402,9 +417,9 @@ defineExpose({
     </div>
 
     <!-- 渠道配置表单 -->
-    <div v-if="currentChannelConfig" class="mt-4">
+    <div v-if="currentChannelConfig" class="mt-4 space-y-4">
       <!-- 动态接收者勾选框 -->
-      <div v-if="currentChannelConfig.dynamicRecipient?.support" class="mb-4 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
+      <div v-if="currentChannelConfig.dynamicRecipient?.support" class="p-3 border rounded-lg bg-gray-50 dark:bg-gray-800/50">
         <div class="flex items-center space-x-2">
           <Switch 
             :model-value="formData.allowMultiRecip" 
@@ -424,9 +439,9 @@ defineExpose({
       </div>
 
       <!-- 接收者输入字段 -->
-      <div v-if="shouldShowRecipientInput" class="mb-2">
-        <Label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">实例配置</Label>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-if="shouldShowRecipientInput" class="space-y-2">
+        <Label class="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">实例配置</Label>
+        <div class="grid grid-cols-1 gap-4">
           <div class="space-y-2">
             <label class="text-xs font-medium text-gray-600 dark:text-gray-400">
               {{ currentChannelConfig.dynamicRecipient.label }}
@@ -442,9 +457,9 @@ defineExpose({
       </div>
       
       <!-- 实例配置输入字段（排除动态接收者字段） -->
-      <div v-if="currentChannelConfig.taskInsInputs && currentChannelConfig.taskInsInputs.length > 0" class="mb-2">
-        <Label class="text-sm font-medium mb-1">实例配置</Label>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-if="currentChannelConfig.taskInsInputs && currentChannelConfig.taskInsInputs.length > 0" class="space-y-2">
+        <Label class="text-sm font-medium block mb-1">实例配置</Label>
+        <div class="grid grid-cols-1 gap-4">
           <div 
             v-for="input in currentChannelConfig.taskInsInputs.filter((inp: any) => inp.col !== currentChannelConfig?.dynamicRecipient?.field)" 
             :key="input.col" 
@@ -462,8 +477,8 @@ defineExpose({
       </div>
 
       <!-- 单选框 -->
-      <div v-if="currentChannelConfig.taskInsRadios && currentChannelConfig.taskInsRadios.length > 0" class="mt-4">
-        <Label class="text-sm font-medium mb-2">消息格式</Label>
+      <div v-if="currentChannelConfig.taskInsRadios && currentChannelConfig.taskInsRadios.length > 0" class="space-y-2">
+        <Label class="text-sm font-medium block mb-1">消息格式</Label>
         <RadioGroup v-model="formData.templ_type" class="flex gap-4">
           <div v-for="radio in currentChannelConfig.taskInsRadios" :key="radio.subLabel" class="flex items-center space-x-2">
             <RadioGroupItem :value="radio.subLabel" :id="radio.subLabel" />

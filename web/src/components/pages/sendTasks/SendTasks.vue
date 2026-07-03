@@ -222,7 +222,7 @@ onMounted(async () => {
             </Button>
           </DialogTrigger>
 
-          <DialogContent class="w-[500px] max-w-[90vw]">
+          <DialogContent class="sm:w-[750px] w-[500px] max-w-[90vw]">
             <DialogHeader>
               <DialogTitle>新增发信任务</DialogTitle>
             </DialogHeader>
@@ -284,7 +284,7 @@ onMounted(async () => {
 
     <!-- 编辑任务Dialog -->
     <Dialog v-model:open="isEditChannelDrawerOpen">
-      <DialogContent class="w-[500px] max-w-[90vw] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent class="sm:w-[750px] w-[500px] max-w-[90vw] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader class="flex-shrink-0">
           <DialogTitle>编辑发信任务</DialogTitle>
         </DialogHeader>

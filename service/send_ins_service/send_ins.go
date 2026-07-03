@@ -63,7 +63,11 @@ func (sw *SendTaskInsService) ValidateDiffIns(ins models.SendTasksIns) (string, 
 		return "", Config
 	}
 	if ins.WayType == constant.MessageTypeMessageNest {
-		var Config models.InsQyWeiXinConfig
+		var Config models.InsMessageNestConfig
+		err := json.Unmarshal([]byte(ins.Config), &Config)
+		if err != nil {
+			return "托管消息配置反序列化失败！", empty
+		}
 		return "", Config
 	}
 	if ins.WayType == constant.MessageTypeCustom {
