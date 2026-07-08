@@ -24,6 +24,7 @@ var (
 		constant.MessageTypeEmail:           func() WayValidator { return &WayDetailEmail{} },
 		constant.MessageTypeDtalk:           func() WayValidator { return &WayDetailDTalk{} },
 		constant.MessageTypeQyWeiXin:        func() WayValidator { return &WayDetailQyWeiXin{} },
+		constant.MessageTypeQyWeiXinApp:     func() WayValidator { return &WayDetailQyWeiXinApp{} },
 		constant.MessageTypeFeishu:          func() WayValidator { return &WayDetailFeishu{} },
 		constant.MessageTypeCustom:          func() WayValidator { return &WayDetailCustom{} },
 		constant.MessageTypeWeChatOFAccount: func() WayValidator { return &WeChatOFAccount{} },
@@ -39,6 +40,7 @@ var (
 		constant.MessageTypeEmail:           func(m interface{}) WayTester { return m.(*WayDetailEmail) },
 		constant.MessageTypeDtalk:           func(m interface{}) WayTester { return m.(*WayDetailDTalk) },
 		constant.MessageTypeQyWeiXin:        func(m interface{}) WayTester { return m.(*WayDetailQyWeiXin) },
+		constant.MessageTypeQyWeiXinApp:     func(m interface{}) WayTester { return m.(*WayDetailQyWeiXinApp) },
 		constant.MessageTypeFeishu:          func(m interface{}) WayTester { return m.(*WayDetailFeishu) },
 		constant.MessageTypeCustom:          func(m interface{}) WayTester { return m.(*WayDetailCustom) },
 		constant.MessageTypeWeChatOFAccount: func(m interface{}) WayTester { return m.(*WeChatOFAccount) },
@@ -427,4 +429,27 @@ func (w *WayDetailGotify) Test() (string, string) {
 		return fmt.Sprintf("发送失败：%s", err), string(res)
 	}
 	return "", string(res)
+}
+
+// WayDetailQyWeiXinApp 企业微信自建应用渠道明细字段
+type WayDetailQyWeiXinApp struct {
+	CorpID   string `json:"corp_id" validate:"required,max=100" label:"企业ID"`
+	AgentID  string `json:"agent_id" validate:"required" label:"应用AgentId"`
+	Secret   string `json:"secret" validate:"required,max=100" label:"应用Secret"`
+	ApiHost  string `json:"api_host" validate:"max=200" label:"自定义API地址"`
+	ProxyURL string `json:"proxy_url" validate:"max=200" label:"代理地址"`
+}
+
+func (w *WayDetailQyWeiXinApp) Validate(authJson string) (string, interface{}) {
+	var empty interface{}
+	err := json.Unmarshal([]byte(authJson), w)
+	if err != nil {
+		return "企业微信自建应用参数反序列化失败！", empty
+	}
+	_, msg := app.CommonPlaygroundValid(*w)
+	return msg, w
+}
+
+func (w *WayDetailQyWeiXinApp) Test() (string, string) {
+	return "企业微信自建应用配置成功，请直接添加实例任务进行发送测试", ""
 }

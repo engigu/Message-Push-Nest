@@ -79,6 +79,38 @@ const CONSTANT = {
             ],
         },
         {
+            type: 'QyWeiXinApp',
+            label: '企业微信自建应用',
+            // 动态接收者配置
+            dynamicRecipient: {
+                support: true,              // 是否支持动态接收者
+                field: 'to_user',           // 接收者字段名
+                label: '接收成员ID',         // 接收者字段标签
+                desc: '成员账号(userid)',    // 接收者字段描述
+            },
+            inputs: [
+                { subLabel: '企业ID', value: '', col: 'corp_id', desc: "企业微信企业ID (corpid)" },
+                { subLabel: '应用AgentId', value: '', col: 'agent_id', desc: "自建应用AgentId" },
+                { subLabel: '应用Secret', value: '', col: 'secret', desc: "自建应用Secret" },
+                { subLabel: '自定义API地址', value: '', col: 'api_host', desc: "可选，自定义企业微信API地址，如 https://qyapi.weixin.qq.com" },
+                { subLabel: '代理地址', value: '', col: 'proxy_url', desc: "可选，支持 HTTP/HTTPS/SOCKS5 代理" },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "企业微信自建应用说明",
+                desc: "使用企业微信自建应用发送消息。<br />1. 支持配置自定义 API 域名（如反向代理）。<br />2. 支持 HTTP/HTTPS/SOCKS5 代理，供国内服务器中转使用。"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+                { subLabel: 'markdown', content: 'markdown' },
+            ],
+            taskInsInputs: [
+                { value: '', col: 'to_user', desc: "接收成员ID (多个用 | 分隔)", label: '接收成员ID' },
+                { value: '', col: 'to_party', desc: "接收部门ID (多个用 | 分隔，可选)", label: '接收部门ID' },
+                { value: '', col: 'to_tag', desc: "接收标签ID (多个用 | 分隔，可选)", label: '接收标签ID' },
+            ],
+        },
+        {
             type: 'Feishu',
             label: '飞书机器人',
             inputs: [

@@ -33,6 +33,13 @@ type InsDtalkConfig struct {
 type InsQyWeiXinConfig struct {
 }
 
+// InsQyWeiXinAppConfig 实例里面的企业微信自建应用config
+type InsQyWeiXinAppConfig struct {
+	ToUser  string `json:"to_user" validate:"required" label:"接收成员ID"`
+	ToParty string `json:"to_party" label:"接收部门ID"`
+	ToTag   string `json:"to_tag" label:"接收标签ID"`
+}
+
 // InsFeishuConfig 实例里面的飞书config
 type InsFeishuConfig struct {
 }

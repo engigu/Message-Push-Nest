@@ -61,6 +61,7 @@ const (
 	MessageTypeEmail           = "Email"
 	MessageTypeDtalk           = "Dtalk"
 	MessageTypeQyWeiXin        = "QyWeiXin"
+	MessageTypeQyWeiXinApp     = "QyWeiXinApp"
 	MessageTypeFeishu          = "Feishu"
 	MessageTypeCustom          = "Custom"
 	MessageTypeWeChatOFAccount = "WeChatOFAccount"

@@ -17,6 +17,7 @@ var insValidatorRegistry = map[string]func() InsValidator{
 	constant.MessageTypeEmail:           func() InsValidator { return &InsEmailValidator{} },
 	constant.MessageTypeDtalk:           func() InsValidator { return &InsDtalkValidator{} },
 	constant.MessageTypeQyWeiXin:        func() InsValidator { return &InsQyWeiXinValidator{} },
+	constant.MessageTypeQyWeiXinApp:     func() InsValidator { return &InsQyWeiXinAppValidator{} },
 	constant.MessageTypeFeishu:          func() InsValidator { return &InsFeishuValidator{} },
 	constant.MessageTypeMessageNest:     func() InsValidator { return &InsMessageNestValidator{} },
 	constant.MessageTypeCustom:          func() InsValidator { return &InsCustomValidator{} },
@@ -79,6 +80,26 @@ type InsQyWeiXinValidator struct{}
 func (v *InsQyWeiXinValidator) Validate(configJson string) (string, interface{}) {
 	var Config models.InsQyWeiXinConfig
 	return "", Config
+}
+
+// InsQyWeiXinAppValidator 企业微信自建应用配置校验
+type InsQyWeiXinAppValidator struct{}
+
+func (v *InsQyWeiXinAppValidator) Validate(configJson string) (string, interface{}) {
+	var empty interface{}
+	var Config models.InsQyWeiXinAppConfig
+	err := json.Unmarshal([]byte(configJson), &Config)
+	if err != nil {
+		return "企业微信自建应用配置反序列化失败！", empty
+	}
+
+	// checkAllowMultiRecip 为真代表动态模式，to_user 可以为空
+	if checkAllowMultiRecip(configJson) && Config.ToUser == "" {
+		return "", Config
+	}
+
+	_, Msg := app.CommonPlaygroundValid(Config)
+	return Msg, Config
 }
 
 // InsFeishuValidator 飞书配置校验
