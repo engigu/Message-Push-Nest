@@ -6,10 +6,13 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 	"log"
 	"message-nest/pkg/setting"
 	"message-nest/pkg/util"
+	"os"
+	"time"
 )
 
 var db *gorm.DB
@@ -36,11 +39,22 @@ type UUIDModel struct {
 func Setup() *gorm.DB {
 	var err error
 
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             500 * time.Millisecond, // 慢 SQL 阈值设为 500ms
+			LogLevel:                  logger.Warn,           // 日志级别
+			IgnoreRecordNotFoundError: true,                  // 忽略未找到记录错误
+			Colorful:                  true,                  // 彩色日志
+		},
+	)
+
 	config := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   setting.DatabaseSetting.TablePrefix,
 			SingularTable: true,
 		},
+		Logger: newLogger,
 	}
 
 	switch setting.DatabaseSetting.Type {
