@@ -490,7 +490,7 @@ onMounted(() => {
   <!-- 图表区域 -->
   <div class="w-[90%] mx-auto mt-8 grid grid-cols-1 lg:grid-cols-10 gap-6">
     <!-- 折线图 -->
-    <Card class="w-full lg:col-span-7">
+    <Card class="w-full lg:col-span-7 hover:shadow-lg transition-all duration-300 animate-fade-in-delayed-1">
       <CardHeader>
         <CardTitle>消息发送趋势</CardTitle>
         <CardDescription>最近{{ state.trendDays }}天的发送情况统计</CardDescription>
@@ -501,7 +501,7 @@ onMounted(() => {
     </Card>
 
     <!-- 饼图 -->
-    <Card class="w-full lg:col-span-3">
+    <Card class="w-full lg:col-span-3 hover:shadow-lg transition-all duration-300 animate-fade-in-delayed-2">
       <CardHeader>
         <CardTitle>发送渠道分布</CardTitle>
         <CardDescription>各发送渠道的使用情况统计</CardDescription>
@@ -512,3 +512,25 @@ onMounted(() => {
     </Card>
   </div>
 </template>
+
+<style scoped>
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-delayed-1 {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.animate-fade-in-delayed-2 {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+</style>
+
