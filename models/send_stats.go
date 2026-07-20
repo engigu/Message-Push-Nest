@@ -56,6 +56,11 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 	currDay := util.GetNowTimeStr()[:10]
 
 	// 今日统计
+	var todayStats struct {
+		TodaySuccNum   int64 `gorm:"column:today_succ_num"`
+		TodayFailedNum int64 `gorm:"column:today_failed_num"`
+		TodayTotalNum  int64 `gorm:"column:today_total_num"`
+	}
 	todayQuery := db.Table(statsTable).
 		Select(`
 			SUM(CASE WHEN status = 'success' THEN num ELSE 0 END) AS today_succ_num,
@@ -64,9 +69,18 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 		`).
 		Where("day = ?", currDay)
 
-	todayQuery.Scan(&result)
+	if err := todayQuery.Scan(&todayStats).Error; err == nil {
+		result.TodaySuccNum = todayStats.TodaySuccNum
+		result.TodayFailedNum = todayStats.TodayFailedNum
+		result.TodayTotalNum = todayStats.TodayTotalNum
+	}
 
 	// 总计统计
+	var totalStats struct {
+		TotalSuccNum   int64 `gorm:"column:total_succ_num"`
+		TotalFailedNum int64 `gorm:"column:total_failed_num"`
+		TotalNum       int64 `gorm:"column:total_num"`
+	}
 	totalQuery := db.Table(statsTable).
 		Select(`
 			SUM(CASE WHEN status = 'success' THEN num ELSE 0 END) AS total_succ_num,
@@ -74,7 +88,11 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 			SUM(num) AS total_num
 		`)
 
-	totalQuery.Scan(&result)
+	if err := totalQuery.Scan(&totalStats).Error; err == nil {
+		result.TotalSuccNum = totalStats.TotalSuccNum
+		result.TotalFailedNum = totalStats.TotalFailedNum
+		result.TotalNum = totalStats.TotalNum
+	}
 
 	// 最近N天每日统计
 	if days > 0 {
@@ -128,6 +146,11 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 	currDay := util.GetNowTimeStr()[:10]
 
 	// 今日统计
+	var todayStats struct {
+		TodaySuccNum   int64 `gorm:"column:today_succ_num"`
+		TodayFailedNum int64 `gorm:"column:today_failed_num"`
+		TodayTotalNum  int64 `gorm:"column:today_total_num"`
+	}
 	todayQuery := db.Table(statsTable).
 		Select(`
 			SUM(CASE WHEN status = 'success' THEN num ELSE 0 END) AS today_succ_num,
@@ -136,9 +159,18 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 		`).
 		Where("day = ? AND task_id = ?", currDay, taskID)
 
-	todayQuery.Scan(&result)
+	if err := todayQuery.Scan(&todayStats).Error; err == nil {
+		result.TodaySuccNum = todayStats.TodaySuccNum
+		result.TodayFailedNum = todayStats.TodayFailedNum
+		result.TodayTotalNum = todayStats.TodayTotalNum
+	}
 
 	// 总计统计
+	var totalStats struct {
+		TotalSuccNum   int64 `gorm:"column:total_succ_num"`
+		TotalFailedNum int64 `gorm:"column:total_failed_num"`
+		TotalNum       int64 `gorm:"column:total_num"`
+	}
 	totalQuery := db.Table(statsTable).
 		Select(`
 			SUM(CASE WHEN status = 'success' THEN num ELSE 0 END) AS total_succ_num,
@@ -147,7 +179,11 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 		`).
 		Where("task_id = ?", taskID)
 
-	totalQuery.Scan(&result)
+	if err := totalQuery.Scan(&totalStats).Error; err == nil {
+		result.TotalSuccNum = totalStats.TotalSuccNum
+		result.TotalFailedNum = totalStats.TotalFailedNum
+		result.TotalNum = totalStats.TotalNum
+	}
 
 	// 最近N天每日统计
 	if days > 0 {

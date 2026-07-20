@@ -237,6 +237,11 @@ func GetStatisticData() (StatisticData, error) {
 	currDay := util.GetNowTimeStr()[:10]
 
 	// 今日统计数据
+	var todayStats struct {
+		TodayTotalNum  int `gorm:"column:today_total_num"`
+		TodaySuccNum   int `gorm:"column:today_succ_num"`
+		TodayFailedNum int `gorm:"column:today_failed_num"`
+	}
 	query := db.
 		Table(logt).
 		Select(`
@@ -245,15 +250,23 @@ func GetStatisticData() (StatisticData, error) {
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
 		Where("DATE(created_on) = ?", currDay)
 
-	query.Scan(&statistic)
+	if err := query.Scan(&todayStats).Error; err == nil {
+		statistic.TodayTotalNum = todayStats.TodayTotalNum
+		statistic.TodaySuccNum = todayStats.TodaySuccNum
+		statistic.TodayFailedNum = todayStats.TodayFailedNum
+	}
 
 	// 	全部消息统计数据
-	totalQuery := db.Table(logt).Select(`COUNT(*) AS message_total_num`)
-	totalQuery.Scan(&statistic)
+	var messageTotalNum int
+	if err := db.Table(logt).Select(`COUNT(*)`).Scan(&messageTotalNum).Error; err == nil {
+		statistic.MessageTotalNum = messageTotalNum
+	}
 
 	// 	托管消息统计数据
-	hostedMessageTotalQuery := db.Table(hostedt).Select(`COUNT(*) AS hosted_message_total_num`)
-	hostedMessageTotalQuery.Scan(&statistic)
+	var hostedMessageTotalNum int
+	if err := db.Table(hostedt).Select(`COUNT(*)`).Scan(&hostedMessageTotalNum).Error; err == nil {
+		statistic.HostedMessageTotalNum = hostedMessageTotalNum
+	}
 
 	// 最近30天数据
 	days := 30
@@ -302,6 +315,11 @@ func GetBasicStatisticData() (BasicStatisticData, error) {
 	currDay := util.GetNowTimeStr()[:10]
 
 	// 今日统计数据
+	var todayStats struct {
+		TodayTotalNum  int `gorm:"column:today_total_num"`
+		TodaySuccNum   int `gorm:"column:today_succ_num"`
+		TodayFailedNum int `gorm:"column:today_failed_num"`
+	}
 	query := db.
 		Table(logt).
 		Select(`
@@ -310,15 +328,23 @@ func GetBasicStatisticData() (BasicStatisticData, error) {
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
 		Where("DATE(created_on) = ?", currDay)
 
-	query.Scan(&statistic)
+	if err := query.Scan(&todayStats).Error; err == nil {
+		statistic.TodayTotalNum = todayStats.TodayTotalNum
+		statistic.TodaySuccNum = todayStats.TodaySuccNum
+		statistic.TodayFailedNum = todayStats.TodayFailedNum
+	}
 
 	// 全部消息统计数据
-	totalQuery := db.Table(logt).Select(`COUNT(*) AS message_total_num`)
-	totalQuery.Scan(&statistic)
+	var messageTotalNum int
+	if err := db.Table(logt).Select(`COUNT(*)`).Scan(&messageTotalNum).Error; err == nil {
+		statistic.MessageTotalNum = messageTotalNum
+	}
 
 	// 托管消息统计数据
-	hostedMessageTotalQuery := db.Table(hostedt).Select(`COUNT(*) AS hosted_message_total_num`)
-	hostedMessageTotalQuery.Scan(&statistic)
+	var hostedMessageTotalNum int
+	if err := db.Table(hostedt).Select(`COUNT(*)`).Scan(&hostedMessageTotalNum).Error; err == nil {
+		statistic.HostedMessageTotalNum = hostedMessageTotalNum
+	}
 
 	return statistic, nil
 }
