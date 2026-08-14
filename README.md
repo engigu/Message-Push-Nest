@@ -76,7 +76,7 @@ Message Nest 是一个灵活而强大的消息推送整合平台，旨在简化�
 
 ## Star History ⭐
 
-[![Star History Chart](https://api.star-history.com/svg?repos=engigu/Message-Push-Nest&type=Date)](https://star-history.com/#engigu/Message-Push-Nest&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=engigu/Message-Push-Nest&type=Date)](https://star-history.dera.page/#engigu/Message-Push-Nest&Date)
 
 ## 许可证 📝
 
