@@ -39,6 +39,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.tag.outputs.TAG }}
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

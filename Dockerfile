@@ -20,12 +20,19 @@ FROM golang:alpine AS go-builder
 ENV GOTOOLCHAIN=auto
 WORKDIR /app
 
+ARG APP_VERSION=""
+
 RUN apk add --no-cache ca-certificates tzdata git
 
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+
+# 如果传入了 APP_VERSION 参数，则写入 .release_version 供系统信息展示
+RUN if [ -n "$APP_VERSION" ]; then \
+        echo "$APP_VERSION" > .release_version; \
+    fi
 
 # 将前端构建产物复制到 web/dist（供 //go:embed 使用）
 COPY --from=web-builder /app/web/dist ./web/dist
