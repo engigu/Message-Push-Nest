@@ -11,6 +11,8 @@ concurrency:
 
 env:
   IMAGE_NAME: engigu/message-nest
+  DOCKER_USER: ${{ secrets.DOCKER_USER }}
+  DOCKER_PASSWD: ${{ secrets.DOCKER_PASSWD }}
 
 jobs:
   build-artifacts:
@@ -89,12 +91,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
-        if: ${{ secrets.DOCKER_USER != '' && secrets.DOCKER_PASSWD != '' }}
+        if: ${{ env.DOCKER_USER != '' && env.DOCKER_PASSWD != '' }}
         uses: docker/login-action@v3
         with:
           registry: docker.io
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWD }}
+          username: ${{ env.DOCKER_USER }}
+          password: ${{ env.DOCKER_PASSWD }}
 
       - name: Extract metadata
         id: meta
@@ -161,12 +163,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
-        if: ${{ secrets.DOCKER_USER != '' && secrets.DOCKER_PASSWD != '' }}
+        if: ${{ env.DOCKER_USER != '' && env.DOCKER_PASSWD != '' }}
         uses: docker/login-action@v3
         with:
           registry: docker.io
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWD }}
+          username: ${{ env.DOCKER_USER }}
+          password: ${{ env.DOCKER_PASSWD }}
 
       - name: Extract metadata
         id: meta
@@ -189,7 +191,7 @@ jobs:
             $(printf 'ghcr.io/${{ env.IMAGE_NAME }}@sha256:%s ' *)
 
           # Docker Hub 多架构合并推送 (配置了 Docker 账号时推送)
-          if [ -n "${{ secrets.DOCKER_USER }}" ]; then
+          if [ -n "$DOCKER_USER" ]; then
             docker buildx imagetools create \
               $(jq -cr '.tags | map(select(startswith("docker.io"))) | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
               $(printf 'docker.io/${{ env.IMAGE_NAME }}@sha256:%s ' *)
