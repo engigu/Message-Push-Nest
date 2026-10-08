@@ -72,67 +72,67 @@ export default {
     </CardHeader>
     <CardContent class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-4">
+        <div class="space-y-5">
           <div>
-            <h3 class="font-medium text-gray-900 mb-2">技术栈</h3>
+            <h3 class="font-medium text-foreground mb-2.5">技术栈</h3>
             <div class="flex flex-wrap gap-2">
-              <Badge v-for="tech in state.techStack" :key="tech">{{ tech }}</Badge>
+              <Badge v-for="tech in state.techStack" :key="tech" variant="secondary" class="bg-secondary/70 hover:bg-secondary font-normal text-xs">
+                {{ tech }}
+              </Badge>
             </div>
           </div>
 
           <div>
-            <h3 class="font-medium text-gray-900 mb-2">功能特性</h3>
+            <h3 class="font-medium text-foreground mb-2.5">功能特性</h3>
             <div class="flex flex-wrap gap-2">
-              <Badge v-for="feature in state.features" :key="feature" variant="secondary">{{ feature }}</Badge>
+              <Badge v-for="feature in state.features" :key="feature" variant="outline" class="border-border text-foreground/90 font-normal text-xs">
+                {{ feature }}
+              </Badge>
             </div>
           </div>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
           <div>
-            <h3 class="font-medium text-gray-900 mb-2">系统信息</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex justify-between">
-                <span class="text-gray-600">系统版本:</span>
-                <Badge variant="outline">{{ state.version }}</Badge>
+            <h3 class="font-medium text-foreground mb-2.5">系统信息</h3>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between items-center py-1 border-b border-border/50">
+                <span class="text-muted-foreground">系统版本:</span>
+                <Badge variant="outline" class="text-xs font-medium">{{ state.version }}</Badge>
               </div>
-              <!-- <div class="flex justify-between">
-                <span class="text-gray-600">运行环境:</span>
-                <span>Vue 3 + TypeScript</span>
-              </div> -->
-              <div class="flex justify-between">
-                <span class="text-gray-600">构建时间:</span>
-                <span>{{ buildTime.includes('开发模式') ? buildTime : new Date(buildTime).toLocaleString('zh-CN') }}</span>
+              <div class="flex justify-between items-center py-1 border-b border-border/50">
+                <span class="text-muted-foreground">构建时间:</span>
+                <span class="text-foreground text-xs font-medium">{{ buildTime.includes('开发模式') ? buildTime : new Date(buildTime).toLocaleString('zh-CN') }}</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">内存使用:</span>
-                <span class="text-sm">{{ state.memoryUsage || '获取中...' }}</span>
+              <div class="flex justify-between items-center py-1 border-b border-border/50">
+                <span class="text-muted-foreground">内存使用:</span>
+                <span class="text-foreground text-xs font-medium">{{ state.memoryUsage || '获取中...' }}</span>
               </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">运行时间:</span>
-                <span class="text-sm">{{ state.uptime || '获取中...' }}</span>
+              <div class="flex justify-between items-center py-1">
+                <span class="text-muted-foreground">运行时间:</span>
+                <span class="text-foreground text-xs font-medium">{{ state.uptime || '获取中...' }}</span>
               </div>
             </div>
           </div>
 
           <div>
-            <h3 class="font-medium text-gray-900 mb-2">版本日志</h3>
+            <h3 class="font-medium text-foreground mb-2.5">版本日志</h3>
             <Sheet>
               <SheetTrigger as-child>
-                <Button variant="outline" size="sm" class="inline-flex items-center gap-2">
-                  <FileText class="w-4 h-4" />
+                <Button variant="outline" size="sm" class="inline-flex items-center gap-2 hover:bg-accent">
+                  <FileText class="w-4 h-4 text-muted-foreground" />
                   查看更新日志
                 </Button>
               </SheetTrigger>
-              <SheetContent class="lg:w-[900px] ">
+              <SheetContent class="lg:w-[900px]">
                 <SheetHeader>
                   <SheetTitle>版本更新日志</SheetTitle>
                 </SheetHeader>
                 <div class="mt-6">
-                  <div class="bg-card text-card-foreground rounded-xl border shadow-sm p-6">
+                  <div class="bg-card text-card-foreground rounded-xl border border-border shadow-sm p-6">
                     <div class="space-y-2 max-h-[80vh] overflow-y-auto">
                       <div v-for="(line, index) in state.versionLog.split('\n').reverse().filter(line => line.trim())" :key="index" 
-                           class="flex items-start gap-3 p-3 rounded-lg border bg-background hover:bg-accent/50 transition-colors">
+                           class="flex items-start gap-3 p-3 rounded-lg border border-border/60 bg-background/50 hover:bg-accent/50 transition-colors">
                         <div class="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0"></div>
                         <div class="text-sm text-foreground leading-relaxed font-sans">
                           {{ line }}
@@ -151,18 +151,17 @@ export default {
         </div>
       </div>
 
-      <div class="border-t border-gray-200 my-4"></div>
+      <div class="border-t border-border my-4"></div>
 
-      <div class="text-center text-sm text-gray-500">
+      <div class="text-center text-sm text-muted-foreground">
         <p>© {{ new Date().getFullYear() }} {{ state.copyright }}
           <a :href="state.githubUrl" target="_blank"
-            class="inline-flex items-center gap-1 text-blue-500 hover:text-blue-700 underline ml-3">
+            class="inline-flex items-center gap-1 text-primary hover:underline ml-3">
             <Github class="w-4 h-4" />
             GitHub 仓库
           </a>
         </p>
-        <p class="mt-1">如有问题请联系系统管理员</p>
-     
+        <p class="mt-1 text-xs text-muted-foreground/80">如有问题请联系系统管理员</p>
       </div>
     </CardContent>
   </Card>

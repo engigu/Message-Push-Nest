@@ -149,11 +149,11 @@ export default {
           
           <div class="space-y-4">
             <!-- 启用开关 -->
-            <div class="flex items-center justify-between space-x-2 p-4 border rounded-lg">
+            <div class="flex items-center justify-between space-x-2 p-4 border border-border rounded-lg bg-muted/20">
               <div class="space-y-0.5">
-                <Label class="text-base font-medium">启用日志清理</Label>
+                <Label class="text-base font-medium text-foreground">启用日志清理</Label>
                 <div class="text-sm text-muted-foreground">
-                  开启后将按照规则清理清理日志
+                  开启后将按照规则清理日志
                 </div>
               </div>
               <Switch v-model="logsState.enabled" @update:model-value="handleLogsSubmit" />
@@ -161,7 +161,7 @@ export default {
 
             <!-- Cron表达式输入 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-gray-700">定时清除Cron表达式</label>
+              <label class="text-sm font-medium text-foreground">定时清除Cron表达式</label>
               <Input 
                 v-model="logsState.cron" 
                 placeholder="请输入定时日志清除的Cron表达式"
@@ -171,7 +171,7 @@ export default {
             
             <!-- 保留数量输入 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-gray-700">保留日志条数</label>
+              <label class="text-sm font-medium text-foreground">保留日志条数</label>
               <Input 
                 v-model="logsState.keepNum" 
                 placeholder="请输入要保留的最近的日志条数"
@@ -182,11 +182,11 @@ export default {
             <!-- 底部操作区域 -->
             <div class="flex items-center justify-between pt-2">
               <div class="flex items-center space-x-2">
-                <span class="text-sm text-gray-600">说明</span>
+                <span class="text-sm text-muted-foreground">说明</span>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
-                      <HelpCircleIcon class="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                      <HelpCircleIcon class="w-4 h-4 text-muted-foreground/70 hover:text-foreground transition-colors" />
                     </TooltipTrigger>
                     <TooltipContent class="max-w-xs">
                       <div class="text-sm">
@@ -212,20 +212,20 @@ export default {
         </div>
 
         <!-- 响应式分隔线：小屏横向，大屏竖向 -->
-        <div class="lg:hidden w-full border-t border-gray-200 dark:border-gray-700 my-6"></div>
+        <div class="lg:hidden w-full border-t border-border my-6"></div>
         <div class="hidden lg:block w-px bg-border self-stretch"></div>
 
         <!-- 托管消息清理部分 -->
         <div class="setting-section flex-1">
           <div class="flex items-center space-x-2 mb-4">
-            <h3 class="text-lg font-semibold">托管消息清理</h3>
+            <h3 class="text-lg font-semibold text-foreground">托管消息清理</h3>
           </div>
           
           <div class="space-y-4">
             <!-- 启用开关 -->
-            <div class="flex items-center justify-between space-x-2 p-4 border rounded-lg">
+            <div class="flex items-center justify-between space-x-2 p-4 border border-border rounded-lg bg-muted/20">
               <div class="space-y-0.5">
-                <Label class="text-base font-medium">启用托管消息清理</Label>
+                <Label class="text-base font-medium text-foreground">启用托管消息清理</Label>
                 <div class="text-sm text-muted-foreground">
                   开启后将按照规则清理托管消息
                 </div>
@@ -235,7 +235,7 @@ export default {
 
             <!-- Cron表达式输入 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-gray-700">定时清除Cron表达式</label>
+              <label class="text-sm font-medium text-foreground">定时清除Cron表达式</label>
               <Input 
                 v-model="hostedMsgState.cron" 
                 placeholder="请输入定时托管消息清除的Cron表达式"
@@ -245,7 +245,7 @@ export default {
             
             <!-- 保留数量输入 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-gray-700">保留托管消息条数</label>
+              <label class="text-sm font-medium text-foreground">保留托管消息条数</label>
               <Input 
                 v-model="hostedMsgState.keepNum" 
                 placeholder="请输入要保留的最近的托管消息条数"
@@ -256,11 +256,11 @@ export default {
             <!-- 底部操作区域 -->
             <div class="flex items-center justify-between pt-2">
               <div class="flex items-center space-x-2">
-                <span class="text-sm text-gray-600">说明</span>
+                <span class="text-sm text-muted-foreground">说明</span>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
-                      <HelpCircleIcon class="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                      <HelpCircleIcon class="w-4 h-4 text-muted-foreground/70 hover:text-foreground transition-colors" />
                     </TooltipTrigger>
                     <TooltipContent class="max-w-xs">
                       <div class="text-sm">

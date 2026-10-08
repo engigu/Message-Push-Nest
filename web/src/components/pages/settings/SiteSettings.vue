@@ -119,25 +119,25 @@ export default {
         <div class="space-y-4">
           <!-- 站点标题 -->
           <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">站点标题</label>
+            <label class="text-sm font-medium text-foreground">站点标题</label>
             <Input v-model="state.title" placeholder="请输入自定义的网站标题" />
           </div>
 
           <!-- 站点标语 -->
           <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">站点标语</label>
+            <label class="text-sm font-medium text-foreground">站点标语</label>
             <Input v-model="state.slogan" placeholder="请输入自定义的网站slogan" />
           </div>
 
           <!-- 站点图标 -->
           <div class="space-y-2">
-            <label class="text-sm font-medium text-gray-700">站点图标(只支持svg文本)</label>
+            <label class="text-sm font-medium text-foreground">站点图标(只支持svg文本)</label>
             <div class="flex items-center gap-2">
               <div class="flex-1">
                 <Input v-model="state.logo" placeholder="请输入自定义的网站logo（svg文本）" />
               </div>
               <div v-if="state.logo"
-                class="flex-shrink-0 w-9 h-9 border border-border rounded bg-white dark:bg-white flex items-center justify-center p-1.5 shadow-sm overflow-hidden"
+                class="flex-shrink-0 w-9 h-9 border border-border rounded bg-muted/50 flex items-center justify-center p-1.5 shadow-sm overflow-hidden"
                 v-html="state.logo">
               </div>
             </div>
@@ -145,19 +145,19 @@ export default {
 
           <!-- 主题色 -->
           <div class="space-y-3">
-            <label class="text-sm font-medium text-gray-700">主题色</label>
+            <label class="text-sm font-medium text-foreground">主题色</label>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button v-for="t in THEMES" :key="t.key" @click="changeTheme(t.key)"
                 class="group relative flex items-center gap-2.5 p-2.5 rounded-lg border transition-all duration-200"
                 :class="[
                   currentThemeColor === t.key
-                    ? 'border-brand bg-brand/5 shadow-sm ring-1 ring-brand/20'
-                    : 'border-border hover:border-brand/40 hover:bg-muted/30'
+                    ? 'border-brand bg-brand/10 dark:bg-brand/20 shadow-sm ring-1 ring-brand/30'
+                    : 'border-border bg-card hover:border-brand/40 hover:bg-muted/40'
                 ]">
                 <div class="w-4 h-4 rounded-full shadow-inner border border-white/20 flex-shrink-0"
                   :style="{ backgroundColor: t.light }"></div>
                 <span class="text-xs font-medium truncate"
-                  :class="currentThemeColor === t.key ? 'text-brand' : 'text-foreground/80'">{{ t.name }}</span>
+                  :class="currentThemeColor === t.key ? 'text-brand font-semibold' : 'text-foreground/80 group-hover:text-foreground'">{{ t.name }}</span>
 
                 <!-- 选中状态标志 -->
                 <div v-if="currentThemeColor === t.key"
@@ -172,19 +172,19 @@ export default {
           <div class="grid grid-cols-2 gap-4">
             <!-- 分页大小 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-gray-700">分页大小</label>
+              <label class="text-sm font-medium text-foreground">分页大小</label>
               <Input v-model="state.pagesize" placeholder="页面分页大小" />
             </div>
 
             <!-- Cookie过期天数 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-gray-700">Cookie过期天数</label>
+              <label class="text-sm font-medium text-foreground">Cookie过期天数</label>
               <Input v-model="state.cookieExpDays" type="number" min="1" max="365" placeholder="Cookie过期天数（默认1天）" />
             </div>
           </div>
 
           <!-- 是否启用公开预览 -->
-          <div class="flex items-center justify-between p-3 border border-dashed rounded-lg bg-slate-50/50 dark:bg-slate-900/30">
+          <div class="flex items-center justify-between p-3 border border-dashed border-border rounded-lg bg-muted/20">
             <div class="space-y-0.5">
               <label class="text-sm font-semibold text-foreground">公开预览功能</label>
               <p class="text-xs text-muted-foreground">允许未登录用户通过防遍历的公开 URL 访问预览托管消息</p>
@@ -200,11 +200,11 @@ export default {
         <!-- 底部操作区域 -->
         <div class="flex items-center justify-between mt-6">
           <div class="flex items-center space-x-2">
-            <span class="text-sm text-gray-600">说明</span>
+            <span class="text-sm text-muted-foreground">说明</span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <HelpCircleIcon class="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                  <HelpCircleIcon class="w-4 h-4 text-muted-foreground/70 hover:text-foreground transition-colors" />
                 </TooltipTrigger>
                 <TooltipContent class="max-w-sm">
                   <div class="text-sm space-y-1">
