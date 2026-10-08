@@ -3,11 +3,11 @@ package setting
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"log"
 	"os"
 	"time"
 
 	"github.com/go-ini/ini"
+	"github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -71,17 +71,17 @@ func Setup() {
 	createConfFolder()
 
 	if fileExists(intPath) {
-		log.Printf("[message-nest] start server from %s.", intPath)
+		logrus.Infof("正在从配置文件 %s 启动服务...", intPath)
 		cfg, err = ini.Load(intPath)
 		if err != nil {
-			log.Fatalf("[message-nest] setting.Setup, fail to parse 'conf/app.ini': %v", err)
+			logrus.Fatalf("解析配置文件 '%s' 失败: %v", intPath, err)
 		}
 
 		mapTo("app", AppSetting)
 		mapTo("server", ServerSetting)
 		mapTo("database", DatabaseSetting)
 	} else {
-		log.Printf("[message-nest] %s is not exists, start server from env vars.", intPath)
+		logrus.Infof("配置文件 %s 不存在，从环境变量加载配置...", intPath)
 		loadConfigFromEnv()
 	}
 
@@ -95,12 +95,12 @@ func ensureJwtSecret() {
 	if AppSetting.JwtSecret == "" || AppSetting.JwtSecret == "message-nest" {
 		randomBytes := make([]byte, 32)
 		if _, err := rand.Read(randomBytes); err != nil {
-			log.Fatalf("[message-nest] failed to generate secure random JWT secret: %v", err)
+			logrus.Fatalf("动态生成安全随机 JWT 密钥失败: %v", err)
 		}
 		AppSetting.JwtSecret = hex.EncodeToString(randomBytes)
-		log.Println("[message-nest] [SECURITY WARNING] JWT_SECRET is not configured or using insecure default ('message-nest').")
-		log.Println("[message-nest] [SECURITY WARNING] A secure random secret has been generated dynamically for this session.")
-		log.Println("[message-nest] [SECURITY WARNING] Notice: Server restart will invalidate previously issued tokens. Please configure a persistent JWT_SECRET in production!")
+		logrus.Warnln("[安全警告] 未配置 JWT_SECRET 或使用了不安全的默认值('message-nest')。")
+		logrus.Warnln("[安全警告] 已为本次运行动态生成高熵安全随机密钥。")
+		logrus.Warnln("[安全警告] 注意：服务重启后之前颁发的 Token 将失效，生产环境请务必显式配置持久化的 JWT_SECRET！")
 	}
 }
 
@@ -108,6 +108,6 @@ func ensureJwtSecret() {
 func mapTo(section string, v interface{}) {
 	err := cfg.Section(section).MapTo(v)
 	if err != nil {
-		log.Fatalf("[message-nest] Cfg.MapTo %s err: %v", section, err)
+		logrus.Fatalf("映射配置分区 [%s] 失败: %v", section, err)
 	}
 }

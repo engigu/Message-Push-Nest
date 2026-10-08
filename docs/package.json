@@ -17,11 +17,15 @@
   "overrides": {
     "vitepress": {
       "vite": "^8.0.16",
-      "esbuild": "^0.25.0"
+      "esbuild": "^0.25.0",
+      "vue": "^3.5.42"
     },
     "vite": "^8.0.16",
     "esbuild": "^0.25.0",
     "postcss": "^8.4.49",
-    "nanoid": "^3.3.18"
+    "nanoid": "^3.3.18",
+    "source-map-js": "^1.2.2",
+    "vue": "^3.5.42",
+    "@vue/server-renderer": "^3.5.42"
   }
 }

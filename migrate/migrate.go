@@ -74,7 +74,7 @@ func checkAndMigrateTables(db *gorm.DB, tables []interface{}, entry *logrus.Entr
 	// 1. 优先迁移 Settings 表（如果是新数据库），保证可以安全读取/存储迁移签名
 	err := db.AutoMigrate(&models.Settings{})
 	if err != nil {
-		entry.Errorf("Migrate settings table error: %s", err.Error())
+		entry.Errorf("迁移配置表失败: %s", err.Error())
 	}
 
 	// 2. 计算当前模型特征签名
@@ -90,13 +90,13 @@ func checkAndMigrateTables(db *gorm.DB, tables []interface{}, entry *logrus.Entr
 	}
 
 	if needMigrate {
-		entry.Infof("检测到模型特征发生变更，开始更新数据库结构... Current Sig: %s", currentSig)
+		entry.Infof("检测到模型特征发生变更，开始更新数据库结构... 当前特征签名: %s", currentSig)
 		for _, table := range tables {
 			tableName := models.GetSchema(table)
-			entry.Infof("Migrate table: %s", tableName)
+			entry.Infof("正在迁移数据表: %s", tableName)
 			err := db.AutoMigrate(table)
 			if err != nil {
-				entry.Infof("Migrate table erorr: %s", err.Error())
+				entry.Errorf("迁移数据表 %s 发生错误: %s", tableName, err.Error())
 			}
 		}
 
@@ -151,26 +151,34 @@ func Setup() {
 
 	checkAndMigrateTables(db, tables, entry)
 
-	entry.Infof("Init Account data...")
+	entry.Infof("正在初始化管理员账号数据...")
 	InitAuthTableData()
 
-	entry.Infof("Init Custom Site data...")
+	entry.Infof("正在初始化自定义站点配置数据...")
 	ss := settings_service.InitSettingService{}
 	ss.InitSiteConfig()
 
-	entry.Infof("Init Cron data...")
+	entry.Infof("正在初始化定时任务配置数据...")
 	ss.InitLogConfig()
 	ss.InitHostedMsgConfig()
 
-	entry.Infof("All table data init done.")
+	entry.Infof("所有数据表基础数据初始化完成。")
 
-	// 补全历史数据的 UniqueKey
-	entry.Infof("Backfilling UniqueKey for historical hosted messages...")
-	go BackfillHostedMessagesUniqueKey()
+	// 补全历史数据的 UniqueKey（仅在未标记完成时执行）
+	backfillSetting, _ := models.GetSettingByKey("init", "hosted_msg_uniquekey_backfill")
+	if backfillSetting.Value != "1" {
+		go BackfillHostedMessagesUniqueKey(entry)
+	}
 }
 
-// BackfillHostedMessagesUniqueKey 为历史托管消息生成 UniqueKey
-func BackfillHostedMessagesUniqueKey() {
+// BackfillHostedMessagesUniqueKey 为历史托管消息生成 UniqueKey，并持久化完成标记到数据库
+func BackfillHostedMessagesUniqueKey(entry *logrus.Entry) {
+	// 双重校验，如果已经标记完成直接退出
+	backfillSetting, _ := models.GetSettingByKey("init", "hosted_msg_uniquekey_backfill")
+	if backfillSetting.Value == "1" {
+		return
+	}
+
 	var messages []models.HostedMessage
 	// 仅选择需要的 id 字段减少内存与I/O开销
 	err := models.GetDB().Model(&models.HostedMessage{}).Select("id").Where("unique_key = ? OR unique_key IS NULL", "").Find(&messages).Error
@@ -180,10 +188,12 @@ func BackfillHostedMessagesUniqueKey() {
 	}
 	total := len(messages)
 	if total == 0 {
+		// 没有需要补全的历史消息，直接记录完成标记
+		models.AddOneSetting(models.Settings{Section: "init", Key: "hosted_msg_uniquekey_backfill", Value: "1"})
 		return
 	}
 
-	logrus.Infof("发现有 %d 条托管消息缺少 unique_key，正在进行高效分批批量更新...", total)
+	entry.Infof("发现有 %d 条托管消息缺少 unique_key，正在为历史托管消息补充唯一标识 (UniqueKey)...", total)
 
 	// 分批进行批量更新，每批处理 500 条，防止生成的 SQL 语句过长
 	batchSize := 500
@@ -219,5 +229,7 @@ func BackfillHostedMessagesUniqueKey() {
 		}
 	}
 
-	logrus.Infof("成功补全 %d 条历史托管消息的 unique_key", total)
+	// 执行完毕后，持久化标记到 settings 表
+	models.AddOneSetting(models.Settings{Section: "init", Key: "hosted_msg_uniquekey_backfill", Value: "1"})
+	logrus.Infof("成功补全 %d 条历史托管消息的 unique_key 并已记录完成标记", total)
 }

@@ -13,6 +13,8 @@ import (
 	"message-nest/pkg/util"
 	"os"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 var db *gorm.DB
@@ -102,7 +104,7 @@ func Setup() *gorm.DB {
 	}
 
 	if err != nil {
-		log.Fatalf("models.Setup err: %v", err)
+		logrus.Fatalf("数据库连接初始化失败: %v", err)
 	}
 
 	if setting.DatabaseSetting.SqlDebug == "enable" {

@@ -2,12 +2,12 @@ package logging
 
 import (
 	"fmt"
-	"github.com/engigu/logrus-prefixed-formatter"
-	"github.com/sirupsen/logrus"
-	"message-nest/pkg/setting"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/engigu/logrus-prefixed-formatter"
+	"github.com/sirupsen/logrus"
 )
 
 //var Logger = logrus.New()
@@ -28,7 +28,6 @@ func CustomCallerFormatter(funcStr string, fileStr string) string {
 }
 
 func Setup() {
-
 	formatter := new(prefixed.TextFormatter)
 	formatter.DisableTimestamp = false
 	formatter.DisableColors = false
@@ -46,8 +45,11 @@ func Setup() {
 	logrus.SetFormatter(formatter)
 	logrus.SetReportCaller(true)
 	logrus.SetOutput(os.Stdout)
+	logrus.SetLevel(logrus.InfoLevel)
+}
 
-	level := strings.ToLower(setting.AppSetting.LogLevel)
+func SetLevel(levelStr string) {
+	level := strings.ToLower(levelStr)
 	switch level {
 	case "debug":
 		logrus.SetLevel(logrus.DebugLevel)

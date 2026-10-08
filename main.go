@@ -27,9 +27,10 @@ var (
 )
 
 func init() {
+	logging.Setup()
 	constant.InitReleaseInfo(rf)
 	setting.Setup()
-	logging.Setup()
+	logging.SetLevel(setting.AppSetting.LogLevel)
 	models.Setup()
 	go func() {
 		// 完成model的迁移之后，需要加载异步任务
@@ -58,9 +59,9 @@ func main() {
 
 	startInfo := ""
 	if setting.ServerSetting.RunMode == "debug" {
-		startInfo = fmt.Sprintf("run mode: %s, start message server @ http://localhost%s", setting.ServerSetting.RunMode, endPoint)
+		startInfo = fmt.Sprintf("运行模式: %s，服务启动地址: http://localhost%s", setting.ServerSetting.RunMode, endPoint)
 	} else {
-		startInfo = fmt.Sprintf("run mode: %s, start message server @ http://0.0.0.0%s", setting.ServerSetting.RunMode, endPoint)
+		startInfo = fmt.Sprintf("运行模式: %s，服务启动地址: http://0.0.0.0%s", setting.ServerSetting.RunMode, endPoint)
 	}
 
 	logrus.WithFields(logrus.Fields{
@@ -69,6 +70,6 @@ func main() {
 
 	err := server.ListenAndServe()
 	if err != nil {
-		logrus.Errorf("Server err: ", err)
+		logrus.Errorf("服务监听异常: %v", err)
 	}
 }

@@ -3,8 +3,9 @@ package constant
 import (
 	"embed"
 	"io/fs"
-	"log"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 var LatestVersion = map[string]string{}
@@ -23,7 +24,7 @@ func InitReleaseInfo(releaseInfo embed.FS) {
 		version = "default"
 	}
 	desc := strings.Trim(readFileContent(".release_log", releaseInfo), "\n\r")
-	log.Printf("[message-nest] release version: %s", version)
+	logrus.Infof("发布版本: %s", version)
 	LatestVersion["version"] = version
 	LatestVersion["desc"] = desc
 }

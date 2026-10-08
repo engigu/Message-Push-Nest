@@ -1,10 +1,11 @@
 package setting
 
 import (
-	"github.com/unknwon/com"
-	"log"
 	"os"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/unknwon/com"
 )
 
 var optionValueMap = map[string]string{}
@@ -26,7 +27,7 @@ func getOptionEnvValue(key string, defaultV string) string {
 func getMustEnvValue(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		log.Printf("[message-nest] you must assign env: %s", key)
+		logrus.Warnf("必须配置环境变量: %s", key)
 		return ""
 	} else {
 		return value
@@ -54,9 +55,9 @@ func printOptionValue() {
 	for key, val := range optionValueMap {
 		upperKey := strings.ToUpper(key)
 		if strings.Contains(upperKey, "SECRET") || strings.Contains(upperKey, "PASSWORD") || strings.Contains(upperKey, "TOKEN") {
-			log.Printf("[message-nest] current option env: %s, value: %s", key, maskSecret(val))
+			logrus.Infof("环境变量配置项: %s, 值: %s", key, maskSecret(val))
 		} else {
-			log.Printf("[message-nest] current option env: %s, value: %s", key, val)
+			logrus.Infof("环境变量配置项: %s, 值: %s", key, val)
 		}
 	}
 }
