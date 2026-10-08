@@ -1,16 +1,14 @@
-# Release Notes (v2.2.6)
+# Release Notes (v2.2.7)
 
 ## 🚀 重大更新与改进
 
-### 📦 CI/CD 与全平台发布
-- **构建架构重构**：统一收敛所有构建逻辑至脚本驱动，支持灵活分模块构建与多平台编译。
-- **全平台二进制矩阵**：补齐 `Darwin (amd64/arm64)`、`Linux (amd64/arm64/armv7)`、`FreeBSD (amd64/arm64)`、`OpenBSD (amd64/arm64)` 以及 `Windows (amd64/arm64)` 全套 11 架构发布资产，并自动导出 `checksums.txt` 校验和。
-- **双仓库同步发布**：实现 GitHub Container Registry (`ghcr.io`) 与 Docker Hub (`docker.io`) 的多架构镜像原子化同步发布。
+### 🌐 API 架构规范化与路由收敛
+- **根路径规范收敛**：彻底清理历史旧根路径兼容路由，全部收敛并统一至 `/api/v1` 和 `/api/v2`，消除接口调用前缀歧义。
+- **配置体系精简瘦身**：彻底移除 `RunMode`、`EmbedHtml`、`InitData`、`RuntimeRootPath` 等冗余开关与历史占位配置项，精简部署与运行心智负担，同步清理对应文档与侧边栏。
 
-### 🐳 容器镜像极简优化
-- **Alpine 底包改造**：运行底包由 `debian:bookworm-slim` 切换为 `alpine:3.21`，底包体积从 ~100MB 骤降至 ~10MB，最终镜像总体积缩减 70%+（仅约 ~35MB）。
-- **运行环境完备性**：保留完整 `ca-certificates`（确保 HTTPS 消息推送）与 `tzdata` 时区配置，并内置 `sh` 命令行工具便于调试与运维。
+### 🎨 前端字体与样式架构优化
+- **跨平台中西文字体分层体系**：Windows 环境优先采用 `Inter` + `Noto Sans SC`（思源黑体），其他平台优先匹配原生无衬线系统字体，并在线引入 Google Fonts 兜底以保证各端视觉呈现极致一致。
+- **现代构建规范适配**：全面适配 Tailwind CSS v4，消除 IDE 与打包工具对未知 CSS at-rules 的校验警告。
 
-### ⚡ 前端性能与 UI 优化
-- **打包策略优化**：配置 Vite/Rolldown 动态拆包（提取 `vendor-core` 与 `vendor-ui`），提升长效缓存利用率，消除了静态资源 Chunk 体积警告。
-- **安全与排版**：全面升级依赖库消除潜在漏洞，加固 JWT 密钥防护与敏感配置脱敏，美化设置页暗色模式与 Inter 字体排版。
+### 📝 日志与开发体验
+- **紧凑彩色控制台日志**：统一输出格式为 `[时间][LEVEL] [模块] 消息`，内置完整模块前缀解析与单元测试支持。
