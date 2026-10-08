@@ -172,7 +172,7 @@ build_release_artifacts() {
     local start_time
     start_time=$(get_timestamp_ms)
 
-    log_step "开始全平台 Release 打包"
+    log_step "开始全平台 Release 打包 (对齐 GoReleaser 完整矩阵)"
     log_info "发布包输出目录: ${pkg_dir}"
     log_info "Docker 资产目录: ${docker_dir}"
     log_info "版本号: ${VERSION}"
@@ -183,48 +183,90 @@ build_release_artifacts() {
     log_info "预下载模块依赖 (go mod download)..."
     go mod download
 
-    _pack_tar() {
-        local os=$1; local arch=$2
-        local bin_file="Message-Nest"
+    _pack_archive() {
+        local os=$1
+        local arch=$2
+        local goarm=$3
+        local title_os=$4
+        local arch_suffix=$5
+        local is_zip=$6
+
+        local bin_name="Message-Nest"
+        if [ "${os}" = "windows" ]; then
+            bin_name="Message-Nest.exe"
+        fi
+
+        local archive_name="Message-Nest_${title_os}_${arch_suffix}"
         local start_pack_time
         start_pack_time=$(get_timestamp_ms)
 
-        log_info "打包 [${os}/${arch}] -> tar.gz..."
-        CGO_ENABLED=0 GOOS="${os}" GOARCH="${arch}" go build -ldflags="${LDFLAGS}" -o "${bin_file}" .
-        tar -czf "${pkg_dir}/Message-Nest-${VERSION}-${os}-${arch}.tar.gz" "${bin_file}" conf/app.example.ini LICENSE NOTICE
-        
-        if [ "${os}" = "linux" ]; then
-            cp "${bin_file}" "${docker_dir}/bin/linux-${arch}/Message-Nest"
+        log_info "编译并打包 [${os}/${arch}${goarm:+v${goarm}}] -> ${archive_name}..."
+
+        local env_args=(CGO_ENABLED=0 GOOS="${os}" GOARCH="${arch}")
+        if [ -n "${goarm}" ]; then
+            env_args+=(GOARM="${goarm}")
         fi
-        rm -f "${bin_file}"
+
+        env "${env_args[@]}" go build -ldflags="${LDFLAGS}" -o "${bin_name}" .
+
+        if [ "${is_zip}" = "true" ]; then
+            zip -q -r "${pkg_dir}/${archive_name}.zip" "${bin_name}" LICENSE README.md conf
+        else
+            tar -czf "${pkg_dir}/${archive_name}.tar.gz" "${bin_name}" LICENSE README.md conf
+        fi
+
+        # 同步一份供 docker 构建
+        if [ "${os}" = "linux" ] && [ "${arch}" = "amd64" ]; then
+            cp "${bin_name}" "${docker_dir}/bin/linux-amd64/Message-Nest"
+        elif [ "${os}" = "linux" ] && [ "${arch}" = "arm64" ]; then
+            cp "${bin_name}" "${docker_dir}/bin/linux-arm64/Message-Nest"
+        fi
+
+        rm -f "${bin_name}"
 
         local pack_duration
         pack_duration=$(format_duration "${start_pack_time}")
-        local pack_size
-        pack_size=$(get_file_size "${pkg_dir}/Message-Nest-${VERSION}-${os}-${arch}.tar.gz")
-        log_success "打包完成 -> Message-Nest-${VERSION}-${os}-${arch}.tar.gz (大小: ${pack_size:-未知}, 耗时: ${pack_duration})"
+        local fsize
+        if [ "${is_zip}" = "true" ]; then
+            fsize=$(get_file_size "${pkg_dir}/${archive_name}.zip")
+        else
+            fsize=$(get_file_size "${pkg_dir}/${archive_name}.tar.gz")
+        fi
+        log_success "打包完成 -> ${archive_name} (大小: ${fsize:-未知}, 耗时: ${pack_duration})"
     }
 
-    # 1. Linux amd64 & arm64
-    _pack_tar linux amd64
-    _pack_tar linux arm64
+    # 1. Darwin (macOS Apple Silicon & Intel)
+    _pack_archive darwin arm64 "" Darwin arm64 false
+    _pack_archive darwin amd64 "" Darwin x86_64 false
 
-    # 2. Windows amd64 (.zip)
-    log_info "打包 [windows/amd64] -> zip..."
-    local win_start_time
-    win_start_time=$(get_timestamp_ms)
-    CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o "Message-Nest.exe" .
-    zip -q -j "${pkg_dir}/Message-Nest-${VERSION}-windows-amd64.zip" "Message-Nest.exe" conf/app.example.ini LICENSE NOTICE
-    rm -f "Message-Nest.exe"
-    local win_duration
-    win_duration=$(format_duration "${win_start_time}")
-    local win_size
-    win_size=$(get_file_size "${pkg_dir}/Message-Nest-${VERSION}-windows-amd64.zip")
-    log_success "打包完成 -> Message-Nest-${VERSION}-windows-amd64.zip (大小: ${win_size:-未知}, 耗时: ${win_duration})"
+    # 2. FreeBSD
+    _pack_archive freebsd arm64 "" Freebsd arm64 false
+    _pack_archive freebsd amd64 "" Freebsd x86_64 false
 
-    # 3. macOS Apple Silicon (arm64) & Intel (amd64)
-    _pack_tar darwin arm64
-    _pack_tar darwin amd64
+    # 3. Linux (amd64, arm64, armv7)
+    _pack_archive linux arm64 "" Linux arm64 false
+    _pack_archive linux arm 7 Linux armv7 false
+    _pack_archive linux amd64 "" Linux x86_64 false
+
+    # 4. OpenBSD
+    _pack_archive openbsd arm64 "" Openbsd arm64 false
+    _pack_archive openbsd amd64 "" Openbsd x86_64 false
+
+    # 5. Windows (arm64, x86_64)
+    _pack_archive windows arm64 "" Windows arm64 true
+    _pack_archive windows amd64 "" Windows x86_64 true
+
+    # 6. 生成 SHA256 校验和 (checksums.txt)
+    log_step "生成 SHA256 校验和文件 (checksums.txt)..."
+    (
+        cd "${pkg_dir}"
+        if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum Message-Nest_* > checksums.txt
+        elif command -v shasum >/dev/null 2>&1; then
+            shasum -a 256 Message-Nest_* > checksums.txt
+        fi
+    )
+    log_success "校验和生成完成 -> checksums.txt"
 
     local total_duration
     total_duration=$(format_duration "${start_time}")
