@@ -1,9 +1,8 @@
-name: Release-Message-Nest
+name: Build-Deploy-Server
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main, dev ]
   workflow_dispatch:
 
 concurrency:
@@ -39,57 +38,18 @@ jobs:
           chmod +x ./scripts/build.sh
           ./scripts/build.sh web
 
-      - name: Build Binaries for Release & Docker
+      - name: Build Multi-Arch Binaries
         env:
           VERSION: ${{ github.ref_name }}
         run: |
-          ./scripts/build.sh release-artifacts release-pkg dist-assets
+          ./scripts/build.sh ci-artifacts dist-assets
 
-      - name: Upload Release Artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: release-artifacts
-          path: release-pkg/*
-          retention-days: 1
-
-      - name: Upload Docker Build Context
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-artifacts
+          name: build-artifacts
           path: dist-assets
           retention-days: 1
-
-  publish-release:
-    if: github.event.repository.fork == false
-    runs-on: ubuntu-latest
-    needs: build-artifacts
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download Release Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: release-artifacts
-          path: release-pkg
-
-      - name: Prepare Release Notes
-        run: |
-          if [ -f .release_log ]; then
-            # 提取最后一条更新日志，若不存在则使用完整 release_log
-            tail -n 10 .release_log > RELEASE_NOTES.md
-          else
-            echo "Release ${{ github.ref_name }}" > RELEASE_NOTES.md
-          fi
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          body_path: RELEASE_NOTES.md
-          files: release-pkg/*
 
   build:
     if: github.event.repository.fork == false
@@ -107,10 +67,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download Docker Build Context
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: docker-artifacts
+          name: build-artifacts
 
       - name: Prepare build context
         run: |
@@ -174,7 +134,7 @@ jobs:
 
   merge:
     runs-on: ubuntu-latest
-    needs: [build, build-artifacts]
+    needs: build
     permissions:
       contents: read
       packages: write
@@ -218,20 +178,32 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest
+            type=raw,value=br-${{ github.ref_name }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
-          # GHCR 多架构合并推送 (版本号 + latest)
+          # GHCR 多架构合并推送
           docker buildx imagetools create \
             $(jq -cr '.tags | map(select(startswith("ghcr.io"))) | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf 'ghcr.io/${{ env.IMAGE_NAME }}@sha256:%s ' *)
 
-          # Docker Hub 多架构合并推送 (版本号 + latest)
+          # Docker Hub 多架构合并推送 (配置了 Docker 账号时推送)
           if [ -n "${{ secrets.DOCKER_USER }}" ]; then
             docker buildx imagetools create \
               $(jq -cr '.tags | map(select(startswith("docker.io"))) | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
               $(printf 'docker.io/${{ env.IMAGE_NAME }}@sha256:%s ' *)
           fi
+
+      - name: Trigger Watchtower CD Update
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          DEPLOY_CMD: ${{ secrets.WATCHTOWER_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_CMD" ]; then
+            echo "ℹ️ 未配置 WATCHTOWER_WEBHOOK_URL，跳过更新"
+            exit 0
+          fi
+          echo "🚀 触发 Watchtower 容器自动更新..."
+          eval "$DEPLOY_CMD"
