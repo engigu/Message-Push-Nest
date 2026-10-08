@@ -98,13 +98,23 @@ jobs:
           username: ${{ env.DOCKER_USER }}
           password: ${{ env.DOCKER_PASSWD }}
 
+      - name: Configure image destinations
+        id: dest
+        run: |
+          if [ -n "$DOCKER_USER" ] && [ -n "$DOCKER_PASSWD" ]; then
+            echo "images=ghcr.io/${{ env.IMAGE_NAME }}
+          docker.io/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+            echo "outputs=type=image,\"name=ghcr.io/${{ env.IMAGE_NAME }},docker.io/${{ env.IMAGE_NAME }}\",push-by-digest=true,name-canonical=true,push=true" >> $GITHUB_OUTPUT
+          else
+            echo "images=ghcr.io/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+            echo "outputs=type=image,\"name=ghcr.io/${{ env.IMAGE_NAME }}\",push-by-digest=true,name-canonical=true,push=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ghcr.io/${{ env.IMAGE_NAME }}
-            docker.io/${{ env.IMAGE_NAME }}
+          images: ${{ steps.dest.outputs.images }}
           flavor: |
             latest=false
 
@@ -117,7 +127,7 @@ jobs:
           target: ci
           platforms: linux/${{ matrix.arch }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,"name=ghcr.io/${{ env.IMAGE_NAME }},docker.io/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
+          outputs: ${{ steps.dest.outputs.outputs }}
           provenance: false
 
       - name: Export digest

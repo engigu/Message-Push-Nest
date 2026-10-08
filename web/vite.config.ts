@@ -23,6 +23,23 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router')) {
+                return 'vendor-core'
+              }
+              if (id.includes('lucide-vue-next') || id.includes('reka-ui')) {
+                return 'vendor-ui'
+              }
+            }
+          },
+        },
+      },
+    },
     define: {
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
       'globalThis.__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
