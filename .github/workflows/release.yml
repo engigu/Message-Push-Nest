@@ -79,8 +79,9 @@ jobs:
 
       - name: Prepare Release Notes
         run: |
-          if [ -f .release_log ]; then
-            # 提取最后一条更新日志，若不存在则使用完整 release_log
+          if [ -f CHANGELOG.md ]; then
+            cat CHANGELOG.md > RELEASE_NOTES.md
+          elif [ -f .release_log ]; then
             tail -n 10 .release_log > RELEASE_NOTES.md
           else
             echo "Release ${{ github.ref_name }}" > RELEASE_NOTES.md
@@ -91,6 +92,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
+          generate_release_notes: true
           files: release-pkg/*
 
   build:
