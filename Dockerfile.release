@@ -1,0 +1,18 @@
+FROM debian:bookworm-slim
+
+ENV TZ=Asia/Shanghai
+
+RUN apt-get update \
+        && apt-get install -y --no-install-recommends ca-certificates tzdata \
+        && update-ca-certificates \
+        && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY ./ /app/
+
+RUN chmod +x /app/Message-Nest
+
+EXPOSE 8000
+
+CMD ["/app/Message-Nest"]

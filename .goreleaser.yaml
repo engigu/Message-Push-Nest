@@ -37,7 +37,7 @@ dockers:
   - image_templates: 
       - "docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64"
       - "ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-amd64"
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.release
     extra_files:
       - LICENSE
       - README.md
@@ -57,7 +57,7 @@ dockers:
       - "docker.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8"
       - "ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-arm64v8"
     goarch: arm64
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.release
     extra_files:
       - LICENSE
       - README.md
@@ -78,7 +78,7 @@ dockers:
       - "ghcr.io/engigu/{{ .Env.DOCKER_IMAGE_NAME }}:{{ .Version }}-armv7"
     goarch: arm
     goarm: 7
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.release
     extra_files:
       - LICENSE
       - README.md

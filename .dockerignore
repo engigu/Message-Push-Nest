@@ -1,0 +1,5 @@
+.git
+.github
+web/node_modules
+tmp
+*.exe
