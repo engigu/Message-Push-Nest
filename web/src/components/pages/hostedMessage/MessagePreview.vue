@@ -112,7 +112,7 @@ const fetchPreviewData = async () => {
   const key = route.params.key as string
   
   try {
-    const response = await request.get('/hostedmessages/preview', { params: { key } })
+    const response = await request.get('/api/v1/hostedmessages/preview', { params: { key } })
     if (response.data.code === 200) {
       const data = response.data.data
       

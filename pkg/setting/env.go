@@ -4,7 +4,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sirupsen/logrus"
+	"message-nest/pkg/logging"
 	"github.com/unknwon/com"
 )
 
@@ -27,7 +27,7 @@ func getOptionEnvValue(key string, defaultV string) string {
 func getMustEnvValue(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		logrus.Warnf("必须配置环境变量: %s", key)
+		logging.Config.Warnf("必须配置环境变量: %s", key)
 		return ""
 	} else {
 		return value
@@ -55,9 +55,9 @@ func printOptionValue() {
 	for key, val := range optionValueMap {
 		upperKey := strings.ToUpper(key)
 		if strings.Contains(upperKey, "SECRET") || strings.Contains(upperKey, "PASSWORD") || strings.Contains(upperKey, "TOKEN") {
-			logrus.Infof("环境变量配置项: %s, 值: %s", key, maskSecret(val))
+			logging.Config.Infof("环境变量配置项: %s, 值: %s", key, maskSecret(val))
 		} else {
-			logrus.Infof("环境变量配置项: %s, 值: %s", key, val)
+			logging.Config.Infof("环境变量配置项: %s, 值: %s", key, val)
 		}
 	}
 }
@@ -67,7 +67,6 @@ func loadConfigFromEnv() {
 	AppSetting.JwtSecret = getOptionEnvValue("JWT_SECRET", "")
 	AppSetting.LogLevel = getOptionEnvValue("LOG_LEVEL", "INFO")
 
-	ServerSetting.RunMode = getOptionEnvValue("RUN_MODE", "release")
 	ServerSetting.HttpPort = 8000
 	ServerSetting.ReadTimeout = 60
 	ServerSetting.WriteTimeout = 60

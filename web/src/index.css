@@ -42,9 +42,15 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
+  /* 默认字体栈：英文数字优先 Inter，中文使用各系统自带字体（如 macOS/iOS 的苹方等） */
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 :root {
+  /* 默认字体栈：英文数字优先 Inter，中文使用系统自带字体 */
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -97,10 +103,16 @@
     @apply border-border/60 outline-ring/30 transition-colors duration-200;
   }
 
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
-    font-family: "Inter", "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    @apply bg-background text-foreground antialiased min-h-screen relative;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: var(--font-sans);
+    @apply bg-background text-foreground min-h-screen relative;
 
     /* 极致背景装饰：极简动态柔和渐变 */
     background-image:
@@ -109,22 +121,60 @@
     background-attachment: fixed;
   }
 
+  /* 保证表单控件继承主字体 */
+  button, input, optgroup, select, textarea {
+    font-family: inherit;
+  }
+
   .dark body {
     background-image:
       radial-gradient(ellipse at 15% 0%, color-mix(in oklch, var(--brand), transparent 93%) 0px, transparent 65%),
       radial-gradient(ellipse at 85% 100%, color-mix(in oklch, var(--brand), transparent 95%) 0px, transparent 70%);
   }
 
-  /* Windows 专属字体优化 */
-  html.is-windows {
-    --font-sans: "Inter", "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-family: var(--font-sans);
-  }
-
   /* 品牌色交互组件增强 */
   .btn-brand-premium {
     @apply bg-brand text-brand-foreground shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300;
   }
+}
+
+/* Windows 专属字体优化（最高优先级覆盖）：英文数字使用 Inter，中文优先使用 Noto Sans SC（思源黑体）各别名及本地字体 */
+html.is-windows {
+  --font-sans: "Inter", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", "Source Han Sans CN", "思源黑体", "Microsoft YaHei", sans-serif;
+  --default-font-family: "Inter", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", "Source Han Sans CN", "思源黑体", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-sans) !important;
+}
+
+html.is-windows body,
+html.is-windows div,
+html.is-windows span,
+html.is-windows p,
+html.is-windows h1,
+html.is-windows h2,
+html.is-windows h3,
+html.is-windows h4,
+html.is-windows h5,
+html.is-windows h6,
+html.is-windows input,
+html.is-windows button,
+html.is-windows select,
+html.is-windows textarea,
+html.is-windows table,
+html.is-windows label,
+html.is-windows pre,
+html.is-windows code,
+html.is-windows pre.font-sans,
+html.is-windows [role="dialog"],
+html.is-windows [role="dialog"] *,
+html.is-windows [data-reka-portal] * {
+  font-family: var(--font-sans) !important;
+}
+
+/* 全平台保证 pre.font-sans 和 .font-sans 穿透默认 monospace 样式 */
+.font-sans,
+pre.font-sans,
+code.font-sans {
+  font-family: var(--font-sans) !important;
 }
 
 @layer utilities {

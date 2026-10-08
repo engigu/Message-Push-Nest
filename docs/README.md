@@ -28,8 +28,7 @@ docs/
 │   ├── introduction.md  # 介绍
 │   ├── features.md      # 特色功能
 │   ├── changelog.md     # 更新日志
-│   ├── configuration.md # 配置说明
-│   └── embed-html.md    # EmbedHtml说明
+│   └── configuration.md # 配置说明
 ├── deployment/          # 部署
 │   ├── overview.md      # 部署概览
 │   ├── direct-run.md    # 直接运行

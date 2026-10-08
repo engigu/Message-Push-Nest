@@ -15,19 +15,13 @@ import (
 	"strings"
 )
 
-// AppendCors 添加是否跨域（debug模式开启）
+// AppendCors 启用跨域中间件支持
 func AppendCors(app *gin.Engine) {
-	if setting.ServerSetting.RunMode == "debug" {
-		app.Use(middleware.Cors())
-	}
+	// app.Use(middleware.Cors())
 }
 
 // AppendServerStaticHtmlWithPrefix 启用返回打包的静态文件（支持路径前缀）
 func AppendServerStaticHtmlWithPrefix(router gin.IRouter, f embed.FS, pathPrefix string) {
-	if setting.ServerSetting.EmbedHtml == "disable" {
-		return
-	}
-
 	assets, _ := fs.Sub(f, "web/dist/assets")
 	dist, _ := fs.Sub(f, "web/dist")
 
@@ -110,74 +104,79 @@ func InitRouter(f embed.FS) *gin.Engine {
 	
 	AppendServerStaticHtmlWithPrefix(router, f, pathPrefix)
 
-	router.POST("/auth", api.GetAuth)
-	router.GET("/hostedmessages/preview", v1.GetHostMessagePreview)
-	
+	// API v1
 	apiV1 := router.Group("/api/v1")
-	apiV1.Use(middleware.JWT())
 	{
-		// sendways
-		apiV1.POST("/sendways/add", v1.AddMsgSendWay)
-		apiV1.POST("/sendways/delete", v1.DeleteMsgSendWay)
-		apiV1.POST("/sendways/edit", v1.EditSendWay)
-		apiV1.POST("/sendways/test", v1.TestSendWay)
-		apiV1.GET("/sendways/list", v1.GetMsgSendWayList)
-		apiV1.GET("/sendways/get", v1.GetMsgSendWay)
+		// 公开免鉴权接口
+		apiV1.POST("/auth", api.GetAuth)
+		apiV1.GET("/hostedmessages/preview", v1.GetHostMessagePreview)
 
-		// sendtasks
-		apiV1.GET("/sendtasks/list", v1.GetMsgSendTaskList)
-		apiV1.POST("/sendtasks/add", v1.AddMsgSendTask)
-		apiV1.POST("/sendtasks/delete", v1.DeleteMsgSendTask)
-		apiV1.POST("/sendtasks/edit", v1.EditMsgSendTask)
-		apiV1.GET("/sendtasks/get", v1.GetMsgSendTask)
+		// 业务接口（需要 JWT 鉴权）
+		authGroup := apiV1.Group("")
+		authGroup.Use(middleware.JWT())
+		{
+			// sendways
+			authGroup.POST("/sendways/add", v1.AddMsgSendWay)
+			authGroup.POST("/sendways/delete", v1.DeleteMsgSendWay)
+			authGroup.POST("/sendways/edit", v1.EditSendWay)
+			authGroup.POST("/sendways/test", v1.TestSendWay)
+			authGroup.GET("/sendways/list", v1.GetMsgSendWayList)
+			authGroup.GET("/sendways/get", v1.GetMsgSendWay)
 
-		// sendtasks/ins
-		apiV1.POST("/sendtasks/ins/addmany", v1.AddManyTasksIns)
-		apiV1.POST("/sendtasks/ins/addone", v1.AddTasksIns)
-		apiV1.GET("/sendtasks/ins/gettask", v1.GetMsgSendWayIns)
-		apiV1.POST("/sendtasks/ins/delete", v1.DeleteMsgTaskIns)
-		apiV1.POST("/sendtasks/ins/update_enable", v1.UpdateMsgTaskInsEnable)
+			// sendtasks
+			authGroup.GET("/sendtasks/list", v1.GetMsgSendTaskList)
+			authGroup.POST("/sendtasks/add", v1.AddMsgSendTask)
+			authGroup.POST("/sendtasks/delete", v1.DeleteMsgSendTask)
+			authGroup.POST("/sendtasks/edit", v1.EditMsgSendTask)
+			authGroup.GET("/sendtasks/get", v1.GetMsgSendTask)
 
-		// message/send
-		apiV1.POST("/message/send", v1.DoSendMassage)
+			// sendtasks/ins
+			authGroup.POST("/sendtasks/ins/addmany", v1.AddManyTasksIns)
+			authGroup.POST("/sendtasks/ins/addone", v1.AddTasksIns)
+			authGroup.GET("/sendtasks/ins/gettask", v1.GetMsgSendWayIns)
+			authGroup.POST("/sendtasks/ins/delete", v1.DeleteMsgTaskIns)
+			authGroup.POST("/sendtasks/ins/update_enable", v1.UpdateMsgTaskInsEnable)
 
-		apiV1.GET("/sendlogs/list", v1.GetTaskSendLogsList)
+			// message/send
+			authGroup.POST("/message/send", v1.DoSendMassage)
 
-		// settings
-		apiV1.POST("/settings/setpasswd", v1.EditPasswd)
-		apiV1.POST("/settings/set", v1.EditSettings)
-		apiV1.POST("/settings/reset", v1.RestDefaultSettings)
-		apiV1.GET("/settings/getsetting", v1.GetUserSetting)
+			authGroup.GET("/sendlogs/list", v1.GetTaskSendLogsList)
 
-		// login logs
-		apiV1.GET("/loginlogs/recent", v1.GetRecentLoginLogs)
+			// settings
+			authGroup.POST("/settings/setpasswd", v1.EditPasswd)
+			authGroup.POST("/settings/set", v1.EditSettings)
+			authGroup.POST("/settings/reset", v1.RestDefaultSettings)
+			authGroup.GET("/settings/getsetting", v1.GetUserSetting)
 
-		// statistic
-		apiV1.GET("/statistic", v1.GetStatisticData)
-		apiV1.GET("/statistic/task", v1.GetSendStatsByTask)
+			// login logs
+			authGroup.GET("/loginlogs/recent", v1.GetRecentLoginLogs)
 
-		// cronMessage
-		apiV1.POST("/cronmessages/addone", v1.AddCronMsgTask)
-		apiV1.GET("/cronmessages/list", v1.GetCronMsgList)
-		apiV1.POST("/cronmessages/delete", v1.DeleteCronMsgTask)
-		apiV1.POST("/cronmessages/edit", v1.EditCronMsgTask)
-		apiV1.POST("/cronmessages/sendnow", v1.SendNowCronMsg)
+			// statistic
+			authGroup.GET("/statistic", v1.GetStatisticData)
+			authGroup.GET("/statistic/task", v1.GetSendStatsByTask)
 
-		// hostedMessage
-		apiV1.GET("/hostedmessages/list", v1.GetHostMessageList)
+			// cronMessage
+			authGroup.POST("/cronmessages/addone", v1.AddCronMsgTask)
+			authGroup.GET("/cronmessages/list", v1.GetCronMsgList)
+			authGroup.POST("/cronmessages/delete", v1.DeleteCronMsgTask)
+			authGroup.POST("/cronmessages/edit", v1.EditCronMsgTask)
+			authGroup.POST("/cronmessages/sendnow", v1.SendNowCronMsg)
 
-		// messageTemplate
-		apiV1.GET("/templates/list", v1.GetMessageTemplateList)
-		apiV1.GET("/templates/get", v1.GetMessageTemplate)
-		apiV1.POST("/templates/add", v1.AddMessageTemplate)
-		apiV1.POST("/templates/edit", v1.EditMessageTemplate)
-		apiV1.POST("/templates/delete", v1.DeleteMessageTemplate)
-		apiV1.POST("/templates/preview", v1.PreviewMessageTemplate)
-		
-		// messageTemplate instances
-		apiV1.GET("/templates/ins/get", v1.GetTemplateWithIns)
-		apiV1.POST("/templates/ins/addone", v1.AddTemplateIns)
+			// hostedMessage
+			authGroup.GET("/hostedmessages/list", v1.GetHostMessageList)
 
+			// messageTemplate
+			authGroup.GET("/templates/list", v1.GetMessageTemplateList)
+			authGroup.GET("/templates/get", v1.GetMessageTemplate)
+			authGroup.POST("/templates/add", v1.AddMessageTemplate)
+			authGroup.POST("/templates/edit", v1.EditMessageTemplate)
+			authGroup.POST("/templates/delete", v1.DeleteMessageTemplate)
+			authGroup.POST("/templates/preview", v1.PreviewMessageTemplate)
+			
+			// messageTemplate instances
+			authGroup.GET("/templates/ins/get", v1.GetTemplateWithIns)
+			authGroup.POST("/templates/ins/addone", v1.AddTemplateIns)
+		}
 	}
 
 	// API v2

@@ -27,7 +27,7 @@ const request = axios.create({
 request.interceptors.request.use(
     (config) => {
         const pageState = usePageState();
-        if (!CONSTANT.NO_AUTH_URL.includes(config.url)) {
+        if (!config.url.startsWith('/api/')) {
             config.url = '/api/v1' + config.url;
         }
         if (pageState.Token && !CONSTANT.NO_AUTH_URL.includes(config.url)) {

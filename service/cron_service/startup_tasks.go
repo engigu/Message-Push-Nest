@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/constant"
+	"message-nest/pkg/logging"
 	"message-nest/service/send_message_service"
 
 	"github.com/robfig/cron/v3"
-	"github.com/sirupsen/logrus"
 	"github.com/unknwon/com"
 )
 
@@ -30,11 +30,9 @@ type CleanConfig struct {
 func executeCleanTask(config CleanConfig) {
 	var errStr string
 	sm := send_message_service.SendMessageService{
-		TaskID: config.TaskID,
-		Name:   config.TaskName,
-		DefaultLogger: logrus.WithFields(logrus.Fields{
-			"prefix": config.LogPrefix,
-		}),
+		TaskID:        config.TaskID,
+		Name:          config.TaskName,
+		DefaultLogger: logging.Scheduler,
 	}
 	sm.Status = send_message_service.SendSuccess
 
@@ -79,7 +77,7 @@ func ClearLogs() {
 	executeCleanTask(CleanConfig{
 		TaskID:       constant.CleanLogsTaskId,
 		TaskName:     "日志定时清除",
-		LogPrefix:    "[Cron Clear Logs]",
+		LogPrefix:    "Scheduler",
 		SectionName:  constant.LogsCleanSectionName,
 		EnabledKey:   constant.LogsCleanEnabledKeyName,
 		KeepNumKey:   constant.LogsCleanKeepKeyName,
@@ -96,26 +94,26 @@ func startCleanCronTask(sectionName, enabledKey, cronKey, resourceName string, j
 	// 检查是否启用
 	enabledSetting, err := models.GetSettingByKey(sectionName, enabledKey)
 	if err != nil {
-		logrus.Error(fmt.Sprintf("获取[%s]清理开关失败，原因：%s", resourceName, err))
+		logging.Scheduler.Errorf("获取%s清理开关失败，原因：%s", resourceName, err)
 		return
 	}
 
 	if enabledSetting.Value != "true" {
-		logrus.Info(fmt.Sprintf("[%s]清理功能未启用", resourceName))
+		logging.Scheduler.Infof("%s清理功能未启用", resourceName)
 		return
 	}
 
 	// 注册任务
 	setting, err := models.GetSettingByKey(sectionName, cronKey)
 	if err != nil {
-		logrus.Error(fmt.Sprintf("获取[%s]的cron失败，原因：%s", resourceName, err))
+		logging.Scheduler.Errorf("获取%s的cron失败，原因：%s", resourceName, err)
 		return
 	}
 	*taskId = AddTask(ScheduledTask{
 		Schedule: setting.Value,
 		Job:      job,
 	})
-	logrus.Info(fmt.Sprintf("[%s]清理任务已启动", resourceName))
+	logging.Scheduler.Infof("%s清理任务已启动", resourceName)
 }
 
 // updateCleanCronTask 更新清理任务的通用逻辑
@@ -132,11 +130,11 @@ func updateCleanCronTask(cron string, enabled bool, resourceName string, job fun
 			Schedule: cron,
 			Job:      job,
 		})
-		logrus.Info(fmt.Sprintf("更新%s的cron成功，%s", resourceName, cron))
+		logging.Scheduler.Infof("更新%s的cron成功，%s", resourceName, cron)
 	} else {
-		logrus.Info(fmt.Sprintf("%s清理任务已停止", resourceName))
+		logging.Scheduler.Infof("%s清理任务已停止", resourceName)
 	}
-	logrus.Info(fmt.Sprintf("所有的定时任务总数： %d", len(TaskList)))
+	logging.Scheduler.Infof("所有的定时任务总数: %d", len(TaskList))
 }
 
 // StartLogsCronRun 启动注册清除任务定时任务
@@ -161,7 +159,7 @@ func ClearHostedMessages() {
 	executeCleanTask(CleanConfig{
 		TaskID:       constant.CleanHostedMsgTaskId,
 		TaskName:     "托管消息定时清除",
-		LogPrefix:    "[Cron Clear Hosted Messages]",
+		LogPrefix:    "Scheduler",
 		SectionName:  constant.HostedMsgCleanSectionName,
 		EnabledKey:   constant.HostedMsgCleanEnabledKeyName,
 		KeepNumKey:   constant.HostedMsgCleanKeepKeyName,
@@ -189,14 +187,14 @@ func (cs *CronService) UpdateHostedMsgCronRun(cron string, enabled bool) {
 
 // StartLogsCronRunOnStartup 启动的时候开启定时任务
 func StartLogsCronRunOnStartup() {
-	logrus.Infof("开始注册定时清除日志任务...")
+	logging.Scheduler.Infof("开始注册定时清除日志任务...")
 	cs := CronService{}
 	cs.StartLogsCronRun()
 }
 
 // StartHostedMsgCronRunOnStartup 启动的时候开启托管消息清理定时任务
 func StartHostedMsgCronRunOnStartup() {
-	logrus.Infof("开始注册定时清除托管消息任务...")
+	logging.Scheduler.Infof("开始注册定时清除托管消息任务...")
 	cs := CronService{}
 	cs.StartHostedMsgCronRun()
 }

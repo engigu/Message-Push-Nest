@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"message-nest/models"
 	"message-nest/pkg/constant"
+	"message-nest/pkg/logging"
 	"message-nest/pkg/util"
 	"message-nest/service/send_message_service/unified"
 	"message-nest/service/send_task_service"
@@ -73,7 +74,7 @@ func (sm *SendMessageService) LogsAndStatusMark(errStr string, status int) {
 func (sm *SendMessageService) AsyncSend(task models.TaskIns) {
 	defer func() {
 		if r := recover(); r != nil {
-			logrus.Error("AsyncSend: Recovered from panic:", r)
+			logging.Sender.Errorf("AsyncSend: Recovered from panic: %v", r)
 		}
 	}()
 
@@ -84,9 +85,7 @@ func (sm *SendMessageService) AsyncSend(task models.TaskIns) {
 	}()
 
 	go func() {
-		entry := logrus.WithFields(logrus.Fields{
-			"prefix": "[Send Goroutine]",
-		})
+		entry := logging.Sender
 		_, err := sm.Send(task)
 		if err != nil {
 			entry.Errorf("任务[%s][%s]发送错误： %s", sm.TaskID, sm.Title, err)
@@ -102,9 +101,7 @@ func (sm *SendMessageService) AsyncSend(task models.TaskIns) {
 // 2. SendModeTemplate：模板模式，使用 TemplateID 查询模板关联的实例
 func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 	errStr := ""
-	entry := logrus.WithFields(logrus.Fields{
-		"prefix": "[Message PreChecK]",
-	})
+	entry := logging.PreCheck
 
 	var task models.TaskIns
 
@@ -113,7 +110,7 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 		// 模板模式：使用模板ID获取实例
 		if sm.TemplateID == "" {
 			errStr = "模板模式下 TemplateID 不能为空"
-			entry.Errorf(errStr)
+			entry.Error(errStr)
 			return task, errors.New(errStr)
 		}
 
@@ -121,12 +118,12 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 		insList, err := models.GetTemplateInsList(sm.TemplateID)
 		if err != nil {
 			errStr = fmt.Sprintf("模板[%s]实例查询失败：%s", sm.TemplateID, err)
-			entry.Errorf(errStr)
+			entry.Error(errStr)
 			return task, errors.New(errStr)
 		}
 		if len(insList) == 0 {
 			errStr = fmt.Sprintf("模板[%s]没有关联任何实例！", sm.TemplateID)
-			entry.Errorf(errStr)
+			entry.Error(errStr)
 			return task, errors.New(errStr)
 		}
 
@@ -144,7 +141,7 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 		// 传统任务模式：使用任务ID查询
 		if sm.TaskID == "" {
 			errStr = "任务模式下 TaskID 不能为空"
-			entry.Errorf(errStr)
+			entry.Error(errStr)
 			return task, errors.New(errStr)
 		}
 
@@ -154,17 +151,17 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 		task, err := sendTaskService.GetTaskWithIns()
 		if err != nil {
 			errStr = fmt.Sprintf("任务[%s]查询失败！", sm.TaskID)
-			entry.Errorf(errStr)
+			entry.Error(errStr)
 			return task, errors.New(errStr)
 		}
 		if task.ID == "" {
 			errStr = fmt.Sprintf("任务[%s]不存在！", sm.TaskID)
-			entry.Errorf(errStr)
+			entry.Error(errStr)
 			return task, errors.New(errStr)
 		}
 		if len(task.InsData) == 0 {
 			errStr = fmt.Sprintf("任务[%s]没有关联任何实例！！", sm.TaskID)
-			entry.Errorf(errStr)
+			entry.Error(errStr)
 			return task, errors.New(errStr)
 		}
 		// 设置任务名称用于日志记录
@@ -176,7 +173,7 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 	default:
 		// SendMode 未设置或无效
 		errStr = fmt.Sprintf("SendMode 未设置或无效: %s，必须是 '%s' 或 '%s'", sm.SendMode, SendModeTask, SendModeTemplate)
-		entry.Errorf(errStr)
+		entry.Error(errStr)
 		return task, errors.New(errStr)
 	}
 }
@@ -377,7 +374,7 @@ func (sm *SendMessageService) UpdateSendStats() {
 	// 更新统计：每次任务执行记录为1次
 	err := models.IncrementSendStats(sm.TaskID, taskType, currentDay, status, 1)
 	if err != nil {
-		logrus.Errorf("更新发送统计失败：%s", err)
+		logging.Sender.Errorf("更新发送统计失败：%s", err)
 	}
 }
 
@@ -410,11 +407,11 @@ func (sm *SendMessageService) BuildTemplateContent(ins models.SendTasksIns) *uni
 	// 检查内容是否存在
 	contentValue, exists := contentMap[contentType]
 	if !exists {
-		logrus.Warnf("模板模式：未知的内容类型 %s", ins.ContentType)
+		logging.Sender.Warnf("模板模式：未知的内容类型 %s", ins.ContentType)
 		return nil
 	}
 	if contentValue == "" {
-		logrus.Warnf("模板模式：实例要求的 %s 类型内容为空", contentType)
+		logging.Sender.Warnf("模板模式：实例要求的 %s 类型内容为空", contentType)
 		return nil
 	}
 
@@ -517,10 +514,10 @@ func (sm *SendMessageService) GetSendMsg(ins models.SendTasksIns) (string, strin
 	if !ok || len(content) == 0 {
 		content, ok := data[unified.FormatTypeText]
 		if !ok {
-			logrus.Error("text节点数据为空！")
+			logging.Sender.Error("text节点数据为空！")
 			return unified.FormatTypeText, ""
 		} else {
-			logrus.Error(fmt.Sprintf("没有找到%s对应的消息，使用text消息替代！", ins.ContentType))
+			logging.Sender.Errorf("没有找到%s对应的消息，使用text消息替代！", ins.ContentType)
 			return unified.FormatTypeText, content
 		}
 	} else {

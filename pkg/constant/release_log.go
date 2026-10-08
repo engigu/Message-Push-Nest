@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/sirupsen/logrus"
+	"message-nest/pkg/logging"
 )
 
 var LatestVersion = map[string]string{}
@@ -24,7 +24,7 @@ func InitReleaseInfo(releaseInfo embed.FS) {
 		version = "default"
 	}
 	desc := strings.Trim(readFileContent(".release_log", releaseInfo), "\n\r")
-	logrus.Infof("发布版本: %s", version)
+	logging.App.Infof("发布版本: %s", version)
 	LatestVersion["version"] = version
 	LatestVersion["desc"] = desc
 }

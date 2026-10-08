@@ -6,13 +6,13 @@ import (
 	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/e"
+	"message-nest/pkg/logging"
 	utilpkg "message-nest/pkg/util"
 	"message-nest/service/send_message_service"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type SendMessageByTemplateReq struct {
@@ -74,7 +74,7 @@ func DoSendMessageByTemplate(c *gin.Context) {
 				}
 			}
 		} else {
-			logrus.Errorf("解析模板占位符配置失败: %v", err)
+			logging.TemplateSend.Errorf("解析模板占位符配置失败: %v", err)
 		}
 	}
 
@@ -136,10 +136,8 @@ func DoSendMessageByTemplate(c *gin.Context) {
 		AtMobiles:  atMobiles,
 		AtUserIds:  atUserIds,
 		AtAll:      template.IsAtAll,
-		Recipients: req.Recipients, // 动态接收者列表
-		DefaultLogger: logrus.WithFields(logrus.Fields{
-			"prefix": "[Template Send]",
-		}),
+		Recipients:    req.Recipients, // 动态接收者列表
+		DefaultLogger: logging.TemplateSend,
 	}
 
 	// 发送前检查

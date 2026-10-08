@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	"message-nest/pkg/logging"
 )
 
 // 需要记录响应内容的 API 路径前缀
@@ -90,28 +90,17 @@ func LogMiddleware(notLogged ...string) gin.HandlerFunc {
 			return
 		}
 
-		entry := logrus.WithFields(logrus.Fields{
-			////"hostname":   hostname,
-			//"statusCode": statusCode,
-			//"latency":    latency,
-			//"clientIP":   clientIP,
-			//"method":     c.Request.Method,
-			//"path":       path,
-			////"referer":    referer,
-			//"dataLength": dataLength,
-			////"userAgent":  clientUserAgent,
-			"prefix": "[Gin]",
-		})
+		entry := logging.HTTP
 
 		if len(c.Errors) > 0 {
 			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
 		} else {
-			msg := fmt.Sprintf("%s [%s] %s %d %d (%dms)", clientIP, c.Request.Method, path, statusCode, dataLength, latency)
+			msg := fmt.Sprintf("%-6s %s -> %d (%dms, %s)", c.Request.Method, path, statusCode, latency, clientIP)
 			
 			// 如果是发送消息的 API，打印返回内容
 			if needCaptureResponse && bodyWriter != nil {
 				responseBody := bodyWriter.body.String()
-				msg = fmt.Sprintf("%s | Response: %s", msg, responseBody)
+				msg = fmt.Sprintf("%s | Resp: %s", msg, responseBody)
 			}
 			
 			if statusCode >= http.StatusInternalServerError {

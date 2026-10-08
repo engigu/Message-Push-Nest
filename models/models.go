@@ -9,12 +9,11 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 	"log"
+	"message-nest/pkg/logging"
 	"message-nest/pkg/setting"
 	"message-nest/pkg/util"
 	"os"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 var db *gorm.DB
@@ -104,7 +103,7 @@ func Setup() *gorm.DB {
 	}
 
 	if err != nil {
-		logrus.Fatalf("数据库连接初始化失败: %v", err)
+		logging.Database.Fatalf("数据库连接初始化失败: %v", err)
 	}
 
 	if setting.DatabaseSetting.SqlDebug == "enable" {

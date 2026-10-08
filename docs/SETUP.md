@@ -18,8 +18,7 @@ docs/
 │   ├── introduction.md      # 项目介绍
 │   ├── features.md          # 特色功能
 │   ├── changelog.md         # 更新日志
-│   ├── configuration.md     # 完整配置说明
-│   └── embed-html.md        # EmbedHtml 配置详解
+│   └── configuration.md     # 完整配置说明
 ├── deployment/              # 部署部分
 │   ├── overview.md          # 部署概览
 │   ├── direct-run.md        # 直接运行 Release
@@ -71,7 +70,6 @@ npm run docs:preview
 - **特色功能** - 核心特性、支持的推送方式、其他功能
 - **更新日志** - 完整的功能更新历史
 - **配置说明** - 详细的配置文件说明和示例
-- **EmbedHtml说明** - 单应用模式和前后端分离模式的详细说明
 
 ### 部署部分
 - **部署概览** - 各种部署方式对比和快速选择指南

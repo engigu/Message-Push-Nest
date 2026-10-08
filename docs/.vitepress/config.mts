@@ -60,8 +60,7 @@ export default defineConfig({
         {
           text: '配置',
           items: [
-            { text: '配置说明', link: '/deployment/configuration' },
-            { text: 'EmbedHtml说明', link: '/deployment/embed-html' }
+            { text: '配置说明', link: '/deployment/configuration' }
           ]
         }
       ],

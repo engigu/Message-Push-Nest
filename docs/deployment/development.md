@@ -27,13 +27,9 @@ JwtSecret = message-nest
 LogLevel = INFO
 
 [server]
-; RunMode务必设置成debug，会自动添加跨域
-RunMode = debug
 HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60
-; 取消EmbedHtml的注释（启用前后端分离），然后到web目录下面，npm run dev启动前端页面
-EmbedHtml = disable
 
 [database]
 ; 开启SQL打印
@@ -49,10 +45,9 @@ Name = yourDbName
 TablePrefix = message_
 ```
 
-::: warning 重要配置
-- `RunMode` 必须设置为 `debug`，会自动添加跨域
-- `EmbedHtml` 必须取消注释，启用前后端分离
-- `SqlDebug` 建议启用，方便调试
+::: tip 调试建议
+- `SqlDebug` 建议启用，方便排查 SQL 语句
+- 前端 `npm run dev` 启动在 5173 端口，Vite 会自动将 API 请求反向代理至后端的 8000 端口，无需额外跨域或开关配置
 :::
 
 ### 3. 启动后端服务

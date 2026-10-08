@@ -104,7 +104,7 @@ let clickLogin = async () => {
   loading.value = true;
   
   try {
-    const rspe = await request.post('/auth', { username: account.value, passwd: password.value });
+    const rspe = await request.post('/api/v1/auth', { username: account.value, passwd: password.value });
     const rsp = rspe.data;
     if (rsp.code != 200) {
         toast.error(rsp.msg);

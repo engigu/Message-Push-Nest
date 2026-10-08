@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"message-nest/pkg/app"
 	"message-nest/pkg/e"
+	"message-nest/pkg/logging"
 	utilpkg "message-nest/pkg/util"
 	"message-nest/service/send_message_service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type SendMessageReq struct {
@@ -75,10 +75,8 @@ func DoSendMassage(c *gin.Context) {
 		AtMobiles:  req.AtMobiles,
 		AtUserIds:  req.AtUserIds,
 		AtAll:      req.AtAll,
-		Recipients: req.Recipients,
-		DefaultLogger: logrus.WithFields(logrus.Fields{
-			"prefix": "[Send Instance]",
-		}),
+		Recipients:    req.Recipients,
+		DefaultLogger: logging.SendInstance,
 	}
 	task, err := msgService.SendPreCheck()
 	if err != nil {

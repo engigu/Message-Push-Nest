@@ -26,12 +26,9 @@ JwtSecret = message-nest
 LogLevel = INFO
 
 [server]
-RunMode = release
 HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60
-; 注释EmbedHtml，启用单应用模式
-; EmbedHtml = disable
 
 [database]
 ; 关闭SQL打印
@@ -46,10 +43,6 @@ Port = 3308
 Name = yourDbName
 TablePrefix = message_
 ```
-
-::: warning 重要
-将配置中 `EmbedHtml = disable` 进行注释，以单应用方式运行。
-:::
 
 ### 4. 启动项目
 
@@ -108,5 +101,4 @@ SQLite数据库文件会自动创建在 `conf/database.db`。
 ### 无法访问页面
 
 1. 确认服务已正常启动
-2. 检查防火墙设置
-3. 确认 `EmbedHtml` 配置已注释
+2. 检查防火墙及网络监听端口设置

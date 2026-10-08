@@ -7,26 +7,21 @@ import (
 	"time"
 
 	"github.com/go-ini/ini"
-	"github.com/sirupsen/logrus"
+	"message-nest/pkg/logging"
 )
 
 type App struct {
 	JwtSecret string
-
-	RuntimeRootPath string
-	LogLevel        string
-	InitData        string
+	LogLevel  string
 }
 
 var AppSetting = &App{}
 
 type Server struct {
-	RunMode      string
 	HttpPort     int
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 
-	EmbedHtml string
 	UrlPrefix string
 }
 
@@ -71,17 +66,17 @@ func Setup() {
 	createConfFolder()
 
 	if fileExists(intPath) {
-		logrus.Infof("正在从配置文件 %s 启动服务...", intPath)
+		logging.Config.Infof("正在从配置文件 %s 启动服务...", intPath)
 		cfg, err = ini.Load(intPath)
 		if err != nil {
-			logrus.Fatalf("解析配置文件 '%s' 失败: %v", intPath, err)
+			logging.Config.Fatalf("解析配置文件 '%s' 失败: %v", intPath, err)
 		}
 
 		mapTo("app", AppSetting)
 		mapTo("server", ServerSetting)
 		mapTo("database", DatabaseSetting)
 	} else {
-		logrus.Infof("配置文件 %s 不存在，从环境变量加载配置...", intPath)
+		logging.Config.Infof("配置文件 %s 不存在，从环境变量加载配置...", intPath)
 		loadConfigFromEnv()
 	}
 
@@ -95,12 +90,12 @@ func ensureJwtSecret() {
 	if AppSetting.JwtSecret == "" || AppSetting.JwtSecret == "message-nest" {
 		randomBytes := make([]byte, 32)
 		if _, err := rand.Read(randomBytes); err != nil {
-			logrus.Fatalf("动态生成安全随机 JWT 密钥失败: %v", err)
+			logging.Security.Fatalf("动态生成安全随机 JWT 密钥失败: %v", err)
 		}
 		AppSetting.JwtSecret = hex.EncodeToString(randomBytes)
-		logrus.Warnln("[安全警告] 未配置 JWT_SECRET 或使用了不安全的默认值('message-nest')。")
-		logrus.Warnln("[安全警告] 已为本次运行动态生成高熵安全随机密钥。")
-		logrus.Warnln("[安全警告] 注意：服务重启后之前颁发的 Token 将失效，生产环境请务必显式配置持久化的 JWT_SECRET！")
+		logging.Security.Warnln("未配置 JWT_SECRET 或使用了不安全的默认值('message-nest')。")
+		logging.Security.Warnln("已为本次运行动态生成高熵安全随机密钥。")
+		logging.Security.Warnln("注意：服务重启后之前颁发的 Token 将失效，生产环境请务必显式配置持久化的 JWT_SECRET！")
 	}
 }
 
@@ -108,6 +103,6 @@ func ensureJwtSecret() {
 func mapTo(section string, v interface{}) {
 	err := cfg.Section(section).MapTo(v)
 	if err != nil {
-		logrus.Fatalf("映射配置分区 [%s] 失败: %v", section, err)
+		logging.Config.Fatalf("映射配置分区 [%s] 失败: %v", section, err)
 	}
 }

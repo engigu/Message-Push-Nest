@@ -5,24 +5,12 @@
 ```ini
 [app]
 JwtSecret = message-nest
-; 暂时无用
-RuntimeRootPath = runtime/
 LogLevel = INFO
-; 首次运行时初始化数据，设置为enable启用
-; InitData = enable
 
 [server]
-; debug or release
-; debug模式下会自动添加跨域headers
-RunMode = release
 HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60
-; use embed html static file
-; 是否使用embed打包的静态资源
-; 如果运行release打包后的应用，请注释这个设置。
-; 如果取消这个注释，只会单独运行api服务，前端页面需要到web目录手动npm run dev, 运行前端服务
-; EmbedHtml = disable
 ; URL路径前缀，用于子路径部署，如：/message
 ; UrlPrefix = /message
 
@@ -50,19 +38,15 @@ Ssl = true
 | 配置项 | 说明 | 默认值 |
 |--------|------|--------|
 | JwtSecret | JWT密钥，用于token生成 | message-nest |
-| RuntimeRootPath | 运行时根路径（暂时无用） | runtime/ |
 | LogLevel | 日志级别：DEBUG/INFO/ERROR | INFO |
-| InitData | 首次运行时初始化数据，设置为enable启用 | - |
 
 ### [server] 服务器配置
 
 | 配置项 | 说明 | 默认值 |
 |--------|------|--------|
-| RunMode | 运行模式：debug/release，debug模式会自动添加跨域 | release |
 | HttpPort | HTTP服务端口 | 8000 |
 | ReadTimeout | 读取超时时间（秒） | 60 |
 | WriteTimeout | 写入超时时间（秒） | 60 |
-| EmbedHtml | 是否使用embed打包的静态资源，注释则启用单应用模式 | - |
 | UrlPrefix | URL路径前缀，用于子路径部署，如：/message | - |
 
 ### [database] 数据库配置
@@ -87,7 +71,6 @@ Ssl = true
 |------|------|
 | JWT_SECRET | jwt秘钥，可选，默认为message-nest |
 | LOG_LEVEL | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR |
-| RUN_MODE | 运行模式，可选，默认release，为debug将自动添加跨域 |
 | URL_PREFIX | URL路径前缀，用于子路径部署，如：/message |
 | DB_TYPE | 数据库类型，sqlite/mysql/postgres。默认为sqlite,存储路径为conf/database.db |
 | MYSQL_HOST | mysql-host，DB_TYPE=mysql必填 |
@@ -106,7 +89,7 @@ Ssl = true
 
 ## 配置示例
 
-### 单应用模式（推荐）
+### 生产标准配置
 
 ```ini
 [app]
@@ -114,12 +97,9 @@ JwtSecret = message-nest
 LogLevel = INFO
 
 [server]
-RunMode = release
 HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60
-; 注释EmbedHtml，启用单应用模式
-; EmbedHtml = disable
 
 [database]
 ; 关闭SQL打印
@@ -134,7 +114,7 @@ Name = yourDbName
 TablePrefix = message_
 ```
 
-### 开发调试模式
+### 开发调试配置（开启 SQL 打印）
 
 ```ini
 [app]
@@ -142,13 +122,9 @@ JwtSecret = message-nest
 LogLevel = INFO
 
 [server]
-; RunMode务必设置成debug，会自动添加跨域
-RunMode = debug
 HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60
-; 取消EmbedHtml的注释（启用前后端分离），然后到web目录下面，npm run dev启动前端页面
-EmbedHtml = disable
 
 [database]
 ; 开启SQL打印
@@ -171,7 +147,6 @@ JwtSecret = message-nest
 LogLevel = INFO
 
 [server]
-RunMode = release
 HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60

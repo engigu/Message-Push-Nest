@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"message-nest/models"
+	"message-nest/pkg/logging"
 	"message-nest/pkg/util"
 	"message-nest/service/settings_service"
 	"reflect"
 
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -22,7 +22,7 @@ func InitAuthTableData() {
 
 	settingO, err := models.GetSettingByKey(initSection, initAuthKey)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		logrus.Error(fmt.Sprintf("查询账号初始化失败！"))
+		logging.Init.Errorf("查询账号初始化失败！")
 		return
 	}
 	if settingO.Value == "1" {
@@ -34,15 +34,15 @@ func InitAuthTableData() {
 	
 	err = models.AddUser(initAccount, initAccountPasswd)
 	if err != nil {
-		logrus.Error(fmt.Sprintf("添加初始化admin账号失败！"))
+		logging.Init.Errorf("添加初始化admin账号失败！")
 		return
 	} else {
-		logrus.Info(fmt.Sprintf("初始化admin账号成功！您的账号：%s 密码：%s", initAccount, initAccountPasswd))
+		logging.Init.Infof("初始化admin账号成功！您的账号：%s 密码：%s", initAccount, initAccountPasswd)
 	}
 
 	err = models.AddOneSetting(models.Settings{Section: initSection, Key: initAuthKey, Value: "1"})
 	if err != nil {
-		logrus.Error(fmt.Sprintf("标记admin账号初始化状态失败！err: %s", err.Error()))
+		logging.Init.Errorf("标记admin账号初始化状态失败！err: %s", err.Error())
 		return
 	}
 }
@@ -70,11 +70,11 @@ func calculateModelsSignature(tables []interface{}) string {
 }
 
 // checkAndMigrateTables 检测数据模型特征并选择性执行数据库迁移
-func checkAndMigrateTables(db *gorm.DB, tables []interface{}, entry *logrus.Entry) {
+func checkAndMigrateTables(db *gorm.DB, tables []interface{}) {
 	// 1. 优先迁移 Settings 表（如果是新数据库），保证可以安全读取/存储迁移签名
 	err := db.AutoMigrate(&models.Settings{})
 	if err != nil {
-		entry.Errorf("迁移配置表失败: %s", err.Error())
+		logging.Database.Errorf("迁移配置表失败: %s", err.Error())
 	}
 
 	// 2. 计算当前模型特征签名
@@ -90,13 +90,13 @@ func checkAndMigrateTables(db *gorm.DB, tables []interface{}, entry *logrus.Entr
 	}
 
 	if needMigrate {
-		entry.Infof("检测到模型特征发生变更，开始更新数据库结构... 当前特征签名: %s", currentSig)
+		logging.Database.Infof("检测到模型特征发生变更，开始更新数据库结构... 当前特征签名: %s", currentSig)
 		for _, table := range tables {
 			tableName := models.GetSchema(table)
-			entry.Infof("正在迁移数据表: %s", tableName)
+			logging.Database.Infof("正在迁移数据表: %s", tableName)
 			err := db.AutoMigrate(table)
 			if err != nil {
-				entry.Errorf("迁移数据表 %s 发生错误: %s", tableName, err.Error())
+				logging.Database.Errorf("迁移数据表 %s 发生错误: %s", tableName, err.Error())
 			}
 		}
 
@@ -111,29 +111,15 @@ func checkAndMigrateTables(db *gorm.DB, tables []interface{}, entry *logrus.Entr
 			})
 		}
 		if err != nil {
-			entry.Errorf("保存迁移签名错误: %s", err.Error())
+			logging.Database.Errorf("保存迁移签名错误: %s", err.Error())
 		}
 	} else {
-		entry.Infof("模型特征与数据库一致，跳过数据库自动迁移流程。Sig: %s", currentSig)
+		logging.Database.Infof("模型特征与数据库一致，跳过数据库自动迁移流程。Sig: %s", currentSig)
 	}
 }
 
 func Setup() {
 	db := models.Setup()
-	//defer func(db *gorm.DB) {
-	//	err := db.Close()
-	//	if err != nil {
-	//
-	//	}
-	//}(db)
-
-	//if setting.AppSetting.InitData != "enable" {
-	//	return
-	//}
-
-	entry := logrus.WithFields(logrus.Fields{
-		"prefix": "[Init Data]",
-	})
 
 	tables := []interface{}{
 		&models.Auth{},
@@ -149,30 +135,30 @@ func Setup() {
 		&models.SendStats{},
 	}
 
-	checkAndMigrateTables(db, tables, entry)
+	checkAndMigrateTables(db, tables)
 
-	entry.Infof("正在初始化管理员账号数据...")
+	logging.Init.Infof("正在初始化管理员账号数据...")
 	InitAuthTableData()
 
-	entry.Infof("正在初始化自定义站点配置数据...")
+	logging.Init.Infof("正在初始化自定义站点配置数据...")
 	ss := settings_service.InitSettingService{}
 	ss.InitSiteConfig()
 
-	entry.Infof("正在初始化定时任务配置数据...")
+	logging.Init.Infof("正在初始化定时任务配置数据...")
 	ss.InitLogConfig()
 	ss.InitHostedMsgConfig()
 
-	entry.Infof("所有数据表基础数据初始化完成。")
+	logging.Init.Infof("所有数据表基础数据初始化完成。")
 
 	// 补全历史数据的 UniqueKey（仅在未标记完成时执行）
 	backfillSetting, _ := models.GetSettingByKey("init", "hosted_msg_uniquekey_backfill")
 	if backfillSetting.Value != "1" {
-		go BackfillHostedMessagesUniqueKey(entry)
+		go BackfillHostedMessagesUniqueKey()
 	}
 }
 
 // BackfillHostedMessagesUniqueKey 为历史托管消息生成 UniqueKey，并持久化完成标记到数据库
-func BackfillHostedMessagesUniqueKey(entry *logrus.Entry) {
+func BackfillHostedMessagesUniqueKey() {
 	// 双重校验，如果已经标记完成直接退出
 	backfillSetting, _ := models.GetSettingByKey("init", "hosted_msg_uniquekey_backfill")
 	if backfillSetting.Value == "1" {
@@ -183,7 +169,7 @@ func BackfillHostedMessagesUniqueKey(entry *logrus.Entry) {
 	// 仅选择需要的 id 字段减少内存与I/O开销
 	err := models.GetDB().Model(&models.HostedMessage{}).Select("id").Where("unique_key = ? OR unique_key IS NULL", "").Find(&messages).Error
 	if err != nil {
-		logrus.Errorf("查找未设置 unique_key 的托管消息失败: %s", err.Error())
+		logging.Init.Errorf("查找未设置 unique_key 的托管消息失败: %s", err.Error())
 		return
 	}
 	total := len(messages)
@@ -193,7 +179,7 @@ func BackfillHostedMessagesUniqueKey(entry *logrus.Entry) {
 		return
 	}
 
-	entry.Infof("发现有 %d 条托管消息缺少 unique_key，正在为历史托管消息补充唯一标识 (UniqueKey)...", total)
+	logging.Init.Infof("发现有 %d 条托管消息缺少 unique_key，正在为历史托管消息补充唯一标识 (UniqueKey)...", total)
 
 	// 分批进行批量更新，每批处理 500 条，防止生成的 SQL 语句过长
 	batchSize := 500
@@ -224,12 +210,12 @@ func BackfillHostedMessagesUniqueKey(entry *logrus.Entry) {
 
 		err = models.GetDB().Exec(sqlRaw, args...).Error
 		if err != nil {
-			logrus.Errorf("批量补全第 %d 到 %d 条记录的 unique_key 失败: %s", i+1, end, err.Error())
+			logging.Init.Errorf("批量补全第 %d 到 %d 条记录的 unique_key 失败: %s", i+1, end, err.Error())
 			return
 		}
 	}
 
 	// 执行完毕后，持久化标记到 settings 表
 	models.AddOneSetting(models.Settings{Section: "init", Key: "hosted_msg_uniquekey_backfill", Value: "1"})
-	logrus.Infof("成功补全 %d 条历史托管消息的 unique_key 并已记录完成标记", total)
+	logging.Init.Infof("成功补全 %d 条历史托管消息的 unique_key 并已记录完成标记", total)
 }

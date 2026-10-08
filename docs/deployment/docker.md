@@ -25,15 +25,10 @@ JwtSecret = your-secure-random-jwt-secret
 LogLevel = INFO
 
 [server]
-RunMode = release
 ; docker模式下端口配置文件中只能为8000
 HttpPort = 8000
 ReadTimeout = 60
 WriteTimeout = 60
-; 是否使用embed打包的静态资源
-; 如果运行release打包后的应用，请注释这个设置。
-; 如果取消这个注释，只会单独运行api服务，前端页面需要到web目录手动npm run dev, 运行前端服务
-; EmbedHtml = disable
 ; URL路径前缀，用于子路径部署，如：/message
 ; UrlPrefix = /message
 
@@ -89,7 +84,6 @@ docker run -d \
 |------|------|
 | JWT_SECRET | JWT签名密钥，建议生产环境指定高熵密钥。未指定或使用弱默认值时将在启动时动态生成随机密钥 |
 | LOG_LEVEL | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR |
-| RUN_MODE | 运行模式，可选，默认release，为debug将自动添加跨域 |
 | URL_PREFIX | URL路径前缀，用于子路径部署，如：/message |
 | DB_TYPE | 数据库类型，sqlite/mysql/postgres。默认为sqlite,存储路径为conf/database.db |
 | MYSQL_HOST | mysql-host，DB_TYPE=mysql必填 |

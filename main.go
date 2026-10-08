@@ -12,10 +12,8 @@ import (
 	"message-nest/service/cron_msg_service"
 	"message-nest/service/cron_service"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -42,7 +40,7 @@ func init() {
 }
 
 func main() {
-	gin.SetMode(setting.ServerSetting.RunMode)
+	gin.SetMode(gin.ReleaseMode)
 	routersInit := routers.InitRouter(f)
 	readTimeout := setting.ServerSetting.ReadTimeout
 	writeTimeout := setting.ServerSetting.WriteTimeout
@@ -57,19 +55,10 @@ func main() {
 		MaxHeaderBytes: maxHeaderBytes,
 	}
 
-	startInfo := ""
-	if setting.ServerSetting.RunMode == "debug" {
-		startInfo = fmt.Sprintf("运行模式: %s，服务启动地址: http://localhost%s", setting.ServerSetting.RunMode, endPoint)
-	} else {
-		startInfo = fmt.Sprintf("运行模式: %s，服务启动地址: http://0.0.0.0%s", setting.ServerSetting.RunMode, endPoint)
-	}
-
-	logrus.WithFields(logrus.Fields{
-		"prefix": fmt.Sprintf("[PID:%d]", os.Getpid()),
-	}).Infof(startInfo)
+	logging.Server.Infof("服务启动地址: http://0.0.0.0%s", endPoint)
 
 	err := server.ListenAndServe()
 	if err != nil {
-		logrus.Errorf("服务监听异常: %v", err)
+		logging.Server.Errorf("服务监听异常: %v", err)
 	}
 }

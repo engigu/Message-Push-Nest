@@ -1,13 +1,13 @@
 package cron_service
 
 import (
-	"github.com/robfig/cron/v3"
-	"github.com/sirupsen/logrus"
+	"message-nest/pkg/logging"
 	"reflect"
 	"runtime"
 	"strings"
-
 	"sync"
+
+	"github.com/robfig/cron/v3"
 )
 
 type ScheduledTask struct {
@@ -43,7 +43,7 @@ func AddTask(task ScheduledTask) cron.EntryID {
 	taskId, err := CronInstance.AddFunc(task.Schedule, task.Job)
 	if err != nil {
 		// 处理错误
-		logrus.Errorf("注册定时任务失败, job: %s, 原因：%s", jobName, err)
+		logging.Scheduler.Errorf("注册定时任务失败, job: %s, 原因：%s", jobName, err)
 	} else {
 		TaskList[taskId] = &task
 		//logrus.Infof("注册定时任务成功, job: %s, entryID: %d, cron: %s", jobName, taskId, task.Schedule)
