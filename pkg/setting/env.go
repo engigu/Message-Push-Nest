@@ -4,6 +4,7 @@ import (
 	"github.com/unknwon/com"
 	"log"
 	"os"
+	"strings"
 )
 
 var optionValueMap = map[string]string{}
@@ -32,16 +33,37 @@ func getMustEnvValue(key string) string {
 	}
 }
 
+// maskSecret 对敏感字符串进行前后明文脱敏处理
+func maskSecret(val string) string {
+	length := len(val)
+	if length == 0 {
+		return ""
+	}
+	if length <= 4 {
+		return "******"
+	}
+	keep := 2
+	if length <= 8 {
+		keep = 1
+	}
+	return val[:keep] + "******" + val[length-keep:]
+}
+
 // printOptionValue 打印可选环境变量值
 func printOptionValue() {
 	for key, val := range optionValueMap {
-		log.Printf("[message-nest] current option env: %s, value: %s", key, val)
+		upperKey := strings.ToUpper(key)
+		if strings.Contains(upperKey, "SECRET") || strings.Contains(upperKey, "PASSWORD") || strings.Contains(upperKey, "TOKEN") {
+			log.Printf("[message-nest] current option env: %s, value: %s", key, maskSecret(val))
+		} else {
+			log.Printf("[message-nest] current option env: %s, value: %s", key, val)
+		}
 	}
 }
 
 // loadConfigFromEnv 从环境变量加载配置
 func loadConfigFromEnv() {
-	AppSetting.JwtSecret = getOptionEnvValue("JWT_SECRET", "message-nest")
+	AppSetting.JwtSecret = getOptionEnvValue("JWT_SECRET", "")
 	AppSetting.LogLevel = getOptionEnvValue("LOG_LEVEL", "INFO")
 
 	ServerSetting.RunMode = getOptionEnvValue("RUN_MODE", "release")

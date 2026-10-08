@@ -20,7 +20,8 @@ Message Nest 使用 GitHub Container Registry 托管镜像：
 
 ```ini
 [app]
-JwtSecret = message-nest
+; 生产环境请配置随机强密钥，如未配置则每次启动自动生成随机密钥
+JwtSecret = your-secure-random-jwt-secret
 LogLevel = INFO
 
 [server]
@@ -86,7 +87,7 @@ docker run -d \
 
 | 变量 | 说明 |
 |------|------|
-| JWT_SECRET | jwt秘钥，可选，默认为message-nest |
+| JWT_SECRET | JWT签名密钥，建议生产环境指定高熵密钥。未指定或使用弱默认值时将在启动时动态生成随机密钥 |
 | LOG_LEVEL | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR |
 | RUN_MODE | 运行模式，可选，默认release，为debug将自动添加跨域 |
 | URL_PREFIX | URL路径前缀，用于子路径部署，如：/message |

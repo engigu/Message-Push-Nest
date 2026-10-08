@@ -1,6 +1,8 @@
 package setting
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"log"
 	"os"
 	"time"
@@ -86,6 +88,20 @@ func Setup() {
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
 
+	ensureJwtSecret()
+}
+
+func ensureJwtSecret() {
+	if AppSetting.JwtSecret == "" || AppSetting.JwtSecret == "message-nest" {
+		randomBytes := make([]byte, 32)
+		if _, err := rand.Read(randomBytes); err != nil {
+			log.Fatalf("[message-nest] failed to generate secure random JWT secret: %v", err)
+		}
+		AppSetting.JwtSecret = hex.EncodeToString(randomBytes)
+		log.Println("[message-nest] [SECURITY WARNING] JWT_SECRET is not configured or using insecure default ('message-nest').")
+		log.Println("[message-nest] [SECURITY WARNING] A secure random secret has been generated dynamically for this session.")
+		log.Println("[message-nest] [SECURITY WARNING] Notice: Server restart will invalidate previously issued tokens. Please configure a persistent JWT_SECRET in production!")
+	}
 }
 
 // mapTo map section
