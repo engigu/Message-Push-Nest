@@ -15,8 +15,9 @@ RUN npm run build
 # ==========================================
 # Stage 2: Build Go Backend
 # ==========================================
-FROM golang:1.24-alpine AS go-builder
+FROM golang:alpine AS go-builder
 
+ENV GOTOOLCHAIN=auto
 WORKDIR /app
 
 RUN apk add --no-cache ca-certificates tzdata git
