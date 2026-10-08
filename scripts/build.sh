@@ -2,7 +2,7 @@
 set -eo pipefail
 
 # ============================================================
-# 日志与格式化输出
+# 日志与格式化输出 (完全对齐 baihu-panel 风格)
 # ============================================================
 C_RESET="\033[0m"
 C_BOLD="\033[1m"
@@ -48,43 +48,25 @@ get_timestamp_ms() {
 
 format_duration() {
     local start_ms=$1
-    local end_ms="${2:-$(get_timestamp_ms)}"
-    local ms=$(( end_ms - start_ms ))
-
-    if [ -z "${ms}" ] || [ "${ms}" -le 0 ]; then
-        echo "0s"
-        return
+    local end_ms
+    end_ms=$(get_timestamp_ms)
+    local diff_ms=$((end_ms - start_ms))
+    if [ ${diff_ms} -lt 1000 ]; then
+        echo "${diff_ms}ms"
+    else
+        local sec=$((diff_ms / 1000))
+        local ms=$((diff_ms % 1000))
+        echo "${sec}.${ms}s"
     fi
-
-    if [ "${ms}" -lt 1000 ]; then
-        echo "${ms}ms"
-        return
-    fi
-
-    local sec=$(( ms / 1000 ))
-    local remain_ms=$(( (ms % 1000) / 100 ))
-
-    if [ "${sec}" -lt 60 ]; then
-        if [ "${remain_ms}" -gt 0 ]; then
-            echo "${sec}.${remain_ms}s"
-        else
-            echo "${sec}s"
-        fi
-        return
-    fi
-
-    local min=$(( sec / 60 ))
-    local rem_sec=$(( sec % 60 ))
-    echo "${min}m${rem_sec}s"
 }
 
 # ============================================================
-# 基础上下文与环境变量
+# 项目基础路径与版本管理
 # ============================================================
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${ROOT_DIR}"
 
-VERSION="${VERSION:-}"
 if [ -z "${VERSION}" ]; then
     if [ -f .release_version ]; then
         VERSION="$(cat .release_version | tr -d '\r\n')"
@@ -125,7 +107,7 @@ build_web() {
 }
 
 # ============================================================
-# 2. 构建单平台 Go 二进制
+# 2. 编译 Go 服务端 (通用单平台编译)
 # ============================================================
 build_server() {
     local os="${1:-linux}"
@@ -164,6 +146,7 @@ build_ci_artifacts() {
     mkdir -p "${base_output}/bin/linux-amd64" "${base_output}/bin/linux-arm64"
     echo "${VERSION}" > .release_version
 
+    log_info "预下载模块依赖 (go mod download)..."
     go mod download
 
     # 1. 编译 linux-amd64
@@ -171,6 +154,9 @@ build_ci_artifacts() {
 
     # 2. 编译 linux-arm64
     build_server linux arm64 "${base_output}/bin/linux-arm64/Message-Nest"
+
+    log_step "CI 部署产物打包完成，清单如下:"
+    find "${base_output}" -type f -exec ls -lh {} + | awk '{print "   " $9 " (" $5 ")"}'
 
     local duration
     duration=$(format_duration "${start_time}")
@@ -194,18 +180,29 @@ build_release_artifacts() {
     mkdir -p "${pkg_dir}" "${docker_dir}/bin/linux-amd64" "${docker_dir}/bin/linux-arm64"
     echo "${VERSION}" > .release_version
 
+    log_info "预下载模块依赖 (go mod download)..."
     go mod download
 
     _pack_tar() {
         local os=$1; local arch=$2
         local bin_file="Message-Nest"
+        local start_pack_time
+        start_pack_time=$(get_timestamp_ms)
+
         log_info "打包 [${os}/${arch}] -> tar.gz..."
         CGO_ENABLED=0 GOOS="${os}" GOARCH="${arch}" go build -ldflags="${LDFLAGS}" -o "${bin_file}" .
         tar -czf "${pkg_dir}/Message-Nest-${VERSION}-${os}-${arch}.tar.gz" "${bin_file}" conf/app.example.ini LICENSE NOTICE
+        
         if [ "${os}" = "linux" ]; then
             cp "${bin_file}" "${docker_dir}/bin/linux-${arch}/Message-Nest"
         fi
         rm -f "${bin_file}"
+
+        local pack_duration
+        pack_duration=$(format_duration "${start_pack_time}")
+        local pack_size
+        pack_size=$(get_file_size "${pkg_dir}/Message-Nest-${VERSION}-${os}-${arch}.tar.gz")
+        log_success "打包完成 -> Message-Nest-${VERSION}-${os}-${arch}.tar.gz (大小: ${pack_size:-未知}, 耗时: ${pack_duration})"
     }
 
     # 1. Linux amd64 & arm64
@@ -214,17 +211,24 @@ build_release_artifacts() {
 
     # 2. Windows amd64 (.zip)
     log_info "打包 [windows/amd64] -> zip..."
+    local win_start_time
+    win_start_time=$(get_timestamp_ms)
     CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="${LDFLAGS}" -o "Message-Nest.exe" .
     zip -q -j "${pkg_dir}/Message-Nest-${VERSION}-windows-amd64.zip" "Message-Nest.exe" conf/app.example.ini LICENSE NOTICE
     rm -f "Message-Nest.exe"
+    local win_duration
+    win_duration=$(format_duration "${win_start_time}")
+    local win_size
+    win_size=$(get_file_size "${pkg_dir}/Message-Nest-${VERSION}-windows-amd64.zip")
+    log_success "打包完成 -> Message-Nest-${VERSION}-windows-amd64.zip (大小: ${win_size:-未知}, 耗时: ${win_duration})"
 
     # 3. macOS Apple Silicon (arm64) & Intel (amd64)
     _pack_tar darwin arm64
     _pack_tar darwin amd64
 
-    local duration
-    duration=$(format_duration "${start_time}")
-    log_step "Release 全平台构建完成 (总耗时: ${duration})，清单如下:"
+    local total_duration
+    total_duration=$(format_duration "${start_time}")
+    log_step "Release 全平台构建完成 (总耗时: ${total_duration})，清单如下:"
     ls -lh "${pkg_dir}" | awk '{print "   " $9 " (" $5 ")"}'
 }
 
@@ -233,7 +237,7 @@ build_release_artifacts() {
 # ============================================================
 clean() {
     log_step "清理构建目录与临时文件..."
-    rm -rf web/dist dist-assets release-pkg Message-Nest Message-Nest.exe
+    rm -rf web/dist dist-assets release-pkg Message-Nest Message-Nest.exe .release_version
     log_success "清理完成"
 }
 
@@ -248,10 +252,20 @@ build_all() {
 }
 
 # ============================================================
-# 命令分发入口
+# 命令调度入口 (完全复刻 baihu-panel 控制入口)
 # ============================================================
-CMD="${1:-all}"
+CMD="${1:-server}"
 shift || true
+
+echo "============================================================"
+echo "           消息推送中心 (Message-Push-Nest) 构建系统"
+echo "============================================================"
+log_info "当前指令 : ${CMD}"
+log_info "项目根目录: ${ROOT_DIR}"
+log_info "版本标记 : ${VERSION}"
+log_info "构建时间 : ${BUILD_TIME}"
+log_info "Go 环境  : $(go version 2>/dev/null || echo '未检测到 Go 环境')"
+echo "============================================================"
 
 case "${CMD}" in
     web)
@@ -273,12 +287,12 @@ case "${CMD}" in
         build_all "$@"
         ;;
     help|--help|-h)
-        echo "使用方法: $0 {all|web|server [os] [arch] [output]|ci-artifacts [output_dir]|release-artifacts [pkg_dir] [docker_dir]|clean}"
+        echo "使用方法: $0 {web|server [os] [arch] [output]|ci-artifacts [output_dir]|release-artifacts [pkg_dir] [docker_dir]|clean|all}"
         exit 0
         ;;
     *)
-        log_warn "未知命令: ${CMD}"
-        echo "使用方法: $0 {all|web|server [os] [arch] [output]|ci-artifacts [output_dir]|release-artifacts [pkg_dir] [docker_dir]|clean}"
+        log_warn "未知指令: ${CMD}"
+        echo "使用方法: $0 {web|server [os] [arch] [output]|ci-artifacts [output_dir]|release-artifacts [pkg_dir] [docker_dir]|clean|all}"
         exit 1
         ;;
 esac
