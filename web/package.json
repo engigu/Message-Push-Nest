@@ -18,11 +18,11 @@
     "@types/crypto-js": "^4.2.2",
     "@types/dompurify": "^3.0.5",
     "@vueuse/core": "^13.9.0",
-    "axios": "^1.16.1",
+    "axios": "^1.20.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
-    "dompurify": "^3.4.11",
+    "dompurify": "^3.4.13",
     "fzstd": "^0.1.1",
     "lucide-vue-next": "^0.536.0",
     "marked": "^18.0.5",
@@ -45,5 +45,8 @@
     "typescript": "~5.8.3",
     "vite": "^8.0.16",
     "vue-tsc": "^3.3.9"
+  },
+  "overrides": {
+    "nanoid": "^3.3.18"
   }
 }
