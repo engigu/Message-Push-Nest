@@ -143,18 +143,14 @@ jobs:
         id: dest
         run: |
           if [ -n "$DOCKER_USER" ] && [ -n "$DOCKER_PASSWD" ]; then
-            cat <<EOF >> $GITHUB_OUTPUT
-images<<END
-ghcr.io/${{ env.IMAGE_NAME }}
-docker.io/${{ env.IMAGE_NAME }}
-END
-outputs=type=image,"name=ghcr.io/${{ env.IMAGE_NAME }},docker.io/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
-EOF
+            echo "images<<EOF" >> $GITHUB_OUTPUT
+            echo "ghcr.io/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+            echo "docker.io/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "outputs=type=image,\"name=ghcr.io/${{ env.IMAGE_NAME }},docker.io/${{ env.IMAGE_NAME }}\",push-by-digest=true,name-canonical=true,push=true" >> $GITHUB_OUTPUT
           else
-            cat <<EOF >> $GITHUB_OUTPUT
-images=ghcr.io/${{ env.IMAGE_NAME }}
-outputs=type=image,"name=ghcr.io/${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
-EOF
+            echo "images=ghcr.io/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+            echo "outputs=type=image,\"name=ghcr.io/${{ env.IMAGE_NAME }}\",push-by-digest=true,name-canonical=true,push=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Extract metadata
