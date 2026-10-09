@@ -51,4 +51,5 @@ Message Nest 支持多种数据库：
 - [开发调试](/deployment/development)
 - [Docker](/deployment/docker)
 - [Docker Compose](/deployment/docker-compose)
+- [自动更新 (Watchtower)](/deployment/watchtower)
 - [Nginx](/deployment/nginx)

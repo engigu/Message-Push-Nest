@@ -201,6 +201,8 @@ docker-compose pull
 docker-compose up -d
 ```
 
+如需全自动免运维升级，可配置 Watchtower 容器监控更新，详情请参考 [自动更新 (Watchtower)](/deployment/watchtower)。
+
 ## 访问服务
 
 启动后访问 `http://localhost:8000`

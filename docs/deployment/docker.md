@@ -171,3 +171,7 @@ docker stop message-nest
 # 删除容器
 docker rm message-nest
 ```
+
+### 自动更新
+
+若希望在新版本镜像发布后自动平滑更新容器，可配合使用 Watchtower，详情请参考 [自动更新 (Watchtower)](/deployment/watchtower)。
