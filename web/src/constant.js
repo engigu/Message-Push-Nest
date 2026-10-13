@@ -1,12 +1,8 @@
 import { ApiStrGenerate } from "./util/viewApi";
 
-// const ApiStrGenerate ={}
-
-
 // 定义一些常量名
 const CONSTANT = {
     PAGE: 1,
-    // PAGE_SIZE: 8,
     TOTAL: 0,
     DEFALUT_SITE_CONFIG: JSON.stringify({ "logo": "<svg t=\"1702547210136\" class=\"icon\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"1861\" width=\"200\" height=\"200\"><path d=\"M970.091313 224.033616a14.201535 14.201535 0 0 0-14.100687-3.631838c-88.419556-13.429657-142.919111-12.953859-248.242424 23.762747-69.454869 24.217859-109.056 79.873293-135.267556 116.712728-6.692202 9.403475-18.949172 26.625293-23.77309 29.509818-5.70699-1.303273-21.929374-16.036202-31.762101-24.965172-28.626747-25.994343-64.252121-58.353778-106.767516-58.757172-0.312889-0.005172-0.627071-0.005172-0.939959-0.005171-29.62101 0-54.798222 13.434828-72.857859 38.89907-13.222788 18.651798-17.914828 37.388929-18.106182 38.176323a14.31402 14.31402 0 0 0 2.893576 12.515556 14.336 14.336 0 0 0 11.782465 5.095434l0.409858-0.024565c19.192242-1.152 59.141172-3.545212 65.807516 81.857939 4.288646 54.899071 29.742545 108.631919 69.833697 147.419798 45.499475 44.025535 106.237414 67.298263 175.650909 67.298263 98.97503 0 166.222869-24.480323 205.207272-45.015919 43.172202-22.742626 62.621737-45.918384 63.429819-46.898425a14.170505 14.170505 0 0 0 1.529535-15.874586 14.191192 14.191192 0 0 0-14.166626-7.337373c-37.924202 4.443798-92.767677 6.09099-138.666667-11.298909-7.580444-2.872889-13.878303-5.893172-18.959515-8.691071 20.273131-9.964606 51.000889-28.383677 83.621495-59.93503 34.186343-33.065374 37.722505-69.908687 40.838464-102.423273 2.297535-23.919192 4.666182-48.651636 18.500526-73.091879 28.807758-50.883232 66.645333-74.489535 74.560646-79.035475a14.201535 14.201535 0 0 0 12.135434-7.776969 14.193778 14.193778 0 0 0-2.59103-16.484849z\" fill=\"\" p-id=\"1862\"></path><path d=\"M674.834101 716.481939c-33.422222 4.90796-74.989899 16.884364-117.22602-8.102787-34.843152-20.613172-53.056646-20.993293-77.783919-18.49794-0.156444 0.015515-0.312889 0.015515-0.469334 0.034909-0.274101 0.033616-0.548202 0.060768-0.822303 0.094384-4.697212 0.487434-9.65301 1.065374-14.995394 1.62004-6.702545 0.649051-13.414141 1.19596-20.133495 1.634263-75.333818 4.102465-136.860444-5.381172-163.012525-10.404202-49.488162-9.872808-86.57196-23.921778-108.946101-33.970424-59.832889-26.868364-87.080081-56.671677-87.080081-72.989738 0-1.873455 0.384-2.222545 0.787394-2.585858 2.196687-1.974303 10.616242-6.520242 41.302626-6.004364 24.793212 0.418909 56.970343 3.858101 94.308849 7.853253 40.722101 4.348121 86.873212 9.283232 136.348444 11.686788 6.913293 0.333576 13.959758 0.625778 20.93899 0.858505 9.510788 0.307717 17.545051-7.182222 17.868283-16.707233 0.319354-9.535354-7.175758-17.550222-16.705939-17.868282a1386.24 1386.24 0 0 1-20.419233-0.839112c-48.521051-2.358303-94.161455-7.236525-134.434909-11.544565-90.868364-9.712485-139.353212-13.818828-162.333737 6.833131-8.02004 7.21196-12.262141 17.004606-12.262141 28.317737 0 0.672323 0.029737 1.348525 0.065939 2.026021l0.005172 0.100848c-0.045253 0.524929-0.071111 1.039515-0.071111 1.539879 0 41.464242 9.561212 81.661414 28.414707 119.484768 17.493333 35.088808 42.251636 66.663434 73.583192 93.927434 9.169455-6.551273 20.155475-13.604202 32.524929-20.050748 49.737697-25.921939 97.838545-29.339152 139.099798-9.884444 101.590626 47.906909 142.060606 47.837091 206.198949-0.364606 5.70699-4.287354 13.814949-3.140525 18.103596 2.567758 4.289939 5.708283 3.140525 13.813657-2.567757 18.103595-38.425859 28.877576-69.968162 41.279354-105.143596 41.280647-0.484848 0-0.969697-0.002586-1.457132-0.007758-32.760242-0.316768-69.311354-11.381657-126.16404-38.190545-51.905939-24.47903-106.215434 1.008485-139.548444 23.465374 64.611556 47.922424 146.341495 74.101657 232.704 74.101656 117.55701 0 226.204444-48.934788 292.761858-131.362909l0.002586-0.002586c18.79402-14.959192 12.028121-41.362101-23.442101-36.152889z\" fill=\"\" p-id=\"1863\"></path></svg>", "pagesize": "8", "slogan": "A Message Way Hosted Site", "title": "Message Nest", "theme_color": "blue" }),
     LOG_TASK_ID: "T-IM1GBswSRY",
@@ -17,39 +13,81 @@ const CONSTANT = {
         '/api/v1/auth',
         '/api/v1/hostedmessages/preview',
     ],
+    CHANNEL_CATEGORIES: [
+        { id: 'all', label: '全部' },
+        { id: 'workplace', label: '办公协作' },
+        { id: 'push', label: '移动推送' },
+        { id: 'base', label: '基础服务' },
+    ],
     WAYS_DATA: [
         {
-            type: 'Email',
-            label: '邮箱',
-            // 动态接收者配置
-            dynamicRecipient: {
-                support: true,              // 是否支持动态接收者
-                field: 'to_account',        // 接收者字段名
-                label: '收件邮箱',           // 接收者字段标签
-                desc: '邮箱地址',            // 接收者字段描述
+            type: 'Telegram',
+            label: 'Telegram',
+            meta: {
+                subTitle: 'TG 机器人',
+                category: '移动推送',
+                categoryId: 'push',
             },
             inputs: [
-                { subLabel: 'smtp服务地址', value: '', col: 'server', desc: "smtp@xyz.com" },
-                { subLabel: 'smtp服务端口', value: '', col: 'port', desc: "port" },
-                { subLabel: '邮箱账号', value: '', col: 'account', desc: "邮箱账号" },
-                { subLabel: '邮箱密码', value: '', col: 'passwd', desc: "邮箱密码" },
-                { subLabel: '发信人名称', value: '', col: 'from_name', desc: "想要设置的发信人名字" },
+                { subLabel: 'Bot Token', value: '', col: 'bot_token', desc: "Telegram Bot Token", placeholder: "从 @BotFather 获取", required: true },
+                { subLabel: 'Chat ID', value: '', col: 'chat_id', desc: "接收消息的Chat ID或User ID", placeholder: "聊天/群组 ID", required: true },
+                { subLabel: 'API 地址', value: '', col: 'api_host', desc: "可选，自定义Telegram API地址（优先级最高）", placeholder: "自定义 API 地址，留空使用官方", required: false },
+                { subLabel: '代理地址', value: '', col: 'proxy_url', desc: "可选，支持 HTTP/HTTPS/SOCKS5 代理", placeholder: "http/https/socks5 代理", required: false },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
+            tips: {
+                text: "Telegram机器人说明",
+                desc: "使用Telegram Bot发送消息。<br />1. 通过 @BotFather 创建机器人获取Bot Token<br />2. Chat ID可以是用户ID、群组ID或频道ID<br />3. <strong>代理配置说明：</strong><br />&nbsp;&nbsp;• <strong>自定义API地址</strong>（优先级最高）：适用于自建代理服务器，如 https://api.example.com<br />&nbsp;&nbsp;• <strong>代理地址</strong>（优先级较低）：支持 HTTP/HTTPS/SOCKS5 代理"
+            },
             taskInsRadios: [
                 { subLabel: 'text', content: 'text' },
+                { subLabel: 'markdown', content: 'markdown' },
                 { subLabel: 'html', content: 'html' },
             ],
             taskInsInputs: [
-                { value: '', col: 'to_account', desc: '收件邮箱', label: '收件邮箱' },
+            ],
+        },
+        {
+            type: 'Bark',
+            label: 'Bark',
+            meta: {
+                subTitle: 'iOS 极速通知',
+                category: '移动推送',
+                categoryId: 'push',
+            },
+            inputs: [
+                { subLabel: 'Push Key', value: '', col: 'push_key', desc: "Bark设备码或自建IP，例：DxHcxxxxxRxxxxxxcm", placeholder: "Bark设备码或自建IP，例：DxHcxxxxxRxxxxxxcm", required: true },
+                { subLabel: '存档', value: '', col: 'archive', desc: "1（存档）或 0（不存档），可选", placeholder: "1（存档）或 0（不存档），可选", required: false },
+                { subLabel: '分组', value: '', col: 'group', desc: "推送分组，可选", placeholder: "推送分组，可选", required: false },
+                { subLabel: '推送声音', value: '', col: 'sound', desc: "推送铃声，可选", placeholder: "推送铃声，可选", required: false },
+                { subLabel: '推送图标', value: '', col: 'icon', desc: "推送图标URL，可选", placeholder: "推送图标URL，可选", required: false },
+                { subLabel: '推送时效', value: '', col: 'level', desc: "active/timeSensitive/passive，可选", placeholder: "active/timeSensitive/passive，可选", required: false },
+                { subLabel: '跳转URL', value: '', col: 'url', desc: "点击推送跳转的URL，可选", placeholder: "点击推送跳转的URL，可选", required: false },
+                { subLabel: '加密Key', value: '', col: 'key', desc: "AES加密Key，16位，可选", placeholder: "AES加密Key，16位，可选", required: false },
+                { subLabel: '加密IV', value: '', col: 'iv', desc: "AES加密IV，16位，可选", placeholder: "AES加密IV，16位，可选", required: false },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "Bark推送说明",
+                desc: "Bark 是一款 iOS 专用的推送软件。<br />1. 在 iPhone 上安装 Bark App<br />2. 复制你的设备 Key 或自建服务器地址<br />3. 详细参数说明可以查看 Bark 官方文档"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
             ],
         },
         {
             type: 'Dtalk',
             label: '钉钉',
+            meta: {
+                subTitle: '钉钉群机器人',
+                category: '办公协作',
+                categoryId: 'workplace',
+            },
             inputs: [
-                { subLabel: 'access_token', value: '', col: 'access_token', desc: "钉钉webhook中的access_token" },
-                { subLabel: '加签', value: '', col: 'secret', desc: "加签的签名，SEC开头" },
+                { subLabel: 'access_token', value: '', col: 'access_token', desc: "钉钉webhook中的access_token", placeholder: "钉钉webhook中的access_token", required: true },
+                { subLabel: '加签', value: '', col: 'secret', desc: "加签的签名，SEC开头", placeholder: "加签的签名，SEC开头（可选）", required: false },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
@@ -64,12 +102,19 @@ const CONSTANT = {
         },
         {
             type: 'QyWeiXin',
-            label: '企业微信机器人',
+            label: '企业微信',
+            meta: {
+                subTitle: '群机器人 Webhook',
+                category: '办公协作',
+                categoryId: 'workplace',
+            },
             inputs: [
-                { subLabel: 'token', value: '', col: 'access_token', desc: "企业微信webhook中的token" },
+                { subLabel: 'token', value: '', col: 'access_token', desc: "企业微信webhook中的token或key", placeholder: "企业微信webhook中的token或key", required: true },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
+                text: "企业微信群机器人说明",
+                desc: "在企业微信群聊中添加群机器人，获取 Webhook 地址中的 key 或 token 参数填入。"
             },
             taskInsRadios: [
                 { subLabel: 'text', content: 'text' },
@@ -80,7 +125,12 @@ const CONSTANT = {
         },
         {
             type: 'QyWeiXinApp',
-            label: '企业微信自建应用',
+            label: '企业微信应用',
+            meta: {
+                subTitle: '应用消息直发',
+                category: '办公协作',
+                categoryId: 'workplace',
+            },
             // 动态接收者配置
             dynamicRecipient: {
                 support: true,              // 是否支持动态接收者
@@ -89,11 +139,11 @@ const CONSTANT = {
                 desc: '成员账号(userid)',    // 接收者字段描述
             },
             inputs: [
-                { subLabel: '企业ID', value: '', col: 'corp_id', desc: "企业微信企业ID (corpid)" },
-                { subLabel: '应用AgentId', value: '', col: 'agent_id', desc: "自建应用AgentId" },
-                { subLabel: '应用Secret', value: '', col: 'secret', desc: "自建应用Secret" },
-                { subLabel: '自定义API地址', value: '', col: 'api_host', desc: "可选，自定义企业微信API地址，如 https://qyapi.weixin.qq.com" },
-                { subLabel: '代理地址', value: '', col: 'proxy_url', desc: "可选，支持 HTTP/HTTPS/SOCKS5 代理" },
+                { subLabel: '企业ID', value: '', col: 'corp_id', desc: "企业微信企业ID (corpid)", placeholder: "企业微信企业ID (corpid)", required: true },
+                { subLabel: '应用AgentId', value: '', col: 'agent_id', desc: "自建应用AgentId", placeholder: "自建应用AgentId", required: true },
+                { subLabel: '应用Secret', value: '', col: 'secret', desc: "自建应用Secret", placeholder: "自建应用Secret", required: true },
+                { subLabel: '自定义API地址', value: '', col: 'api_host', desc: "可选，自定义企业微信API地址，如 https://qyapi.weixin.qq.com", placeholder: "自定义 API 地址，留空使用官方", required: false },
+                { subLabel: '代理地址', value: '', col: 'proxy_url', desc: "可选，支持 HTTP/HTTPS/SOCKS5 代理", placeholder: "http/https/socks5 代理，可选", required: false },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
@@ -112,10 +162,15 @@ const CONSTANT = {
         },
         {
             type: 'Feishu',
-            label: '飞书机器人',
+            label: '飞书',
+            meta: {
+                subTitle: '飞书群机器人',
+                category: '办公协作',
+                categoryId: 'workplace',
+            },
             inputs: [
-                { subLabel: 'access_token', value: '', col: 'access_token', desc: "飞书webhook中的access_token" },
-                { subLabel: '加签', value: '', col: 'secret', desc: "加签的签名" },
+                { subLabel: 'access_token', value: '', col: 'access_token', desc: "飞书webhook中的access_token", placeholder: "飞书webhook中的access_token", required: true },
+                { subLabel: '加签', value: '', col: 'secret', desc: "加签的签名", placeholder: "加签的签名（可选）", required: false },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
@@ -129,12 +184,52 @@ const CONSTANT = {
             ],
         },
         {
-            type: 'Custom',
-            label: '自定义推送',
+            type: 'Email',
+            label: '邮件',
+            meta: {
+                subTitle: 'SMTP 邮件',
+                category: '基础服务',
+                categoryId: 'base',
+            },
+            // 动态接收者配置
+            dynamicRecipient: {
+                support: true,              // 是否支持动态接收者
+                field: 'to_account',        // 接收者字段名
+                label: '收件邮箱',           // 接收者字段标签
+                desc: '邮箱地址',            // 接收者字段描述
+            },
             inputs: [
-                { subLabel: 'webhook地址', value: '', col: 'webhook', desc: "自定义webhook地址" },
-                { subLabel: '请求头', value: '', col: 'header', desc: "自定义请求头\n例如：Authorization: Bearer 4rt...\nContent-Type: application/json", isTextArea: true },
-                { subLabel: '请求体', value: '', col: 'body', desc: "text内容请使用 TEXT 进行占位\n例如：{\"message\": \"TEXT\", \"foo\": \"bar\"}", isTextArea: true },
+                { subLabel: 'smtp服务地址', value: '', col: 'server', desc: "smtp@xyz.com", placeholder: "smtp.example.com", required: true },
+                { subLabel: 'smtp服务端口', value: '', col: 'port', desc: "port", placeholder: "465 / 587", required: true },
+                { subLabel: '邮箱账号', value: '', col: 'account', desc: "邮箱账号", placeholder: "username@example.com", required: true },
+                { subLabel: '邮箱密码', value: '', col: 'passwd', desc: "邮箱密码", placeholder: "邮箱密码或授权码", required: true },
+                { subLabel: '发信人名称', value: '', col: 'from_name', desc: "想要设置的发信人名字", placeholder: "发信人名称，可选", required: false },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "邮件渠道说明",
+                desc: "使用标准 SMTP 协议发送邮件通知，主流邮箱建议开启并使用客户端独立授权码。"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+                { subLabel: 'html', content: 'html' },
+            ],
+            taskInsInputs: [
+                { value: '', col: 'to_account', desc: '收件邮箱', label: '收件邮箱' },
+            ],
+        },
+        {
+            type: 'Custom',
+            label: '自定义Webhook',
+            meta: {
+                subTitle: '自定义 Webhook',
+                category: '基础服务',
+                categoryId: 'base',
+            },
+            inputs: [
+                { subLabel: 'webhook地址', value: '', col: 'webhook', desc: "自定义webhook地址", placeholder: "自定义 webhook 地址 (https://...)", required: true },
+                { subLabel: '请求头', value: '', col: 'header', desc: "自定义请求头\n例如：Authorization: Bearer 4rt...\nContent-Type: application/json", placeholder: "例如：Authorization: Bearer xxx", isTextArea: true, required: false },
+                { subLabel: '请求体', value: '', col: 'body', desc: "text内容请使用 TEXT 进行占位\n例如：{\"message\": \"TEXT\", \"foo\": \"bar\"}", placeholder: "text内容请使用 TEXT 进行占位", isTextArea: true, required: false },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
@@ -147,8 +242,124 @@ const CONSTANT = {
             ],
         },
         {
+            type: 'Ntfy',
+            label: 'Ntfy',
+            meta: {
+                subTitle: 'Pub/Sub 极简推送',
+                category: '移动推送',
+                categoryId: 'push',
+            },
+            inputs: [
+                { subLabel: 'Topic', value: '', col: 'topic', desc: "Ntfy的Topic名字，必填", placeholder: "Ntfy的Topic名字，必填", required: true },
+                { subLabel: '自定义API地址', value: '', col: 'url', desc: "默认: https://ntfy.sh/，可选", placeholder: "默认: https://ntfy.sh/，可选", required: false },
+                { subLabel: '优先级', value: '3', col: 'priority', desc: "1(min) 到 5(max)，可选", placeholder: "1(min) 到 5(max)，可选", required: false },
+                { subLabel: '图标URL', value: '', col: 'icon', desc: "推送显示的图标URL，可选", placeholder: "推送显示的图标URL，可选", required: false },
+                { subLabel: 'Token', value: '', col: 'token', desc: "认证Token，可选", placeholder: "认证Token，可选", required: false },
+                { subLabel: '用户名', value: '', col: 'username', desc: "Basic认证用户名，可选", placeholder: "Basic认证用户名，可选", required: false },
+                { subLabel: '密码', value: '', col: 'password', desc: "Basic认证密码，可选", placeholder: "Basic认证密码，可选", required: false },
+                { subLabel: 'Actions', value: '', col: 'actions', desc: "JSON格式的Action配置，可选", placeholder: "JSON格式的Action配置，可选", required: false },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "Ntfy推送说明",
+                desc: "Ntfy 是一款基于 HTTP 的发布-订阅通知服务。<br />1. 填写你的 Topic<br />2. 如果是自建服务，填写自定义 API 地址<br />3. 支持 Token 或 用户名密码 认证"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+            ],
+        },
+        {
+            type: 'Gotify',
+            label: 'Gotify',
+            meta: {
+                subTitle: '私有消息推送',
+                category: '移动推送',
+                categoryId: 'push',
+            },
+            inputs: [
+                { subLabel: 'Gotify服务地址', value: '', col: 'url', desc: "Gotify服务的URL，例如: https://gotify.example.com", placeholder: "例如: https://gotify.example.com", required: true },
+                { subLabel: 'Token', value: '', col: 'token', desc: "APP的Token", placeholder: "APP的Token", required: true },
+                { subLabel: '优先级', value: '5', col: 'priority', desc: "消息优先级，可选", placeholder: "消息优先级，可选", required: false },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "Gotify推送说明",
+                desc: "Gotify 是一款自托管的消息推送服务。<br />1. 在 Gotify 中创建 APP 获取 Token<br />2. 填写 Gotify 服务的完整 URL"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+            ],
+        },
+        {
+            type: 'PushMe',
+            label: 'PushMe',
+            meta: {
+                subTitle: '轻量多端推送',
+                category: '移动推送',
+                categoryId: 'push',
+            },
+            inputs: [
+                { subLabel: 'Push Key', value: '', col: 'push_key', desc: "PushMe的push_key", placeholder: "PushMe的push_key", required: true },
+                { subLabel: '自定义API地址', value: '', col: 'url', desc: "默认: https://push.i-i.me/，可选", placeholder: "默认: https://push.i-i.me/，可选", required: false },
+                { subLabel: '日期', value: '', col: 'date', desc: "日期，可选", placeholder: "日期，可选", required: false },
+                { subLabel: '类型', value: '', col: 'type', desc: "类型，可选", placeholder: "类型，可选", required: false },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "PushMe推送说明",
+                desc: "PushMe 是一款推送服务。<br />1. 获取你的 Push Key<br />2. 如果有自建服务，填写自定义 API 地址"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+            ],
+        },
+        {
+            type: 'AliyunSMS',
+            label: '阿里云短信',
+            meta: {
+                subTitle: '短信服务 SMS',
+                category: '基础服务',
+                categoryId: 'base',
+            },
+            // 动态接收者配置
+            dynamicRecipient: {
+                support: true,              // 是否支持动态接收者
+                field: 'phone_number',      // 接收者字段名
+                label: '手机号码',           // 接收者字段标签
+                desc: '手机号码',            // 接收者字段描述
+            },
+            inputs: [
+                { subLabel: 'AccessKeyId', value: '', col: 'access_key_id', desc: "阿里云AccessKeyId", placeholder: "阿里云AccessKeyId", required: true },
+                { subLabel: 'AccessKeySecret', value: '', col: 'access_key_secret', desc: "阿里云AccessKeySecret", placeholder: "阿里云AccessKeySecret", required: true },
+                { subLabel: 'RegionId', value: 'cn-hangzhou', col: 'region_id', desc: "阿里云区域ID，如cn-hangzhou", placeholder: "阿里云区域ID，如cn-hangzhou", required: true },
+                { subLabel: '短信签名', value: '', col: 'sign_name', desc: "短信签名名称", placeholder: "短信签名名称", required: true },
+                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
+            ],
+            tips: {
+                text: "阿里云短信说明", desc: "使用阿里云短信服务发送短信，需要在阿里云控制台申请短信签名和模板。<br />AccessKey请在阿里云控制台获取。"
+            },
+            taskInsRadios: [
+                { subLabel: 'text', content: 'text' },
+            ],
+            taskInsInputs: [
+                { value: '', col: 'phone_number', desc: "手机号码（接收短信的手机号）", label: '手机号码' },
+                { value: '', col: 'template_code', desc: "短信模板CODE（在阿里云短信控制台获取）", label: '短信模板CODE' },
+            ],
+        },
+        {
             type: 'WeChatOFAccount',
-            label: '微信测试公众号模板',
+            label: '微信公众号',
+            meta: {
+                subTitle: '微信模板消息',
+                category: '移动推送',
+                categoryId: 'push',
+            },
             // 动态接收者配置
             dynamicRecipient: {
                 support: true,              // 是否支持动态接收者
@@ -157,9 +368,9 @@ const CONSTANT = {
                 desc: 'OpenId',             // 接收者字段描述
             },
             inputs: [
-                { subLabel: 'appID', value: '', col: 'appID', desc: "公众号appid" },
-                { subLabel: 'appsecret', value: '', col: 'appsecret', desc: "公众号appsecret" },
-                { subLabel: '模板id', value: '', col: 'tempid', desc: "模板消息id" },
+                { subLabel: 'appID', value: '', col: 'appID', desc: "公众号appid", placeholder: "公众号appid", required: true },
+                { subLabel: 'appsecret', value: '', col: 'appsecret', desc: "公众号appsecret", placeholder: "公众号appsecret", required: true },
+                { subLabel: '模板id', value: '', col: 'tempid', desc: "模板消息id", placeholder: "模板消息id", required: true },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
@@ -175,6 +386,11 @@ const CONSTANT = {
         {
             type: 'MessageNest',
             label: '自托管消息',
+            meta: {
+                subTitle: '站内消息接收',
+                category: '基础服务',
+                categoryId: 'base',
+            },
             inputs: [
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
@@ -188,145 +404,6 @@ const CONSTANT = {
                 { value: '', col: 'blacklist_regex', desc: '过滤黑名单正则表达式，匹配的内容不会记录', label: '黑名单正则' },
             ],
         },
-        // 暂时屏蔽阿里云短信入口
-        {
-            type: 'AliyunSMS',
-            label: '阿里云短信',
-            // 动态接收者配置
-            dynamicRecipient: {
-                support: true,              // 是否支持动态接收者
-                field: 'phone_number',      // 接收者字段名
-                label: '手机号码',           // 接收者字段标签
-                desc: '手机号码',            // 接收者字段描述
-            },
-            inputs: [
-                { subLabel: 'AccessKeyId', value: '', col: 'access_key_id', desc: "阿里云AccessKeyId" },
-                { subLabel: 'AccessKeySecret', value: '', col: 'access_key_secret', desc: "阿里云AccessKeySecret" },
-                { subLabel: 'RegionId', value: 'cn-hangzhou', col: 'region_id', desc: "阿里云区域ID，如cn-hangzhou" },
-                { subLabel: '短信签名', value: '', col: 'sign_name', desc: "短信签名名称" },
-                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
-            ],
-            tips: {
-                text: "阿里云短信说明", desc: "使用阿里云短信服务发送短信，需要在阿里云控制台申请短信签名和模板。<br />AccessKey请在阿里云控制台获取。"
-            },
-            taskInsRadios: [
-                { subLabel: 'text', content: 'text' },
-            ],
-            taskInsInputs: [
-                { value: '', col: 'phone_number', desc: "手机号码（接收短信的手机号）", label: '手机号码' },
-                { value: '', col: 'template_code', desc: "短信模板CODE（在阿里云短信控制台获取）", label: '短信模板CODE' },
-            ],
-        },
-        {
-            type: 'Telegram',
-            label: 'Telegram机器人',
-            inputs: [
-                { subLabel: 'Bot Token', value: '', col: 'bot_token', desc: "Telegram Bot Token" },
-                { subLabel: 'Chat ID', value: '', col: 'chat_id', desc: "接收消息的Chat ID或User ID" },
-                { subLabel: '自定义API地址', value: '', col: 'api_host', desc: "可选，自定义Telegram API地址（优先级最高）" },
-                { subLabel: '代理地址', value: '', col: 'proxy_url', desc: "可选，支持 HTTP/HTTPS/SOCKS5 代理" },
-                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
-            ],
-            tips: {
-                text: "Telegram机器人说明",
-                desc: "使用Telegram Bot发送消息。<br />1. 通过 @BotFather 创建机器人获取Bot Token<br />2. Chat ID可以是用户ID、群组ID或频道ID<br />3. <strong>代理配置说明：</strong><br />&nbsp;&nbsp;• <strong>自定义API地址</strong>（优先级最高）：适用于自建代理服务器，如 https://api.example.com<br />&nbsp;&nbsp;• <strong>代理地址</strong>（优先级较低）：支持以下格式<br />&nbsp;&nbsp;&nbsp;&nbsp;- HTTP代理：http://127.0.0.1:7890<br />&nbsp;&nbsp;&nbsp;&nbsp;- HTTPS代理：https://proxy.example.com:8080<br />&nbsp;&nbsp;&nbsp;&nbsp;- SOCKS5代理：socks5://127.0.0.1:1080<br />&nbsp;&nbsp;&nbsp;&nbsp;- 带认证的SOCKS5：socks5://user:pass@host:1080<br />&nbsp;&nbsp;• 如果同时配置，将优先使用自定义API地址，代理地址会被忽略"
-            },
-            taskInsRadios: [
-                { subLabel: 'text', content: 'text' },
-                { subLabel: 'markdown', content: 'markdown' },
-                { subLabel: 'html', content: 'html' },
-            ],
-            taskInsInputs: [
-            ],
-        },
-        {
-            type: 'Bark',
-            label: 'Bark推送',
-            inputs: [
-                { subLabel: 'Push Key', value: '', col: 'push_key', desc: "Bark设备码或自建IP，例：DxHcxxxxxRxxxxxxcm" },
-                { subLabel: '存档', value: '', col: 'archive', desc: "1（存档）或 0（不存档），可选" },
-                { subLabel: '分组', value: '', col: 'group', desc: "推送分组，可选" },
-                { subLabel: '推送声音', value: '', col: 'sound', desc: "推送铃声，可选" },
-                { subLabel: '推送图标', value: '', col: 'icon', desc: "推送图标URL，可选" },
-                { subLabel: '推送时效', value: '', col: 'level', desc: "active/timeSensitive/passive，可选" },
-                { subLabel: '跳转URL', value: '', col: 'url', desc: "点击推送跳转的URL，可选" },
-                { subLabel: '加密Key', value: '', col: 'key', desc: "AES加密Key，16位，可选" },
-                { subLabel: '加密IV', value: '', col: 'iv', desc: "AES加密IV，16位，可选" },
-                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
-            ],
-            tips: {
-                text: "Bark推送说明",
-                desc: "Bark 是一款 iOS 专用的推送软件。<br />1. 在 iPhone 上安装 Bark App<br />2. 复制你的设备 Key 或自建服务器地址<br />3. 详细参数说明可以查看 Bark 官方文档"
-            },
-            taskInsRadios: [
-                { subLabel: 'text', content: 'text' },
-            ],
-            taskInsInputs: [
-            ],
-        },
-        {
-            type: 'PushMe',
-            label: 'PushMe推送',
-            inputs: [
-                { subLabel: 'Push Key', value: '', col: 'push_key', desc: "PushMe的push_key" },
-                { subLabel: '自定义API地址', value: '', col: 'url', desc: "默认: https://push.i-i.me/，可选" },
-                { subLabel: '日期', value: '', col: 'date', desc: "日期，可选" },
-                { subLabel: '类型', value: '', col: 'type', desc: "类型，可选" },
-                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
-            ],
-            tips: {
-                text: "PushMe推送说明",
-                desc: "PushMe 是一款推送服务。<br />1. 获取你的 Push Key<br />2. 如果有自建服务，填写自定义 API 地址"
-            },
-            taskInsRadios: [
-                { subLabel: 'text', content: 'text' },
-            ],
-            taskInsInputs: [
-            ],
-        },
-        {
-            type: 'Ntfy',
-            label: 'Ntfy推送',
-            inputs: [
-                { subLabel: 'Topic', value: '', col: 'topic', desc: "Ntfy的Topic名字，必填" },
-                { subLabel: '自定义API地址', value: '', col: 'url', desc: "默认: https://ntfy.sh/，可选" },
-                { subLabel: '优先级', value: '3', col: 'priority', desc: "1(min) 到 5(max)，可选" },
-                { subLabel: '图标URL', value: '', col: 'icon', desc: "推送显示的图标URL，可选" },
-                { subLabel: 'Token', value: '', col: 'token', desc: "认证Token，可选" },
-                { subLabel: '用户名', value: '', col: 'username', desc: "Basic认证用户名，可选" },
-                { subLabel: '密码', value: '', col: 'password', desc: "Basic认证密码，可选" },
-                { subLabel: 'Actions', value: '', col: 'actions', desc: "JSON格式的Action配置，可选" },
-                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
-            ],
-            tips: {
-                text: "Ntfy推送说明",
-                desc: "Ntfy 是一款基于 HTTP 的发布-订阅通知服务。<br />1. 填写你的 Topic<br />2. 如果是自建服务，填写自定义 API 地址<br />3. 支持 Token 或 用户名密码 认证"
-            },
-            taskInsRadios: [
-                { subLabel: 'text', content: 'text' },
-            ],
-            taskInsInputs: [
-            ],
-        },
-        {
-            type: 'Gotify',
-            label: 'Gotify推送',
-            inputs: [
-                { subLabel: 'Gotify服务地址', value: '', col: 'url', desc: "Gotify服务的URL，例如: https://gotify.example.com" },
-                { subLabel: 'Token', value: '', col: 'token', desc: "APP的Token" },
-                { subLabel: '优先级', value: '5', col: 'priority', desc: "消息优先级，可选" },
-                { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
-            ],
-            tips: {
-                text: "Gotify推送说明",
-                desc: "Gotify 是一款自托管的消息推送服务。<br />1. 在 Gotify 中创建 APP 获取 Token<br />2. 填写 Gotify 服务的完整 URL"
-            },
-            taskInsRadios: [
-                { subLabel: 'text', content: 'text' },
-            ],
-            taskInsInputs: [
-            ],
-        },
     ],
     API_VIEW_DATA: [
         { label: "curl", class: "language-shell line-numbers", code: "", func: ApiStrGenerate.getCurlString },
@@ -338,7 +415,6 @@ const CONSTANT = {
         { label: "node", class: "language-javascript line-numbers", code: "", func: ApiStrGenerate.getNodeString },
     ],
 }
-
 
 // 转换渠道map
 CONSTANT.WAYS_DATA_MAP = {};

@@ -1,4 +1,3 @@
-// 类型声明文件
 export interface ConstantType {
   PAGE: number;
   TOTAL: number;
@@ -8,10 +7,28 @@ export interface ConstantType {
   STORE_TOKEN_NAME: string;
   STORE_CUSTOM_NAME: string;
   NO_AUTH_URL: string[];
+  CHANNEL_CATEGORIES: Array<{
+    id: string;
+    label: string;
+  }>;
   WAYS_DATA: Array<{
     type: string;
+    label: string;
+    meta?: {
+      subTitle?: string;
+      category?: string;
+      categoryId?: string;
+    };
+    subTitle?: string;
+    category?: string;
+    categoryId?: string;
+    inputs?: any[];
+    tips?: any;
+    dynamicRecipient?: any;
     [key: string]: any;
   }>;
+  WAYS_DATA_MAP: Record<string, any>;
+  API_VIEW_DATA: any[];
 }
 
 export declare const CONSTANT: ConstantType;

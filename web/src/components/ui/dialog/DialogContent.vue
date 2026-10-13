@@ -20,9 +20,12 @@ const delegatedProps = reactiveOmit(props, "class")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits) as any
 
-// Prevent auto-focus on dialog open
+// Prevent auto-focus on dialog open and blur trigger element to avoid aria-hidden warning
 const handleOpenAutoFocus = (event: Event) => {
   event.preventDefault()
+  if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur()
+  }
 }
 
 </script>

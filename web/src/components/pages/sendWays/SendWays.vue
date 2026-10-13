@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
 import Pagination from '@/components/ui/Pagination.vue'
@@ -51,7 +51,7 @@ const selectedChannelType = ref('all')
 const channelTypeOptions = computed(() => {
   const options = [{ value: 'all', label: '全部类型' }]
   CONSTANT.WAYS_DATA.forEach(item => {
-    options.push({ value: item.type, label: item.label })
+    options.push({ value: item.type, label: item.label || item.type })
   })
   return options
 })
@@ -186,7 +186,7 @@ onMounted(async () => {
       <div class="flex-shrink-0">
         <Dialog v-model:open="isAddChannelDrawerOpen">
           <DialogTrigger as-child>
-            <Button variant="default" class="w-full sm:w-auto">
+            <Button variant="default" class="w-full sm:w-auto" @click="($event.currentTarget as HTMLElement)?.blur?.()">
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -194,14 +194,8 @@ onMounted(async () => {
             </Button>
           </DialogTrigger>
 
-          <DialogContent class="!max-w-none w-[90vw] lg:w-[60vw] h-[80vh] flex flex-col p-0 gap-0">
-            <DialogHeader class="p-6 pb-2">
-              <DialogTitle>新增发信渠道</DialogTitle>
-            </DialogHeader>
-
-            <div class="flex-1 overflow-y-auto px-6 pb-6">
-              <AddWays v-model:open="isAddChannelDrawerOpen" @save="handleSaveChannel" />
-            </div>
+          <DialogContent class="sm:max-w-3xl w-[95vw] h-[85vh] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border-border/50 bg-card shadow-2xl">
+            <AddWays v-model:open="isAddChannelDrawerOpen" @save="handleSaveChannel" />
           </DialogContent>
         </Dialog>
       </div>
@@ -238,7 +232,7 @@ onMounted(async () => {
           <TableCell class="whitespace-nowrap w-[160px]">{{ channel.created_on }}</TableCell>
           <TableCell class="whitespace-nowrap w-[160px]">{{ channel.modified_on }}</TableCell>
           <TableCell class="text-center space-x-2">
-            <Button size="sm" variant="outline" @click="openEditChannelDrawer(channel)">编辑</Button>
+            <Button size="sm" variant="outline" @click="openEditChannelDrawer(channel); ($event.currentTarget as HTMLElement)?.blur?.()">编辑</Button>
             <!-- <Button size="sm" variant="outline" @click="openConfigSheet(channel)">查看</Button> -->
             <Button size="sm" variant="outline" class="text-red-500 border-red-300 hover:bg-red-50 
               hover:border-red-400 hover:text-red-600 hover:shadow-md
@@ -257,14 +251,8 @@ onMounted(async () => {
 
     <!-- 编辑渠道Dialog -->
     <Dialog v-model:open="isEditChannelDrawerOpen">
-      <DialogContent class="sm:max-w-[800px] max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader class="p-6 pb-2">
-          <DialogTitle>编辑发信渠道</DialogTitle>
-        </DialogHeader>
-
-        <div class="flex-1 overflow-y-auto px-6 pb-6">
-          <EditWays v-model:open="isEditChannelDrawerOpen" :edit-data="editChannelData" @save="handleEditChannel" />
-        </div>
+      <DialogContent class="sm:max-w-3xl w-[95vw] h-[85vh] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl border-border/50 bg-card shadow-2xl">
+        <EditWays v-model:open="isEditChannelDrawerOpen" :edit-data="editChannelData" @save="handleEditChannel" />
       </DialogContent>
     </Dialog>
 
