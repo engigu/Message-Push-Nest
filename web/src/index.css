@@ -217,3 +217,67 @@ code.font-sans {
     @apply !bg-card/90 !backdrop-blur-xl !border-border/50 !shadow-2xl !rounded-xl !p-0 !overflow-hidden;
   }
 }
+
+/* 现代化极速平滑 Dialog 硬件加速动效（去除重绘 scale，130ms 极简微动效秒开） */
+@keyframes dialog-overlay-show {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-overlay-hide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialog-content-show {
+  from {
+    opacity: 0;
+    transform: translate3d(-50%, calc(-50% + 4px), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(-50%, -50%, 0);
+  }
+}
+
+@keyframes dialog-content-hide {
+  from {
+    opacity: 1;
+    transform: translate3d(-50%, -50%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-50%, calc(-50% + 4px), 0);
+  }
+}
+
+.dialog-overlay-animate[data-state="open"] {
+  animation: dialog-overlay-show 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+}
+
+.dialog-overlay-animate[data-state="closed"] {
+  animation: dialog-overlay-hide 90ms ease-in forwards;
+  will-change: opacity;
+}
+
+.dialog-content-animate {
+  will-change: transform, opacity;
+  transform: translate3d(-50%, -50%, 0);
+}
+
+.dialog-content-animate[data-state="open"] {
+  animation: dialog-content-show 130ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dialog-content-animate[data-state="closed"] {
+  animation: dialog-content-hide 90ms ease-in forwards;
+}
