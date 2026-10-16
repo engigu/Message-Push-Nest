@@ -27,7 +27,6 @@ interface WayItem {
   config: string
   created_on: string
   modified_on: string
-  status: number
 }
 
 const router = useRoute();
@@ -41,8 +40,6 @@ let state = reactive({
   optionValue: '',
 })
 
-// 状态过滤
-const selectedStatus = ref('all')
 
 // 渠道类型过滤
 const selectedChannelType = ref('all')
@@ -72,7 +69,7 @@ const editChannelData = ref<WayItem | null>(null)
 const handleSaveChannel = (_data: any) => {
   // 这里可以添加实际的保存逻辑
   // 保存成功后刷新列表
-  queryListDataWithStatus()
+  refreshList()
 }
 
 // 总页数
@@ -92,13 +89,13 @@ const openEditChannelDrawer = (channel: WayItem) => {
 // 处理编辑渠道保存
 const handleEditChannel = (_data: any) => {
   // 保存成功后刷新列表
-  queryListDataWithStatus()
+  refreshList()
 }
 
 const changePage = async (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     state.currPage = page
-    await queryListDataWithStatus()
+    await refreshList()
   }
 }
 
@@ -112,22 +109,18 @@ const filterByChannelType = async (value: any) => {
   if (value) {
     selectedChannelType.value = String(value);
     state.currPage = 1; // 重置到第一页
-    await queryListDataWithStatus();
+    await refreshList();
   }
 }
 
-// 查询数据（包含状态过滤）
-const queryListDataWithStatus = async () => {
-  const statusParam = selectedStatus.value === 'all' ? '' : selectedStatus.value;
+// 刷新列表数据
+const refreshList = async () => {
   const channelTypeParam = selectedChannelType.value === 'all' ? '' : selectedChannelType.value;
-  await queryListData(state.currPage, state.pageSize, state.search, channelTypeParam, '', statusParam);
+  await queryListData(state.currPage, state.pageSize, state.search, channelTypeParam);
 }
 
-const queryListData = async (page: number, size: number, name = '', channelType = '', query = '', status = '') => {
+const queryListData = async (page: number, size: number, name = '', channelType = '', query = '') => {
   let params: any = { page: page, size: size, name: name, type: channelType, query: query };
-  if (status !== '') {
-    params.status = status;
-  }
   const rsp = await request.get('/sendways/list', { params: params });
   state.tableData = await rsp.data.data.lists;
   state.total = await rsp.data.data.total;
@@ -210,7 +203,7 @@ onMounted(async () => {
           <TableHead>发信方式类型</TableHead>
           <TableHead class="whitespace-nowrap w-[160px]">创建时间</TableHead>
           <TableHead class="whitespace-nowrap w-[160px]">更新时间</TableHead>
-          <TableHead class="text-center">操作/状态</TableHead>
+          <TableHead class="text-center">操作</TableHead>
         </TableRow>
       </TableHeader>
 
@@ -237,9 +230,6 @@ onMounted(async () => {
             <Button size="sm" variant="outline" class="text-red-500 border-red-300 hover:bg-red-50 
               hover:border-red-400 hover:text-red-600 hover:shadow-md
                transition-all duration-200" @click="handleDelete(channel.id)">删除</Button>
-            <Badge :variant="channel.status === 0 ? 'secondary' : 'outline'" :class="channel.status === 0 ? 'bg-muted text-muted-foreground' : 'text-emerald-600 border-emerald-300 dark:border-emerald-800 dark:text-emerald-400'">
-              {{ channel.status === 0 ? '已禁用' : '已启用' }}
-            </Badge>
           </TableCell>
         </TableRow>
       </TableBody>

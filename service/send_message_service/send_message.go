@@ -193,12 +193,6 @@ func (sm *SendMessageService) Send(task models.TaskIns) (string, error) {
 			continue
 		}
 
-		// 检查渠道是否已被禁用
-		if way.Status != nil && *way.Status == 0 {
-			sm.LogsAndStatusMark(fmt.Sprintf("渠道[%s]已被禁用，跳过该实例的发送", way.Name), SendFail)
-			continue
-		}
-
 		// 暂停了实例的发送
 		if ins.Enable != 1 {
 			//sm.LogsAndStatusMark("该实例发送已经被暂停，跳过发送！\n", sm.Status)

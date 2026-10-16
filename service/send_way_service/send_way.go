@@ -14,8 +14,6 @@ type SendWay struct {
 	ModifiedBy string
 	Auth       string
 	CreatedOn  string
-	Status     *int
-	StatusStr  string
 
 	PageNum  int
 	PageSize int
@@ -48,7 +46,7 @@ func (sw *SendWay) Add() error {
 	if err != nil {
 		return err
 	}
-	return models.AddSendWay(sw.Name, sw.Auth, sw.Type, sw.Status, sw.CreatedBy, sw.ModifiedBy)
+	return models.AddSendWay(sw.Name, sw.Auth, sw.Type, sw.CreatedBy, sw.ModifiedBy)
 }
 
 func (sw *SendWay) Edit() error {
@@ -60,9 +58,6 @@ func (sw *SendWay) Edit() error {
 	data["modified_by"] = sw.ModifiedBy
 	data["name"] = sw.Name
 	data["auth"] = sw.Auth
-	if sw.Status != nil {
-		data["status"] = *sw.Status
-	}
 	return models.EditSendWay(sw.ID, data)
 }
 
@@ -79,11 +74,11 @@ func (sw *SendWay) Delete() error {
 }
 
 func (sw *SendWay) Count() (int64, error) {
-	return models.GetSendWaysTotal(sw.Name, sw.Type, sw.StatusStr, sw.getMaps())
+	return models.GetSendWaysTotal(sw.Name, sw.Type, sw.getMaps())
 }
 
 func (sw *SendWay) GetAll() ([]models.SendWays, error) {
-	tags, err := models.GetSendWays(sw.PageNum, sw.PageSize, sw.Name, sw.Type, sw.StatusStr, sw.getMaps())
+	tags, err := models.GetSendWays(sw.PageNum, sw.PageSize, sw.Name, sw.Type, sw.getMaps())
 	if err != nil {
 		return nil, err
 	}

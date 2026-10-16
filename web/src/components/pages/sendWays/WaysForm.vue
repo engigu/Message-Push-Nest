@@ -3,7 +3,6 @@ import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
 import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
@@ -68,8 +67,7 @@ const activeCategory = ref<string>('all')
 // 当前选中的渠道类型，默认从 waysData 第一个开始
 const selectedType = ref<string>(waysData[0]?.type || 'Telegram')
 
-// 是否启用渠道
-const isEnabled = ref(true)
+
 
 // 表单数据
 const formData = ref<Record<string, any>>({})
@@ -153,13 +151,6 @@ const initFormData = () => {
     selectedType.value = props.editData.type || waysData[0]?.type || ''
     currentStep.value = 'configure'
 
-    // 回显渠道启用状态（默认为 true，若明确为 0 则为 false）
-    if (props.editData.status !== undefined && props.editData.status !== null) {
-      isEnabled.value = Number(props.editData.status) === 1
-    } else {
-      isEnabled.value = true
-    }
-
     let authData: Record<string, any> = {}
     try {
       authData = props.editData.auth ? JSON.parse(props.editData.auth) : {}
@@ -173,8 +164,7 @@ const initFormData = () => {
       newFormData[key] = authData[key]
     })
   } else {
-    // 新增模式：默认启用，默认使用渠道名称
-    isEnabled.value = true
+    // 新增模式：默认使用渠道名称
     if (!newFormData.name) {
       newFormData.name = config.label || ''
     }
@@ -237,7 +227,6 @@ const getFinalData = () => {
     auth: JSON.stringify(authData),
     type: selectedType.value,
     name: formData.value.name ? formData.value.name.trim() : config.label,
-    status: isEnabled.value ? 1 : 0,
   }
 
   if (props.mode === 'edit' && props.editData?.id) {
@@ -510,16 +499,6 @@ watch(
               <p v-if="validationErrors.name" class="text-xs text-red-500 mt-1 pl-0.5">
                 {{ validationErrors.name }}
               </p>
-            </div>
-          </div>
-
-          <!-- 启用开关 -->
-          <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4">
-            <label class="w-24 sm:w-28 shrink-0 text-sm font-medium text-foreground">
-              启用
-            </label>
-            <div class="flex-1 flex items-center h-10">
-              <Switch v-model="isEnabled" />
             </div>
           </div>
         </div>
