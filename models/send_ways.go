@@ -10,9 +10,10 @@ import (
 type SendWays struct {
 	UUIDModel
 
-	Name string `json:"name" gorm:"type:varchar(100) ;default:'';"`
-	Type string `json:"type" gorm:"type:varchar(100) ;default:'';index"`
-	Auth string `json:"auth" gorm:"type:varchar(2048) ;default:'';"`
+	Name   string `json:"name" gorm:"type:varchar(100) ;default:'';"`
+	Type   string `json:"type" gorm:"type:varchar(100) ;default:'';index"`
+	Auth   string `json:"auth" gorm:"type:varchar(2048) ;default:'';"`
+	Status *int   `json:"status" gorm:"type:int ;default:1;"`
 }
 
 func GenerateWayUniqueID() string {
@@ -20,17 +21,22 @@ func GenerateWayUniqueID() string {
 	return fmt.Sprintf("WY%s", newUUID)
 }
 
-func AddSendWay(name string, auth string, wayType string, createdBy string, modifiedBy string) error {
+func AddSendWay(name string, auth string, wayType string, status *int, createdBy string, modifiedBy string) error {
 	newUUID := GenerateWayUniqueID()
+	if status == nil {
+		defaultStatus := 1
+		status = &defaultStatus
+	}
 	way := SendWays{
 		UUIDModel: UUIDModel{
 			ID:         newUUID,
 			CreatedBy:  createdBy,
 			ModifiedBy: modifiedBy,
 		},
-		Name: name,
-		Type: wayType,
-		Auth: auth,
+		Name:   name,
+		Type:   wayType,
+		Auth:   auth,
+		Status: status,
 	}
 	if err := db.Create(&way).Error; err != nil {
 		return err
@@ -38,7 +44,7 @@ func AddSendWay(name string, auth string, wayType string, createdBy string, modi
 	return nil
 }
 
-func GetSendWays(pageNum int, pageSize int, name string, type_ string, maps interface{}) ([]SendWays, error) {
+func GetSendWays(pageNum int, pageSize int, name string, type_ string, status string, maps interface{}) ([]SendWays, error) {
 	var (
 		ways []SendWays
 		err  error
@@ -49,6 +55,9 @@ func GetSendWays(pageNum int, pageSize int, name string, type_ string, maps inte
 	}
 	if type_ != "" {
 		query = query.Where("type = ?", type_)
+	}
+	if status != "" {
+		query = query.Where("status = ?", status)
 	}
 
 	query = query.Order("created_on DESC")
@@ -63,7 +72,7 @@ func GetSendWays(pageNum int, pageSize int, name string, type_ string, maps inte
 	return ways, nil
 }
 
-func GetSendWaysTotal(name string, type_ string, maps interface{}) (int64, error) {
+func GetSendWaysTotal(name string, type_ string, status string, maps interface{}) (int64, error) {
 	var (
 		err   error
 		total int64
@@ -74,6 +83,9 @@ func GetSendWaysTotal(name string, type_ string, maps interface{}) (int64, error
 	}
 	if type_ != "" {
 		query = query.Where("type = ?", type_)
+	}
+	if status != "" {
+		query = query.Where("status = ?", status)
 	}
 
 	err = query.Count(&total).Error

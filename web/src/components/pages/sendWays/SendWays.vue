@@ -237,9 +237,9 @@ onMounted(async () => {
             <Button size="sm" variant="outline" class="text-red-500 border-red-300 hover:bg-red-50 
               hover:border-red-400 hover:text-red-600 hover:shadow-md
                transition-all duration-200" @click="handleDelete(channel.id)">删除</Button>
-            <!-- <Badge :class="channel.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'">
-              {{ getStatusText(channel.status) }} -->
-            <!-- </Badge> -->
+            <Badge :variant="channel.status === 0 ? 'secondary' : 'outline'" :class="channel.status === 0 ? 'bg-muted text-muted-foreground' : 'text-emerald-600 border-emerald-300 dark:border-emerald-800 dark:text-emerald-400'">
+              {{ channel.status === 0 ? '已禁用' : '已启用' }}
+            </Badge>
           </TableCell>
         </TableRow>
       </TableBody>

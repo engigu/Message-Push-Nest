@@ -68,13 +68,15 @@ func GetMsgSendWayList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	name := c.Query("name")
 	type_ := c.Query("type")
+	status := c.Query("status")
 
 	offset, limit := util.GetPageSize(c)
 	sendWayService := send_way_service.SendWay{
-		Name:     name,
-		Type:     type_,
-		PageNum:  offset,
-		PageSize: limit,
+		Name:      name,
+		Type:      type_,
+		StatusStr: status,
+		PageNum:   offset,
+		PageSize:  limit,
 	}
 	ways, err := sendWayService.GetAll()
 	if err != nil {
@@ -95,9 +97,10 @@ func GetMsgSendWayList(c *gin.Context) {
 }
 
 type AddMsgSendWayReq struct {
-	Name string `json:"name" validate:"required,max=100,min=1" label:"渠道名"`
-	Type string `json:"type" validate:"required,max=100,min=1" label:"渠道类型"`
-	Auth string `json:"auth" label:"渠道认证方式"`
+	Name   string `json:"name" validate:"required,max=100,min=1" label:"渠道名"`
+	Type   string `json:"type" validate:"required,max=100,min=1" label:"渠道类型"`
+	Auth   string `json:"auth" label:"渠道认证方式"`
+	Status *int   `json:"status" label:"渠道状态"`
 }
 
 // AddMsgSendWay 添加发送渠道
@@ -117,6 +120,7 @@ func AddMsgSendWay(c *gin.Context) {
 		Name:       req.Name,
 		Type:       req.Type,
 		Auth:       req.Auth,
+		Status:     req.Status,
 		CreatedBy:  currentUser,
 		ModifiedBy: currentUser,
 	}
@@ -138,10 +142,11 @@ func AddMsgSendWay(c *gin.Context) {
 }
 
 type EditSendWayReq struct {
-	ID   string `json:"id" validate:"required,len=12" label:"渠道id"`
-	Name string `json:"name" validate:"required,max=100,min=1" label:"渠道名"`
-	Type string `json:"type" validate:"required,max=100,min=1" label:"渠道类型"`
-	Auth string `json:"auth" validate:"required" label:"渠道认证信息"`
+	ID     string `json:"id" validate:"required,len=12" label:"渠道id"`
+	Name   string `json:"name" validate:"required,max=100,min=1" label:"渠道名"`
+	Type   string `json:"type" validate:"required,max=100,min=1" label:"渠道类型"`
+	Auth   string `json:"auth" validate:"required" label:"渠道认证信息"`
+	Status *int   `json:"status" label:"渠道状态"`
 }
 
 // EditSendWay 编辑发送渠道
@@ -163,6 +168,7 @@ func EditSendWay(c *gin.Context) {
 		Name:       req.Name,
 		Type:       req.Type,
 		Auth:       req.Auth,
+		Status:     req.Status,
 		ModifiedBy: currentUser,
 	}
 

@@ -153,6 +153,13 @@ const initFormData = () => {
     selectedType.value = props.editData.type || waysData[0]?.type || ''
     currentStep.value = 'configure'
 
+    // 回显渠道启用状态（默认为 true，若明确为 0 则为 false）
+    if (props.editData.status !== undefined && props.editData.status !== null) {
+      isEnabled.value = Number(props.editData.status) === 1
+    } else {
+      isEnabled.value = true
+    }
+
     let authData: Record<string, any> = {}
     try {
       authData = props.editData.auth ? JSON.parse(props.editData.auth) : {}
@@ -166,7 +173,8 @@ const initFormData = () => {
       newFormData[key] = authData[key]
     })
   } else {
-    // 新增模式：默认使用渠道名称
+    // 新增模式：默认启用，默认使用渠道名称
+    isEnabled.value = true
     if (!newFormData.name) {
       newFormData.name = config.label || ''
     }
@@ -229,6 +237,7 @@ const getFinalData = () => {
     auth: JSON.stringify(authData),
     type: selectedType.value,
     name: formData.value.name ? formData.value.name.trim() : config.label,
+    status: isEnabled.value ? 1 : 0,
   }
 
   if (props.mode === 'edit' && props.editData?.id) {
@@ -321,21 +330,16 @@ const handleClose = () => {
   emit('update:open', false)
 }
 
-// 监听编辑数据传入
+// 监听编辑数据或打开状态传入
 watch(
-  () => props.editData,
+  () => [props.editData, props.open],
   () => {
-    if (props.mode === 'edit') {
+    if (props.open) {
       initFormData()
     }
   },
   { immediate: true }
 )
-
-// 新增模式默认初始化
-if (props.mode === 'add') {
-  initFormData()
-}
 </script>
 
 <template>
@@ -515,7 +519,7 @@ if (props.mode === 'add') {
               启用
             </label>
             <div class="flex-1 flex items-center h-10">
-              <Switch v-model:checked="isEnabled" />
+              <Switch v-model="isEnabled" />
             </div>
           </div>
         </div>

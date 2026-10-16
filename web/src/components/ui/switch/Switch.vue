@@ -1,28 +1,45 @@
 <script setup lang="ts">
 import type { SwitchRootEmits, SwitchRootProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
-import { reactiveOmit } from "@vueuse/core"
+import { computed } from "vue"
 import {
   SwitchRoot,
-
   SwitchThumb,
   useForwardPropsEmits,
 } from "reka-ui"
 import { cn } from "@/lib/utils"
 
-const props = defineProps<SwitchRootProps & { class?: HTMLAttributes["class"] }>()
+interface ExtendedSwitchProps extends SwitchRootProps {
+  class?: HTMLAttributes["class"]
+  checked?: boolean
+}
 
-const emits = defineEmits<SwitchRootEmits>()
+const props = defineProps<ExtendedSwitchProps>()
 
-const delegatedProps = reactiveOmit(props, "class")
+const emits = defineEmits<SwitchRootEmits & {
+  'update:checked': [value: boolean]
+}>()
+
+const delegatedProps = computed(() => {
+  const { class: _, checked, ...rest } = props
+  return {
+    ...rest,
+    modelValue: rest.modelValue !== undefined ? rest.modelValue : checked,
+  }
+})
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+
+const handleUpdateModelValue = (val: boolean) => {
+  emits('update:checked', val)
+}
 </script>
 
 <template>
   <SwitchRoot
     data-slot="switch"
     v-bind="forwarded"
+    @update:model-value="handleUpdateModelValue"
     :class="cn(
       'peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
       props.class,
