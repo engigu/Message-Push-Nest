@@ -6,14 +6,15 @@ import CleanSettings from './CleanSettings.vue'
 import SiteSettings from './SiteSettings.vue'
 import AboutSettings from './AboutSettings.vue'
 import LoginLogs from './LoginLogs.vue'
+import OidcSettings from './OidcSettings.vue'
 
 // 当前选中的设置项
 const activeTab = ref('password')
 </script>
 
 <template>
-  <div class="p-6 w-full max-w-6xl mx-auto">
-    <div class="flex flex-col lg:flex-row gap-6">
+  <div class="p-3 sm:p-6 w-full max-w-6xl mx-auto">
+    <div class="flex flex-col lg:flex-row gap-4 sm:gap-6">
       <!-- 侧边栏 -->
       <SettingsSidebar 
         :active-tab="activeTab" 
@@ -24,6 +25,9 @@ const activeTab = ref('password')
       <div class="flex-1">
         <!-- 重置密码 -->
         <PasswordSettings v-if="activeTab === 'password'" />
+
+        <!-- 单点登录 (OIDC / OAuth 2.0) -->
+        <OidcSettings v-if="activeTab === 'oidc'" />
 
         <!-- 数据清理 -->
         <CleanSettings v-if="activeTab === 'clean'" />

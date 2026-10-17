@@ -5,6 +5,36 @@ import "github.com/robfig/cron/v3"
 const CleanLogsTaskId = "T-IM1GBswSRY"
 const CleanHostedMsgTaskId = "T-HM2KCxwTZQ"
 const SiteSettingSectionName = "site_config"
+const SecuritySectionName = "security"
+
+const (
+	SSOTypeOIDC   = "oidc"
+	SSOTypeOAuth2 = "oauth2"
+
+	PathAuthOidcLogin      = "/api/v1/auth/oidc/login"
+	PathAuthOidcCallback   = "/api/v1/auth/oidc/callback"
+	PathAuthOAuth2Login    = "/api/v1/auth/oauth2/login"
+	PathAuthOAuth2Callback = "/api/v1/auth/oauth2/callback"
+
+	KeyOidcEnabled      = "oidc_enabled"
+	KeyOidcIssuer       = "oidc_issuer"
+	KeyOidcClientID     = "oidc_client_id"
+	KeyOidcClientSecret = "oidc_client_secret"
+	KeyOidcRedirectURL  = "oidc_redirect_url"
+	KeyOidcScopes       = "oidc_scopes"
+	KeyOidcAutoCreate   = "oidc_auto_create"
+
+	KeyOauth2Enabled      = "oauth2_enabled"
+	KeyOauth2Name         = "oauth2_name"
+	KeyOauth2AuthURL      = "oauth2_auth_url"
+	KeyOauth2TokenURL     = "oauth2_token_url"
+	KeyOauth2UserinfoURL  = "oauth2_userinfo_url"
+	KeyOauth2UserKey      = "oauth2_user_key"
+	KeyOauth2ClientID     = "oauth2_client_id"
+	KeyOauth2ClientSecret = "oauth2_client_secret"
+	KeyOauth2Scopes       = "oauth2_scopes"
+	KeyOauth2AutoCreate   = "oauth2_auto_create"
+)
 
 //const SiteSettingTitleKeyName = "title"
 //const SiteSettingSloganKeyName = "slogan"

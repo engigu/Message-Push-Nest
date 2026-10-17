@@ -30,11 +30,15 @@ request.interceptors.request.use(
         if (!config.url.startsWith('/api/')) {
             config.url = '/api/v1' + config.url;
         }
-        if (pageState.Token && !CONSTANT.NO_AUTH_URL.includes(config.url)) {
+        const token = pageState.Token || localStorage.getItem(CONSTANT.STORE_TOKEN_NAME);
+        if (token && !CONSTANT.NO_AUTH_URL.includes(config.url)) {
             config.headers = {
                 ...config.headers,
-                'm-token': pageState.Token,
+                'm-token': token,
             };
+            if (!pageState.Token) {
+                pageState.setToken(token);
+            }
         }
         return config;
     },
@@ -52,7 +56,7 @@ request.interceptors.response.use(
             const tokenErrorCodes = [20001, 20002, 20003, 20004, 20005];
             if (tokenErrorCodes.includes(response.data.code)) {
                 // Token失效，执行登出
-                logout();
+                logout('登录已失效，请重新登录');
                 return Promise.reject(response);
             }
             
@@ -66,17 +70,8 @@ request.interceptors.response.use(
     (error) => {
         // HTTP状态码401表示未授权
         if (error.response && error.response.status == 401) {
-            // 检查响应体中的业务错误码
-            if (error.response.data && error.response.data.code) {
-                const tokenErrorCodes = [20001, 20002, 20003, 20004, 20005];
-                if (tokenErrorCodes.includes(error.response.data.code)) {
-                    logout();
-                    return Promise.reject(error);
-                }
-            }
-            
-            // 其他401错误也执行登出
-            logout();
+            logout('登录凭据已失效或后端已重启，请重新登录');
+            return Promise.reject(error);
         } else {
             handleException(error);
         }
@@ -101,13 +96,16 @@ const handleException = (error) => {
 };
 
 // 登出系统
-const logout = () => {
+const logout = (reason = '') => {
     const pageState = usePageState();
     
     // 清除token和登录状态
     pageState.setToken('');
     localStorage.removeItem(CONSTANT.STORE_TOKEN_NAME);
     
+    if (reason) {
+        toast.error(reason);
+    }
     // 立即跳转到登录页
     router.push('/login');
 };

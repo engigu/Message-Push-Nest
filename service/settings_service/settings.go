@@ -9,6 +9,7 @@ import (
 	"message-nest/pkg/util"
 	"message-nest/service/cron_service"
 	"strconv"
+	"strings"
 
 	"github.com/robfig/cron/v3"
 )
@@ -85,7 +86,7 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 		}
 		return err
 	} else {
-		if value == "" {
+		if value == "" && section != constant.SecuritySectionName {
 			return nil
 		}
 		data := make(map[string]interface{})
@@ -204,6 +205,25 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		}
 		_, errStr := app.CommonPlaygroundValid(config)
 		return errStr
+	}
+	if section == constant.SecuritySectionName {
+		if data["oidc_enabled"] == "true" {
+			if strings.TrimSpace(data["oidc_issuer"]) == "" {
+				return "启用 OIDC 时，必须填写 Issuer 服务端地址"
+			}
+			if strings.TrimSpace(data["oidc_client_id"]) == "" {
+				return "启用 OIDC 时，必须填写 Client ID"
+			}
+		}
+		if data["oauth2_enabled"] == "true" {
+			if strings.TrimSpace(data["oauth2_auth_url"]) == "" || strings.TrimSpace(data["oauth2_token_url"]) == "" || strings.TrimSpace(data["oauth2_userinfo_url"]) == "" {
+				return "启用 OAuth 2.0 时，必须填写授权端点、令牌端点和用户信息端点"
+			}
+			if strings.TrimSpace(data["oauth2_client_id"]) == "" {
+				return "启用 OAuth 2.0 时，必须填写 Client ID"
+			}
+		}
+		return ""
 	}
 	return fmt.Sprintf("未知的section：%s", section)
 }

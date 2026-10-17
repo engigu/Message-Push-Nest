@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 // import LoginInex from '../components/Login.vue'
 import { CONSTANT } from '../constant'
+import { usePageState } from '../store/page_sate'
 
 const router = createRouter({
   // 使用 HTML5 History 模式，确保 URL 变化反映在浏览器地址栏中
@@ -75,6 +76,11 @@ const router = createRouter({
       component: () => import('../components/pages/hostedMessage/MessagePreview.vue')
     },
     {
+      path: '/notice',
+      name: 'notice',
+      component: () => import('../components/pages/Notice.vue')
+    },
+    {
       path: '/:catchAll(.*)',
       name: '404',
       component: () => import('../components/404.vue')
@@ -82,16 +88,41 @@ const router = createRouter({
   ]
 })
 
-// 登录失效重定向到登录页面
+// 登录失效重定向与 SSO Token 自动拦截处理
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem(CONSTANT.STORE_TOKEN_NAME);
-  const isAuthenticated = Boolean(token && token.trim() !== '');
+  // 如果 URL query 中携带了 token（来自 OIDC / OAuth 2.0 单点登录成功回调）
+  if (to.query && to.query.token) {
+    const ssoToken = String(to.query.token);
+    if (ssoToken.trim() !== '') {
+      localStorage.setItem(CONSTANT.STORE_TOKEN_NAME, ssoToken);
+      try {
+        const pageState = usePageState();
+        pageState.setToken(ssoToken);
+      } catch (e) {
+        console.warn('同步 SSO Token 失败:', e);
+      }
+      // 清除 URL query 避免敏感 Token 长期停留在地址栏
+      const nextQuery = { ...to.query };
+      delete nextQuery.token;
+      next({ path: to.path === '/login' ? '/' : to.path, query: nextQuery, replace: true });
+      return;
+    }
+  }
 
-  // 404页面 or 公开预览页面不需要登录验证
-  if (to.name === '404' || to.name === 'preview') {
+  // 404页面、公开预览页面或系统提示页面不需要登录验证
+  if (to.name === '404' || to.name === 'preview' || to.name === 'notice' || to.path === '/notice') {
     next();
     return;
   }
+
+  // 如果访问登录页且带有错误或提示信息，直接导向提示信息页面展示
+  if (to.path === '/login' && to.query && (to.query.error || to.query.message)) {
+    next({ path: '/notice', query: to.query });
+    return;
+  }
+
+  const token = localStorage.getItem(CONSTANT.STORE_TOKEN_NAME);
+  const isAuthenticated = Boolean(token && token.trim() !== '');
   
   // 如果没有token且不是访问登录页，跳转到登录页
   if (!isAuthenticated && to.path !== '/login') {

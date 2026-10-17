@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { KeyIcon, TrashIcon, SettingsIcon, InfoIcon, HistoryIcon } from 'lucide-vue-next'
+import { KeyIcon, TrashIcon, SettingsIcon, InfoIcon, HistoryIcon, FingerprintIcon } from 'lucide-vue-next'
 
 // 定义props
 interface Props {
@@ -18,6 +18,7 @@ defineEmits<Emits>()
 // 设置菜单项
 const settingsMenu = [
   { id: 'password', name: '重置密码', icon: KeyIcon },
+  { id: 'oidc', name: '单点登录', icon: FingerprintIcon },
   { id: 'clean', name: '数据清理', icon: TrashIcon },
   { id: 'loginlogs', name: '登录日志', icon: HistoryIcon },
   { id: 'site', name: '站点设置', icon: SettingsIcon },

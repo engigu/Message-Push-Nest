@@ -110,11 +110,19 @@ func InitRouter(f embed.FS) *gin.Engine {
 		// 公开免鉴权接口
 		apiV1.POST("/auth", api.GetAuth)
 		apiV1.GET("/hostedmessages/preview", v1.GetHostMessagePreview)
+		apiV1.GET("/auth/sso/status", v1.GetSSOStatus)
+		apiV1.GET("/auth/oidc/login", v1.OidcLogin)
+		apiV1.GET("/auth/oidc/callback", v1.OidcCallback)
+		apiV1.GET("/auth/oauth2/login", v1.OAuth2Login)
+		apiV1.GET("/auth/oauth2/callback", v1.OAuth2Callback)
 
 		// 业务接口（需要 JWT 鉴权）
 		authGroup := apiV1.Group("")
 		authGroup.Use(middleware.JWT())
 		{
+			// sso / oidc / oauth2 test
+			authGroup.POST("/auth/oidc/test", v1.OidcTest)
+			authGroup.POST("/auth/oauth2/test", v1.OAuth2Test)
 			// sendways
 			authGroup.POST("/sendways/add", v1.AddMsgSendWay)
 			authGroup.POST("/sendways/delete", v1.DeleteMsgSendWay)
