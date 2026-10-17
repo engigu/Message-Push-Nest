@@ -348,11 +348,11 @@ export default {
 
 <template>
   <Card>
-    <CardHeader class="p-4 sm:p-6 pb-3 sm:pb-4">
-      <CardTitle class="text-base sm:text-lg">单点登录设置</CardTitle>
-      <CardDescription class="text-xs sm:text-sm truncate">配置 OIDC 与 OAuth 2.0 登录参数</CardDescription>
+    <CardHeader>
+      <CardTitle>单点登录设置</CardTitle>
+      <CardDescription>配置 OIDC 与 OAuth 2.0 登录参数</CardDescription>
     </CardHeader>
-    <CardContent class="p-4 sm:p-6 pt-0 sm:pt-0">
+    <CardContent>
       <div class="setting-container">
         <!-- 标签页切换 -->
         <Tabs v-model="activeTab" class="w-full">
