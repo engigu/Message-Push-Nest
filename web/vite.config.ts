@@ -44,6 +44,11 @@ export default defineConfig(() => {
     build: {
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
+        onwarn(warning, defaultWarn) {
+          // 过滤 node_modules 三方库中无害的 PURE 注释位置警告
+          if (warning.code === 'INVALID_ANNOTATION') return
+          defaultWarn(warning)
+        },
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
@@ -52,6 +57,9 @@ export default defineConfig(() => {
               }
               if (id.includes('lucide-vue-next') || id.includes('reka-ui')) {
                 return 'vendor-ui'
+              }
+              if (id.includes('apexcharts') || id.includes('vue3-apexcharts')) {
+                return 'vendor-charts'
               }
             }
           },
