@@ -1,5 +1,5 @@
 <template>
-  <Card class="w-full cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group animate-fade-in" @click="handleClick">
+  <Card class="w-full cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group" @click="handleClick">
     <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
       <CardTitle class="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors duration-300">
         {{ title }}
@@ -44,20 +44,6 @@ export default {
 </script>
 
 <style scoped>
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeInUp 0.4s ease-out both;
-}
 
 @keyframes icon-bounce {
   0%, 100% {

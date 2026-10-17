@@ -188,6 +188,7 @@ type StatisticData struct {
 	TodayTotalNum         int `json:"today_total_num"`
 	MessageTotalNum       int `json:"message_total_num"`
 	HostedMessageTotalNum int `json:"hosted_message_total_num"`
+	WaysTotalNum          int `json:"ways_total_num"`
 
 	LatestSendData []LatestSendData `json:"latest_send_data" gorm:"many2many:latest_send_data;"`
 	WayCateData    []WayCateData    `json:"way_cate_data" gorm:"many2many:way_cate_data;"`
@@ -200,6 +201,7 @@ type BasicStatisticData struct {
 	TodayTotalNum         int `json:"today_total_num"`
 	MessageTotalNum       int `json:"message_total_num"`
 	HostedMessageTotalNum int `json:"hosted_message_total_num"`
+	WaysTotalNum          int `json:"ways_total_num"`
 }
 
 // TrendStatisticData 趋势统计数据
@@ -266,6 +268,12 @@ func GetStatisticData() (StatisticData, error) {
 	var hostedMessageTotalNum int
 	if err := db.Table(hostedt).Select(`COUNT(*)`).Scan(&hostedMessageTotalNum).Error; err == nil {
 		statistic.HostedMessageTotalNum = hostedMessageTotalNum
+	}
+
+	// 发送渠道统计数据
+	var waysTotalNum int
+	if err := db.Table(wayst).Select(`COUNT(*)`).Scan(&waysTotalNum).Error; err == nil {
+		statistic.WaysTotalNum = waysTotalNum
 	}
 
 	// 最近30天数据
@@ -344,6 +352,13 @@ func GetBasicStatisticData() (BasicStatisticData, error) {
 	var hostedMessageTotalNum int
 	if err := db.Table(hostedt).Select(`COUNT(*)`).Scan(&hostedMessageTotalNum).Error; err == nil {
 		statistic.HostedMessageTotalNum = hostedMessageTotalNum
+	}
+
+	// 发送渠道统计数据
+	var waysTotalNum int
+	wayst := GetSchema(SendWays{})
+	if err := db.Table(wayst).Select(`COUNT(*)`).Scan(&waysTotalNum).Error; err == nil {
+		statistic.WaysTotalNum = waysTotalNum
 	}
 
 	return statistic, nil

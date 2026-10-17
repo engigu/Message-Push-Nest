@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import StatCard from '@/components/pages/dashboard/CardNum.vue'
-import { InboxIcon, FileTextIcon, SendIcon, CheckCircleIcon, XCircleIcon } from 'lucide-vue-next'
+import { InboxIcon, FileTextIcon, SendIcon, CheckCircleIcon, XCircleIcon, RadioIcon } from 'lucide-vue-next'
 // import { LineChart } from "@/components/ui/chart-line"
-import { onMounted, reactive } from 'vue';
+import { onMounted, onUnmounted, reactive } from 'vue';
 import { request } from '@/api/api';
 import { toast } from 'vue-sonner';
 // import VueApexCharts from 'vue3-apexcharts'
 import ApexCharts from 'apexcharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+let lineChartInstance: ApexCharts | null = null;
+let pieChartInstance: ApexCharts | null = null;
 
 interface SendData {
   day: string
@@ -26,6 +29,7 @@ let state = reactive({
   basicData: {
     message_total_num: 0,
     hosted_message_total_num: 0,
+    ways_total_num: 0,
     today_total_num: 0,
     today_succ_num: 0,
     today_failed_num: 0,
@@ -49,7 +53,14 @@ const getBasicStatisticData = async () => {
   try {
     const rsp = await request.get('/statistic?type=basic');
     if (rsp && rsp.data && rsp.data.code == 200) {
-      state.basicData = rsp.data.data;
+      state.basicData = { ...state.basicData, ...rsp.data.data };
+      if (rsp.data.data.ways_total_num === undefined) {
+        // 兼容当前运行后端若尚未热重载时的兜底统计
+        const wayRsp = await request.get('/sendways/list', { params: { page: 1, size: 1 } });
+        if (wayRsp?.data?.code === 200 && wayRsp.data.data?.total !== undefined) {
+          state.basicData.ways_total_num = wayRsp.data.data.total;
+        }
+      }
     } else {
       toast.error(rsp?.data?.msg || '获取基础统计数据失败');
     }
@@ -258,6 +269,7 @@ const renderLineChart = () => {
       fontSize: '12px',
       fontFamily: 'Inter, sans-serif',
       markers: {
+        shape: 'circle',
         width: 8,
         height: 8,
         radius: 4
@@ -338,6 +350,7 @@ const renderLineChart = () => {
           offsetX: -5,
           fontSize: '10px',
           markers: {
+            shape: 'circle',
             width: 6,
             height: 6,
             radius: 3
@@ -352,8 +365,13 @@ const renderLineChart = () => {
   }
   const chartElement = document.querySelector("#sales-chart") as HTMLElement;
   if (!chartElement) return;
-  const chart = new ApexCharts(chartElement, options);
-  chart.render();
+  if (lineChartInstance) {
+    lineChartInstance.destroy();
+    lineChartInstance = null;
+  }
+  chartElement.innerHTML = '';
+  lineChartInstance = new ApexCharts(chartElement, options);
+  lineChartInstance.render();
 
 }
 
@@ -373,8 +391,7 @@ const renderPieChart = () => {
         easing: 'easeinout',
         speed: 800,
         animateGradually: {
-          enabled: true,
-          delay: 150
+          enabled: false
         },
         dynamicAnimation: {
           enabled: true,
@@ -385,7 +402,10 @@ const renderPieChart = () => {
     labels: wayCateData.length > 0
       ? wayCateData.map(item => item.way_name)
       : [],
-    colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+    colors: [
+      '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+      '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#6366f1'
+    ],
     legend: {
       position: 'bottom',
       fontSize: '10px',
@@ -442,8 +462,13 @@ const renderPieChart = () => {
   }
   const pieChartElement = document.querySelector("#pie-chart") as HTMLElement;
   if (!pieChartElement) return;
-  const pieChart = new ApexCharts(pieChartElement, options);
-  pieChart.render();
+  if (pieChartInstance) {
+    pieChartInstance.destroy();
+    pieChartInstance = null;
+  }
+  pieChartElement.innerHTML = '';
+  pieChartInstance = new ApexCharts(pieChartElement, options);
+  pieChartInstance.render();
 }
 
 // 获取今日日期
@@ -456,15 +481,28 @@ onMounted(() => {
   loadAllStatisticData();
 })
 
+onUnmounted(() => {
+  if (lineChartInstance) {
+    lineChartInstance.destroy();
+    lineChartInstance = null;
+  }
+  if (pieChartInstance) {
+    pieChartInstance.destroy();
+    pieChartInstance = null;
+  }
+})
+
 
 
 </script>
 
 <template>
-  <div class="w-[90%] mx-auto pt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  lg:grid-cols-5 gap-4">
+  <div class="w-[90%] mx-auto pt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
 
     <StatCard title="托管消息数" :value="state.basicData.hosted_message_total_num" description="" :icon="InboxIcon"
       route-path="/hostedmessage" />
+    <StatCard title="发送渠道数" :value="state.basicData.ways_total_num" description="" :icon="RadioIcon"
+      route-path="/sendways" />
     <StatCard title="发送日志数" :value="state.basicData.message_total_num" description="" :icon="FileTextIcon"
       route-path="/sendlogs" />
     <StatCard title="今日发送数" :value="state.basicData.today_total_num" description="" :icon="SendIcon"
@@ -490,7 +528,7 @@ onMounted(() => {
   <!-- 图表区域 -->
   <div class="w-[90%] mx-auto mt-8 grid grid-cols-1 lg:grid-cols-10 gap-6">
     <!-- 折线图 -->
-    <Card class="w-full lg:col-span-7 hover:shadow-lg transition-all duration-300 animate-fade-in-delayed-1">
+    <Card class="w-full lg:col-span-7 hover:shadow-lg transition-all duration-300">
       <CardHeader>
         <CardTitle>消息发送趋势</CardTitle>
         <CardDescription>最近{{ state.trendDays }}天的发送情况统计</CardDescription>
@@ -501,7 +539,7 @@ onMounted(() => {
     </Card>
 
     <!-- 饼图 -->
-    <Card class="w-full lg:col-span-3 hover:shadow-lg transition-all duration-300 animate-fade-in-delayed-2">
+    <Card class="w-full lg:col-span-3 hover:shadow-lg transition-all duration-300">
       <CardHeader>
         <CardTitle>发送渠道分布</CardTitle>
         <CardDescription>各发送渠道的使用情况统计</CardDescription>
@@ -514,23 +552,31 @@ onMounted(() => {
 </template>
 
 <style scoped>
-@keyframes fadeInUp {
-  from {
+/* 折线图数据节点（Markers）：从小放大并自然浮动到位，仅作用于数据线节点（排除图例） */
+:deep(#sales-chart .apexcharts-series-markers .apexcharts-marker) {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: markerFloatUp 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+
+@keyframes markerFloatUp {
+  0% {
+    transform: scale(0) translateY(12px);
     opacity: 0;
-    transform: translateY(15px);
   }
-  to {
+  60% {
+    transform: scale(1.18) translateY(-2px);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1) translateY(0);
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
-.animate-fade-in-delayed-1 {
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-}
-
-.animate-fade-in-delayed-2 {
-  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+:deep(#sales-chart .apexcharts-series-markers .apexcharts-marker:hover) {
+  transform: scale(1.3);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 </style>
 
