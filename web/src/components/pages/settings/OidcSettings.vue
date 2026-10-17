@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+defineOptions({
+  name: 'OidcSettings'
+})
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -338,12 +342,6 @@ async function handleTestOAuth2() {
 onMounted(() => {
   loadSettings()
 })
-</script>
-
-<script lang="ts">
-export default {
-  name: 'OidcSettings'
-}
 </script>
 
 <template>
@@ -781,7 +779,6 @@ export default {
 :deep(.secret-mask),
 .secret-mask {
   -webkit-text-security: disc !important;
-  text-security: disc !important;
 }
 
 /* 避免浏览器 autofill 给输入框注入破坏主题样式的奇怪背景色 */
