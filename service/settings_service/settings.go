@@ -8,6 +8,7 @@ import (
 	"message-nest/pkg/constant"
 	"message-nest/pkg/util"
 	"message-nest/service/cron_service"
+	"os"
 	"strconv"
 	"strings"
 
@@ -22,6 +23,9 @@ type UserSettings struct {
 
 // EditUserPasswd 用户设置密码
 func (us *UserSettings) EditUserPasswd() error {
+	if strings.ToLower(os.Getenv("DEMO_MODE")) == "true" || strings.ToLower(os.Getenv("RUN_MODE")) == "demo" {
+		return errors.New("当前处于演示模式，已禁止修改密码！")
+	}
 	ok, _ := models.CheckAuth(us.UserName, us.OldPassword)
 	if !ok {
 		return errors.New("旧密码校验失败！")

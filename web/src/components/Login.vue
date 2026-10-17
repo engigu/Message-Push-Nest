@@ -17,6 +17,7 @@ import { usePageState } from '@/store/page_sate';
 import { useRouter } from 'vue-router';
 // @ts-ignore
 import { LocalStieConfigUtils } from '@/util/localSiteConfig';
+import { checkIsDemoMode, setRuntimeDemoMode } from '@/util/demo';
 
 
 const siteConfigData = JSON.parse(CONSTANT.DEFALUT_SITE_CONFIG);
@@ -28,8 +29,11 @@ if (siteConfigData.title) {
 }
 let pageState = usePageState();
 let router = useRouter();
-let account = ref("");
-let password = ref("");
+
+// 演示模式智能判定（环境变量 / demo 域名 / URL 参数）
+let isDemo = ref(checkIsDemoMode());
+let account = ref(isDemo.value ? "admin" : "");
+let password = ref(isDemo.value ? "123456" : "");
 let loading = ref(false);
 let ssoProviders = ref<any[]>([]);
 let loginErrorMessage = ref('');
@@ -50,14 +54,13 @@ const handleSSOLogin = (provider: any) => {
   window.location.href = `${prefix}${targetUrl}${sep}redirect=${redirect}`;
 };
 
-// 站点演示模式
-const demoSiteSet = () => {
-    // @ts-ignore
-    if (import.meta.env.VITE_RUN_MODE === 'demo') {
-        account.value = 'admin';
-        password.value = '123456';
-    }
-}
+// 站点演示模式填充
+const demoSiteSet = (force = false) => {
+  if (force || isDemo.value) {
+    account.value = 'admin';
+    password.value = '123456';
+  }
+};
 
 let handleSubmit = async function () {
   toast('注册功能还在开发的路上...');
@@ -84,7 +87,9 @@ const updateFavicon = (logoSvg: string) => {
 
 // 登录页面加载时获取最新配置与 SSO 状态
 onMounted(async () => {
-  demoSiteSet();
+  if (isDemo.value) {
+    demoSiteSet(true);
+  }
 
   // 检查 SSO 回调参数 (token 或 error)
   const queryParams = new URLSearchParams(window.location.search);
@@ -112,12 +117,17 @@ onMounted(async () => {
     return;
   }
 
-  // 加载单点登录可用身份源
+  // 加载单点登录可用身份源与服务端状态
   try {
     const ssoRes = await request.get('/auth/sso/status');
     if (ssoRes.data && ssoRes.data.code === 200 && ssoRes.data.data) {
       if (ssoRes.data.data.enabled && ssoRes.data.data.providers) {
         ssoProviders.value = ssoRes.data.data.providers;
+      }
+      if (ssoRes.data.data.is_demo) {
+        setRuntimeDemoMode(true);
+        isDemo.value = true;
+        demoSiteSet(true);
       }
     }
   } catch (e) {
@@ -222,6 +232,24 @@ let clickLogin = async () => {
                   </div>
                   <button type="button" @click="loginErrorMessage = ''" class="text-destructive/70 hover:text-destructive p-0.5" title="关闭">
                     ✕
+                  </button>
+                </div>
+
+                <!-- 演示模式专属状态与快捷填入条 -->
+                <div v-if="isDemo" class="p-3 rounded-xl border border-primary/25 bg-primary/5 text-primary text-xs flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    <span>演示环境：默认账号 <strong>admin</strong> / 密码 <strong>123456</strong></span>
+                  </div>
+                  <button
+                    type="button"
+                    class="font-medium underline hover:opacity-80 transition cursor-pointer select-none text-xs"
+                    @click.prevent="demoSiteSet(true)"
+                  >
+                    一键填入
                   </button>
                 </div>
 

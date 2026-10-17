@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
+import { checkIsDemoMode } from '@/util/demo'
 
 // 重置密码相关
 const passwordForm = ref({
@@ -15,13 +16,8 @@ const passwordForm = ref({
 
 // 重置密码
 const resetPassword = async () => {
-
-  
   // 检查演示模式
-    // @ts-ignore
-  const isDemoMode = (import.meta as any).env.VITE_RUN_MODE === 'demo'
-  
-  if (isDemoMode) {
+  if (checkIsDemoMode()) {
     toast.error('演示模式下无法重置密码')
     return
   }

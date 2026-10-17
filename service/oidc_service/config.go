@@ -3,6 +3,7 @@ package oidc_service
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	coreos_oidc "github.com/coreos/go-oidc/v3/oidc"
@@ -178,8 +179,10 @@ func ResolveSSOStatus() gin.H {
 		}
 	}
 
+	isDemo := strings.ToLower(os.Getenv("DEMO_MODE")) == "true" || strings.ToLower(os.Getenv("RUN_MODE")) == "demo"
+
 	if len(providers) == 0 {
-		return gin.H{"enabled": false, "providers": []gin.H{}}
+		return gin.H{"enabled": false, "providers": []gin.H{}, "is_demo": isDemo}
 	}
 
 	return gin.H{
@@ -187,6 +190,7 @@ func ResolveSSOStatus() gin.H {
 		"providers": providers,
 		"type":      providers[0]["type"],
 		"name":      providers[0]["name"],
+		"is_demo":   isDemo,
 	}
 }
 
