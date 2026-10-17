@@ -55,10 +55,13 @@ const handleSSOLogin = (provider: any) => {
 };
 
 // 站点演示模式填充
-const demoSiteSet = (force = false) => {
+const demoSiteSet = (force = false, showToast = false) => {
   if (force || isDemo.value) {
     account.value = 'admin';
     password.value = '123456';
+    if (showToast) {
+      toast.success('已填入演示账号密码');
+    }
   }
 };
 
@@ -236,21 +239,26 @@ let clickLogin = async () => {
                 </div>
 
                 <!-- 演示模式专属状态与快捷填入条 -->
-                <div v-if="isDemo" class="p-3 rounded-xl border border-primary/25 bg-primary/5 text-primary text-xs flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <span class="relative flex h-2 w-2">
+                <div v-if="isDemo" class="p-2.5 px-3 rounded-xl border border-primary/20 bg-primary/5 text-xs flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="relative flex h-2 w-2 shrink-0">
                       <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                       <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                     </span>
-                    <span>演示环境：默认账号 <strong>admin</strong> / 密码 <strong>123456</strong></span>
+                    <div class="min-w-0 space-y-0.5">
+                      <div class="text-xs font-semibold text-primary leading-none">演示环境</div>
+                      <div class="text-[11px] text-muted-foreground font-mono tracking-tight leading-none">账号 admin · 密码 123456</div>
+                    </div>
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    class="font-medium underline hover:opacity-80 transition cursor-pointer select-none text-xs"
-                    @click.prevent="demoSiteSet(true)"
+                    variant="outline"
+                    size="sm"
+                    class="h-7 px-2.5 text-xs font-medium shrink-0 whitespace-nowrap border-primary/30 text-primary hover:bg-primary/10 hover:text-primary transition-all cursor-pointer select-none"
+                    @click.prevent="demoSiteSet(true, true)"
                   >
-                    一键填入
-                  </button>
+                    自动填入
+                  </Button>
                 </div>
 
                 <div class="grid gap-2">
