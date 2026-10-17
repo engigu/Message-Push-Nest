@@ -55,7 +55,7 @@ func (st *CronMsgService) GetAll() ([]CronMsgResult, error) {
 }
 
 func (st *CronMsgService) FillNextExecTime(msgs []models.CronMessages) []CronMsgResult {
-	var result []CronMsgResult
+	result := make([]CronMsgResult, 0)
 	for _, msg := range msgs {
 		r := CronMsgResult{
 			CronMessages: msg,

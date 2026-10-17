@@ -120,8 +120,8 @@ const queryListData = async (page: number, size: number, name = '', taskType = '
     params.status = status;
   }
   const rsp = await request.get('/cronmessages/list', { params: params });
-  state.tableData = await rsp.data.data.lists;
-  state.total = await rsp.data.data.total;
+  state.tableData = rsp.data?.data?.lists || [];
+  state.total = rsp.data?.data?.total || 0;
 }
 
 // 删除定时消息
@@ -203,14 +203,14 @@ onMounted(async () => {
 
           <TableBody>
             <!-- 空数据展示 -->
-            <TableRow v-if="state.tableData.length === 0">
+            <TableRow v-if="!state.tableData || state.tableData.length === 0">
               <TableCell colspan="8" class="text-center py-12">
                 <EmptyTableState title="暂无定时消息" description="还没有配置任何定时消息，请先添加定时消息" />
               </TableCell>
             </TableRow>
 
             <!-- 数据行 -->
-            <TableRow v-for="cronMessage in state.tableData" :key="cronMessage.id">
+            <TableRow v-for="cronMessage in (state.tableData || [])" :key="cronMessage.id">
               <TableCell>{{ cronMessage.id }}</TableCell>
               <TableCell>
                 <ClickableTruncate :text="cronMessage.title" wrapper-class="max-w-[180px] sm:max-w-[260px]" preview-title="标题" />

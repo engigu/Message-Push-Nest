@@ -122,8 +122,8 @@ const refreshList = async () => {
 const queryListData = async (page: number, size: number, name = '', channelType = '', query = '') => {
   let params: any = { page: page, size: size, name: name, type: channelType, query: query };
   const rsp = await request.get('/sendways/list', { params: params });
-  state.tableData = await rsp.data.data.lists;
-  state.total = await rsp.data.data.total;
+  state.tableData = rsp.data?.data?.lists || [];
+  state.total = rsp.data?.data?.total || 0;
 }
 // 删除渠道
 const handleDelete = async (id: number) => {
@@ -209,14 +209,14 @@ onMounted(async () => {
 
       <TableBody>
         <!-- 空数据展示 -->
-        <TableRow v-if="state.tableData.length === 0">
+        <TableRow v-if="!state.tableData || state.tableData.length === 0">
           <TableCell colspan="6" class="text-center py-12">
             <EmptyTableState title="暂无发信方式" description="还没有配置任何发信方式，请先添加发信方式" />
           </TableCell>
         </TableRow>
 
         <!-- 数据行 -->
-        <TableRow v-for="channel in state.tableData" :key="channel.id">
+        <TableRow v-for="channel in (state.tableData || [])" :key="channel.id">
           <TableCell>{{ channel.id }}</TableCell>
           <TableCell>{{ channel.name }}</TableCell>
           <TableCell>
