@@ -9,7 +9,7 @@ const CONSTANT = {
     HOSTED_MSG_TASK_ID: "T-HM2KCxwTZQ",
     STORE_TOKEN_NAME: '__message_nest_token__',
     STORE_CUSTOM_NAME: '__message_nest_custom_site__',
-    // 已统一通过 /api/v1/auth/* 与 /api/v1/public/* 自动前缀判别，无需在此枚举维护
+    // 登录凭据 m-token 由请求拦截器统一自动挂载，无需在此维护白名单
     NO_AUTH_URL: [],
     CHANNEL_CATEGORIES: [
         { id: 'all', label: '全部' },
