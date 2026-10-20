@@ -50,6 +50,11 @@ type AddUserReq struct {
 // AddUser 添加用户（仅管理员）
 func AddUser(c *gin.Context) {
 	appG := app.Gin{C: c}
+	if setting.IsDemoMode() {
+		appG.CResponse(http.StatusForbidden, "演示模式下已禁止添加用户！", nil)
+		return
+	}
+
 	var req AddUserReq
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
@@ -89,6 +94,11 @@ type EditUserReq struct {
 // EditUser 编辑用户信息（仅管理员）
 func EditUser(c *gin.Context) {
 	appG := app.Gin{C: c}
+	if setting.IsDemoMode() {
+		appG.CResponse(http.StatusForbidden, "演示模式下已禁止修改用户！", nil)
+		return
+	}
+
 	var req EditUserReq
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
@@ -121,6 +131,11 @@ type DeleteUserReq struct {
 // DeleteUser 删除用户（仅管理员）
 func DeleteUser(c *gin.Context) {
 	appG := app.Gin{C: c}
+	if setting.IsDemoMode() {
+		appG.CResponse(http.StatusForbidden, "演示模式下已禁止删除用户！", nil)
+		return
+	}
+
 	var req DeleteUserReq
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
@@ -150,6 +165,11 @@ type ResetUserPasswdReq struct {
 // ResetUserPassword 重置用户密码（仅管理员）
 func ResetUserPassword(c *gin.Context) {
 	appG := app.Gin{C: c}
+	if setting.IsDemoMode() {
+		appG.CResponse(http.StatusForbidden, "演示模式下已禁止重置密码！", nil)
+		return
+	}
+
 	var req ResetUserPasswdReq
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
@@ -302,6 +322,11 @@ type UnbindUserSSOReq struct {
 // AdminUnbindUserSSO 管理员解绑指定用户的 SSO
 func AdminUnbindUserSSO(c *gin.Context) {
 	appG := app.Gin{C: c}
+	if setting.IsDemoMode() {
+		appG.CResponse(http.StatusForbidden, "演示模式下已禁止解绑用户单点登录！", nil)
+		return
+	}
+
 	var req UnbindUserSSOReq
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {

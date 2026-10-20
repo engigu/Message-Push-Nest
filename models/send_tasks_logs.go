@@ -170,16 +170,24 @@ func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (
 	return total, nil
 }
 
-// GetSendLogsTotal 获取所有日志总数
-func DeleteOutDateLogs(keepNum int) (int, error) {
+// DeleteOutDateLogs 删除过期的任务日志，保留最新的 keepNum 条，支持按用户过滤
+func DeleteOutDateLogs(keepNum int, createdBy ...string) (int, error) {
 	var affectedRows int
+	if keepNum <= 0 {
+		return 0, nil
+	}
 
 	// 优化方案：使用GORM的Offset和Limit找到临界ID，兼容多种数据库
 	// 1. 获取第 keepNum 条记录的ID作为临界值
 	var threshold SendTasksLogs
-	result := db.Model(&SendTasksLogs{}).
-		Select("id").
-		Order("created_on DESC, id DESC").
+	query := db.Model(&SendTasksLogs{}).Select("id")
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
+	} else if len(createdBy) > 0 && createdBy[0] == "" {
+		query = query.Where("created_by = '' OR created_by IS NULL")
+	}
+
+	result := query.Order("created_on DESC, id DESC").
 		Offset(keepNum - 1).
 		Limit(1).
 		Find(&threshold)
@@ -189,8 +197,15 @@ func DeleteOutDateLogs(keepNum int) (int, error) {
 		return 0, nil
 	}
 
-	// 2. 删除ID小于临界值的记录
-	deleteResult := db.Where("id < ?", threshold.ID).Delete(&SendTasksLogs{})
+	// 2. 删除ID小于临界值的记录（限定用户范围）
+	deleteQuery := db.Where("id < ?", threshold.ID)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		deleteQuery = deleteQuery.Where("created_by = ?", createdBy[0])
+	} else if len(createdBy) > 0 && createdBy[0] == "" {
+		deleteQuery = deleteQuery.Where("created_by = '' OR created_by IS NULL")
+	}
+
+	deleteResult := deleteQuery.Delete(&SendTasksLogs{})
 	if deleteResult.Error != nil {
 		return affectedRows, deleteResult.Error
 	}

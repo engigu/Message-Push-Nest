@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { PlusIcon, SearchIcon, RefreshCwIcon, KeyRoundIcon, PencilIcon, Trash2Icon, ShieldAlertIcon, FingerprintIcon } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { usePageState } from '@/store/page_sate'
+import { checkIsDemoMode } from '@/util/demo'
 
 // @ts-ignore
 import { request } from '@/api/api'
@@ -28,6 +29,7 @@ interface UserItem {
 }
 
 const pageState = usePageState()
+const isDemo = ref(checkIsDemoMode())
 const loading = ref(false)
 const users = ref<UserItem[]>([])
 const total = ref(0)
@@ -153,6 +155,10 @@ const onSearch = () => {
 
 // 打开新增
 const openAddModal = () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用新增用户')
+    return
+  }
   addForm.username = ''
   addForm.password = ''
   addForm.email = ''
@@ -166,6 +172,10 @@ const openAddModal = () => {
 }
 
 const handleAddUser = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用新增用户')
+    return
+  }
   if (!addForm.username.trim()) {
     toast.error('请输入用户名')
     return
@@ -198,6 +208,10 @@ const handleAddUser = async () => {
 
 // 打开编辑
 const openEditModal = (user: UserItem) => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用修改用户信息')
+    return
+  }
   editForm.id = user.id
   editForm.username = user.username
   editForm.email = user.email || ''
@@ -209,6 +223,10 @@ const openEditModal = (user: UserItem) => {
 }
 
 const handleEditUser = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用修改用户信息')
+    return
+  }
   actionLoading.value = true
   try {
     const rsp = await request.put('/api/v1/users', editForm)
@@ -227,6 +245,10 @@ const handleEditUser = async () => {
 }
 
 const handleAdminUnbindSSO = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用解绑单点登录')
+    return
+  }
   if (!confirm(`确定要解除用户 [${editForm.username}] 的单点登录绑定吗？解除后该用户将转为纯本地账号。`)) {
     return
   }
@@ -253,6 +275,10 @@ const handleAdminUnbindSSO = async () => {
 
 // 打开重置密码
 const openResetPasswdModal = (user: UserItem) => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用重置密码')
+    return
+  }
   resetPasswdForm.id = user.id
   resetPasswdForm.username = user.username
   resetPasswdForm.password = ''
@@ -265,6 +291,10 @@ const openResetPasswdModal = (user: UserItem) => {
 }
 
 const handleResetPassword = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用重置密码')
+    return
+  }
   if (!resetPasswdForm.password.trim() || resetPasswdForm.password.length < 4) {
     toast.error('新密码长度至少 4 位')
     return
@@ -290,11 +320,19 @@ const handleResetPassword = async () => {
 
 // 打开删除确认
 const openDeleteModal = (user: UserItem) => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用删除用户')
+    return
+  }
   targetDeleteUser.value = user
   deleteDialogOpen.value = true
 }
 
 const handleDeleteUser = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前系统处于演示模式，已全局禁用删除用户')
+    return
+  }
   if (!targetDeleteUser.value) return
   actionLoading.value = true
   try {
@@ -334,7 +372,7 @@ const handleDeleteUser = async () => {
           <RefreshCwIcon class="w-4 h-4" :class="{ 'animate-spin': loading }" />
           <span>刷新</span>
         </Button>
-        <Button size="sm" @click="openAddModal" class="gap-1.5">
+        <Button size="sm" @click="openAddModal" :disabled="isDemo" class="gap-1.5" :title="isDemo ? '演示模式已禁用新增用户' : '新增用户'">
           <PlusIcon class="w-4 h-4" />
           <span>新增用户</span>
         </Button>
@@ -342,6 +380,11 @@ const handleDeleteUser = async () => {
     </CardHeader>
 
     <CardContent class="space-y-4">
+      <!-- 演示模式提示横幅 -->
+      <div v-if="isDemo" class="p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-2">
+        <span>⚠️ 当前系统处于演示模式，用户管理功能仅供只读预览展示，新增、编辑、重置密码及删除用户等写操作均已全局禁用。</span>
+      </div>
+
       <!-- 搜索过滤条 -->
       <div class="flex items-center gap-3">
         <div class="relative flex-1 max-w-sm">
@@ -439,7 +482,9 @@ const handleDeleteUser = async () => {
                     variant="ghost"
                     size="sm"
                     class="h-8 px-2 text-xs"
-                    title="修改信息"
+                    :class="{ 'opacity-40 cursor-not-allowed': isDemo }"
+                    :disabled="isDemo"
+                    :title="isDemo ? '演示模式已禁用修改信息' : '修改信息'"
                     @click="openEditModal(user)"
                   >
                     <PencilIcon class="w-3.5 h-3.5" />
@@ -448,7 +493,9 @@ const handleDeleteUser = async () => {
                     variant="ghost"
                     size="sm"
                     class="h-8 px-2 text-xs"
-                    title="重置密码"
+                    :class="{ 'opacity-40 cursor-not-allowed': isDemo }"
+                    :disabled="isDemo"
+                    :title="isDemo ? '演示模式已禁用重置密码' : '重置密码'"
                     @click="openResetPasswdModal(user)"
                   >
                     <KeyRoundIcon class="w-3.5 h-3.5" />
@@ -458,7 +505,9 @@ const handleDeleteUser = async () => {
                     variant="ghost"
                     size="sm"
                     class="h-8 px-2 text-xs text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                    title="删除用户"
+                    :class="{ 'opacity-40 cursor-not-allowed': isDemo }"
+                    :disabled="isDemo"
+                    :title="isDemo ? '演示模式已禁用删除用户' : '删除用户'"
                     @click="openDeleteModal(user)"
                   >
                     <Trash2Icon class="w-3.5 h-3.5" />
@@ -539,7 +588,7 @@ const handleDeleteUser = async () => {
       </div>
       <DialogFooter>
         <Button variant="outline" @click="addDialogOpen = false" :disabled="actionLoading">取消</Button>
-        <Button @click="handleAddUser" :disabled="actionLoading">
+        <Button @click="handleAddUser" :disabled="isDemo || actionLoading">
           {{ actionLoading ? '创建中...' : '确认创建' }}
         </Button>
       </DialogFooter>
@@ -554,6 +603,9 @@ const handleDeleteUser = async () => {
         <DialogDescription>修改该账号的角色及可用状态。</DialogDescription>
       </DialogHeader>
       <div class="space-y-4 py-2">
+        <div v-if="isDemo" class="p-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
+          ⚠️ 当前系统处于演示模式，已全局禁止修改用户信息。
+        </div>
         <div v-if="editForm.is_oidc" class="p-3 rounded-lg bg-sky-500/10 border border-sky-500/20 text-xs flex items-center justify-between gap-2">
           <div class="text-sky-700 dark:text-sky-300">
             该账号已绑定 {{ formatProviderName(editForm.auth_provider) }} 单点登录。
@@ -564,21 +616,21 @@ const handleDeleteUser = async () => {
             size="sm"
             class="h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border-rose-200 dark:border-rose-900/40 shrink-0"
             @click="handleAdminUnbindSSO"
-            :disabled="actionLoading"
+            :disabled="isDemo || actionLoading"
           >
             解绑 SSO
           </Button>
         </div>
         <div class="space-y-1.5">
           <Label for="edit-email">电子邮箱</Label>
-          <Input id="edit-email" type="email" v-model="editForm.email" placeholder="user@example.com" />
+          <Input id="edit-email" type="email" v-model="editForm.email" placeholder="user@example.com" :disabled="isDemo" />
         </div>
         <div class="space-y-1.5">
           <Label for="edit-role">用户角色</Label>
           <select
             id="edit-role"
             v-model="editForm.role"
-            :disabled="editForm.username === 'admin'"
+            :disabled="isDemo || editForm.username === 'admin'"
             class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60"
           >
             <option value="user">普通用户</option>
@@ -591,7 +643,7 @@ const handleDeleteUser = async () => {
           <select
             id="edit-status"
             v-model.number="editForm.status"
-            :disabled="editForm.id === pageState.userId"
+            :disabled="isDemo || editForm.id === pageState.userId"
             class="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60"
           >
             <option :value="1">正常 (允许登录使用)</option>
@@ -602,7 +654,7 @@ const handleDeleteUser = async () => {
       </div>
       <DialogFooter>
         <Button variant="outline" @click="editDialogOpen = false" :disabled="actionLoading">取消</Button>
-        <Button @click="handleEditUser" :disabled="actionLoading">
+        <Button @click="handleEditUser" :disabled="isDemo || actionLoading">
           {{ actionLoading ? '保存中...' : '保存修改' }}
         </Button>
       </DialogFooter>
@@ -624,6 +676,9 @@ const handleDeleteUser = async () => {
       </div>
 
       <div class="space-y-4 py-2">
+        <div v-if="isDemo" class="p-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
+          ⚠️ 当前系统处于演示模式，已全局禁止重置密码。
+        </div>
         <div v-if="targetResetUserIsOidc" class="p-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400 space-y-1">
           <div class="font-medium">⚠️ {{ formatProviderName(targetResetUserProvider) }} 单点登录账号提示</div>
           <div>该用户通过 {{ formatProviderName(targetResetUserProvider) }} 单点登录集成，通常由外部身份源验证身份。在此设置密码将作为系统的本地兜底登录凭据。</div>
@@ -637,12 +692,13 @@ const handleDeleteUser = async () => {
             v-model="resetPasswdForm.password"
             placeholder="请输入新密码（至少 4 位）"
             autocomplete="new-password"
+            :disabled="isDemo"
           />
         </div>
       </div>
       <DialogFooter>
         <Button variant="outline" @click="resetPasswdDialogOpen = false" :disabled="actionLoading">取消</Button>
-        <Button @click="handleResetPassword" :disabled="actionLoading">
+        <Button @click="handleResetPassword" :disabled="isDemo || actionLoading">
           {{ actionLoading ? '重置中...' : '确认重置' }}
         </Button>
       </DialogFooter>
@@ -664,7 +720,7 @@ const handleDeleteUser = async () => {
       </DialogHeader>
       <DialogFooter class="mt-4">
         <Button variant="outline" @click="deleteDialogOpen = false" :disabled="actionLoading">取消</Button>
-        <Button variant="destructive" @click="handleDeleteUser" :disabled="actionLoading">
+        <Button variant="destructive" @click="handleDeleteUser" :disabled="isDemo || actionLoading">
           {{ actionLoading ? '删除中...' : '确认删除' }}
         </Button>
       </DialogFooter>

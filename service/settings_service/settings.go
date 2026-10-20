@@ -57,6 +57,19 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 		result[setting.Key] = setting.Value
 	}
 
+	// 针对多用户数据清理：如果普通用户未显式设置过自定义 cron，分配专属打散随机时间
+	if us.UserID != "" {
+		if section == constant.LogsCleanSectionName {
+			if result["cron"] == "" || result["cron"] == "1 0 * * *" {
+				result["cron"] = util.GetDefaultCronForUser(us.UserID, 0)
+			}
+		} else if section == constant.HostedMsgCleanSectionName {
+			if result["cron"] == "" || result["cron"] == "30 0 * * *" {
+				result["cron"] = util.GetDefaultCronForUser(us.UserID, 27)
+			}
+		}
+	}
+
 	// 如果是site_config，更新缓存
 	if section == constant.SiteSettingSectionName {
 		SetSiteConfigCache(result)
@@ -76,25 +89,31 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 
 // EditSettings 便捷自定义设置
 func (us *UserSettings) EditSettings(section string, key string, value string, currentUserID string) error {
+	// 如果用户提交的清理 cron 为空，自动分配该用户的分散随机 cron
+	if key == constant.LogsCleanCronKeyName && value == "" {
+		if section == constant.LogsCleanSectionName {
+			value = util.GetDefaultCronForUser(currentUserID, 0)
+		} else if section == constant.HostedMsgCleanSectionName {
+			value = util.GetDefaultCronForUser(currentUserID, 27)
+		}
+	}
+
 	var setting models.Settings
 	if currentUserID != "" {
 		setting, _ = models.GetSettingByUser(section, key, currentUserID)
 	} else {
 		setting, _ = models.GetSettingByKey(section, key)
 	}
+
+	var err error
 	if setting.ID == 0 {
-		err := models.AddOneSetting(models.Settings{
+		err = models.AddOneSetting(models.Settings{
 			Section:    section,
 			Key:        key,
 			Value:      value,
 			CreatedBy:  currentUserID,
 			ModifiedBy: currentUserID,
 		})
-		// 如果是site_config，清除缓存
-		if section == constant.SiteSettingSectionName {
-			ClearSiteConfigCache()
-		}
-		return err
 	} else {
 		if value == "" && section != constant.SecuritySectionName {
 			return nil
@@ -104,33 +123,45 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 		data["key"] = key
 		data["value"] = value
 		data["modified_by"] = currentUserID
-		err := models.EditSetting(setting.ID, data)
-		// 更新日志清理配置
-		if section == constant.LogsCleanSectionName {
-			if key == constant.LogsCleanCronKeyName || key == constant.LogsCleanEnabledKeyName {
-				cronService := cron_service.CronService{}
-				// 获取最新的cron和enabled值
-				cronSetting, _ := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanCronKeyName)
-				enabledSetting, _ := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanEnabledKeyName)
-				cronService.UpdateLogsCronRun(cronSetting.Value, enabledSetting.Value == "true")
-			}
-		}
-		// 更新托管消息清理配置
-		if section == constant.HostedMsgCleanSectionName {
-			if key == constant.HostedMsgCleanCronKeyName || key == constant.HostedMsgCleanEnabledKeyName {
-				cronService := cron_service.CronService{}
-				// 获取最新的cron和enabled值
-				cronSetting, _ := models.GetSettingByKey(constant.HostedMsgCleanSectionName, constant.HostedMsgCleanCronKeyName)
-				enabledSetting, _ := models.GetSettingByKey(constant.HostedMsgCleanSectionName, constant.HostedMsgCleanEnabledKeyName)
-				cronService.UpdateHostedMsgCronRun(cronSetting.Value, enabledSetting.Value == "true")
-			}
-		}
-		// 如果是site_config，清除缓存
-		if section == constant.SiteSettingSectionName {
-			ClearSiteConfigCache()
-		}
+		err = models.EditSetting(setting.ID, data)
+	}
+
+	if err != nil {
 		return err
 	}
+
+	// 更新日志清理配置（支持按当前用户独立调度）
+	if section == constant.LogsCleanSectionName {
+		if key == constant.LogsCleanCronKeyName || key == constant.LogsCleanEnabledKeyName {
+			cronService := cron_service.CronService{}
+			cronSetting, _ := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanCronKeyName, currentUserID)
+			enabledSetting, _ := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanEnabledKeyName, currentUserID)
+			cronExpr := cronSetting.Value
+			if cronExpr == "" {
+				cronExpr = util.GetDefaultCronForUser(currentUserID, 0)
+			}
+			cronService.UpdateUserLogsCronRun(currentUserID, cronExpr, enabledSetting.Value == "true")
+		}
+	}
+	// 更新托管消息清理配置（支持按当前用户独立调度）
+	if section == constant.HostedMsgCleanSectionName {
+		if key == constant.HostedMsgCleanCronKeyName || key == constant.HostedMsgCleanEnabledKeyName {
+			cronService := cron_service.CronService{}
+			cronSetting, _ := models.GetSettingByKey(constant.HostedMsgCleanSectionName, constant.HostedMsgCleanCronKeyName, currentUserID)
+			enabledSetting, _ := models.GetSettingByKey(constant.HostedMsgCleanSectionName, constant.HostedMsgCleanEnabledKeyName, currentUserID)
+			cronExpr := cronSetting.Value
+			if cronExpr == "" {
+				cronExpr = util.GetDefaultCronForUser(currentUserID, 27)
+			}
+			cronService.UpdateUserHostedMsgCronRun(currentUserID, cronExpr, enabledSetting.Value == "true")
+		}
+	}
+	// 如果是site_config，清除缓存
+	if section == constant.SiteSettingSectionName {
+		ClearSiteConfigCache()
+	}
+
+	return nil
 }
 
 // 站点自定义的结构
@@ -145,13 +176,13 @@ type SiteConfig struct {
 }
 
 type LogConfig struct {
-	Cron    string `json:"cron" validate:"required,cron" label:"日志定时表达式"`
+	Cron    string `json:"cron" validate:"omitempty,cron" label:"日志定时表达式"`
 	KeepNum string `json:"keep_num" validate:"required,min=1,max=50" label:"日志保留数"`
 	Enabled string `json:"enabled" validate:"required,oneof=true false" label:"是否启用"`
 }
 
 type HostedMsgConfig struct {
-	Cron    string `json:"cron" validate:"required,cron" label:"托管消息定时表达式"`
+	Cron    string `json:"cron" validate:"omitempty,cron" label:"托管消息定时表达式"`
 	KeepNum string `json:"keep_num" validate:"required,min=1,max=50" label:"托管消息保留数"`
 	Enabled string `json:"enabled" validate:"required,oneof=true false" label:"是否启用"`
 }
@@ -215,9 +246,11 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		config.Cron = data["cron"]
 		config.KeepNum = data["keep_num"]
 		config.Enabled = data["enabled"]
-		_, err := cron.ParseStandard(config.Cron)
-		if err != nil {
-			return fmt.Sprintf("%s 不是合法的corn表达式", config.Cron)
+		if config.Cron != "" {
+			_, err := cron.ParseStandard(config.Cron)
+			if err != nil {
+				return fmt.Sprintf("%s 不是合法的cron表达式", config.Cron)
+			}
 		}
 		_, errStr := app.CommonPlaygroundValid(config)
 		return errStr
@@ -227,9 +260,11 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		config.Cron = data["cron"]
 		config.KeepNum = data["keep_num"]
 		config.Enabled = data["enabled"]
-		_, err := cron.ParseStandard(config.Cron)
-		if err != nil {
-			return fmt.Sprintf("%s 不是合法的corn表达式", config.Cron)
+		if config.Cron != "" {
+			_, err := cron.ParseStandard(config.Cron)
+			if err != nil {
+				return fmt.Sprintf("%s 不是合法的cron表达式", config.Cron)
+			}
 		}
 		_, errStr := app.CommonPlaygroundValid(config)
 		return errStr

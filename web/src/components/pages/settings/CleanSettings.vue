@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -10,9 +10,11 @@ import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 import { useRouter } from 'vue-router'
 import { CONSTANT } from '@/constant'
-import { HelpCircleIcon } from 'lucide-vue-next'
+import { HelpCircleIcon, ShuffleIcon } from 'lucide-vue-next'
+import { checkIsDemoMode } from '@/util/demo'
 
 const router = useRouter()
+const isDemo = ref(checkIsDemoMode())
 
 // 日志清理状态
 const logsState = reactive({
@@ -30,8 +32,35 @@ const hostedMsgState = reactive({
   enabled: false,
 })
 
+// 随机生成凌晨低峰期的 Cron 表达式（1:00 ~ 4:59）
+const randomizeLogsCron = () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('演示模式下禁止修改清理配置')
+    return
+  }
+  const minute = Math.floor(Math.random() * 60)
+  const hour = 1 + Math.floor(Math.random() * 4)
+  logsState.cron = `${minute} ${hour} * * *`
+  toast.info(`已随机分配日志清理时间：每天 ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`)
+}
+
+const randomizeHostedMsgCron = () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('演示模式下禁止修改清理配置')
+    return
+  }
+  const minute = Math.floor(Math.random() * 60)
+  const hour = 1 + Math.floor(Math.random() * 4)
+  hostedMsgState.cron = `${minute} ${hour} * * *`
+  toast.info(`已随机分配托管消息清理时间：每天 ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`)
+}
+
 // 提交日志清理配置
 const handleLogsSubmit = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('演示模式下禁止修改清理配置')
+    return
+  }
   try {
     const postData = {
       section: logsState.section,
@@ -53,6 +82,10 @@ const handleLogsSubmit = async () => {
 
 // 提交托管消息清理配置
 const handleHostedMsgSubmit = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('演示模式下禁止修改清理配置')
+    return
+  }
   try {
     const postData = {
       section: hostedMsgState.section,
@@ -139,6 +172,11 @@ export default {
       <CardDescription>配置定时数据清除和保留策略</CardDescription>
     </CardHeader>
     <CardContent>
+      <!-- 演示模式提示横幅 -->
+      <div v-if="isDemo" class="mb-6 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-2">
+        <span>⚠️ 当前系统处于演示模式，数据清理配置仅供只读预览展示，禁止修改配置。</span>
+      </div>
+
       <!-- 大屏横向，小屏竖向 -->
       <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
         <!-- 日志清理部分 -->
@@ -156,16 +194,28 @@ export default {
                   开启后将按照规则清理日志
                 </div>
               </div>
-              <Switch v-model="logsState.enabled" @update:model-value="handleLogsSubmit" />
+              <Switch v-model="logsState.enabled" :disabled="isDemo" @update:model-value="handleLogsSubmit" />
             </div>
 
             <!-- Cron表达式输入 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-foreground">定时清除Cron表达式</label>
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-foreground">定时清除Cron表达式</label>
+                <button
+                  type="button"
+                  class="text-xs text-primary hover:underline flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                  :disabled="!logsState.enabled || isDemo"
+                  :title="isDemo ? '演示模式已禁止修改' : '随机生成凌晨低峰期清理时间'"
+                  @click="randomizeLogsCron"
+                >
+                  <ShuffleIcon class="w-3.5 h-3.5" />
+                  <span>随机时间</span>
+                </button>
+              </div>
               <Input 
                 v-model="logsState.cron" 
-                placeholder="请输入定时日志清除的Cron表达式"
-                :disabled="!logsState.enabled"
+                placeholder="留空自动随机生成，或输入如 15 2 * * *"
+                :disabled="!logsState.enabled || isDemo"
               />
             </div>
             
@@ -175,7 +225,7 @@ export default {
               <Input 
                 v-model="logsState.keepNum" 
                 placeholder="请输入要保留的最近的日志条数"
-                :disabled="!logsState.enabled"
+                :disabled="!logsState.enabled || isDemo"
               />
             </div>
 
@@ -190,7 +240,8 @@ export default {
                     </TooltipTrigger>
                     <TooltipContent class="max-w-xs">
                       <div class="text-sm">
-                        <p>cron如果不设置，默认是在每天的0点1分进行清理</p>
+                        <p>为避免并发冲击，系统已为每位用户默认随机打散在凌晨低峰期（1:00~4:59）执行</p>
+                        <p class="mt-1">点击“随机时间”可重新打散分配，亦可手动指定或留空自动随机分配</p>
                         <p class="mt-1">保留数目如果不设置，默认保留最近1000条</p>
                         <p class="mt-1">需要先启用开关才能生效</p>
                       </div>
@@ -203,7 +254,13 @@ export default {
                 <Button variant="outline" size="sm" @click="handleLogsView">
                   查看日志
                 </Button>
-                <Button size="sm" @click="handleLogsSubmit">
+                <Button
+                  size="sm"
+                  :disabled="isDemo"
+                  :class="{ 'opacity-50 cursor-not-allowed': isDemo }"
+                  :title="isDemo ? '演示模式已禁止修改清理配置' : '保存'"
+                  @click="handleLogsSubmit"
+                >
                   保存
                 </Button>
               </div>
@@ -230,16 +287,28 @@ export default {
                   开启后将按照规则清理托管消息
                 </div>
               </div>
-              <Switch v-model="hostedMsgState.enabled" @update:model-value="handleHostedMsgSubmit" />
+              <Switch v-model="hostedMsgState.enabled" :disabled="isDemo" @update:model-value="handleHostedMsgSubmit" />
             </div>
 
             <!-- Cron表达式输入 -->
             <div class="space-y-2">
-              <label class="text-sm font-medium text-foreground">定时清除Cron表达式</label>
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-foreground">定时清除Cron表达式</label>
+                <button
+                  type="button"
+                  class="text-xs text-primary hover:underline flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                  :disabled="!hostedMsgState.enabled || isDemo"
+                  :title="isDemo ? '演示模式已禁止修改' : '随机生成凌晨低峰期清理时间'"
+                  @click="randomizeHostedMsgCron"
+                >
+                  <ShuffleIcon class="w-3.5 h-3.5" />
+                  <span>随机时间</span>
+                </button>
+              </div>
               <Input 
                 v-model="hostedMsgState.cron" 
-                placeholder="请输入定时托管消息清除的Cron表达式"
-                :disabled="!hostedMsgState.enabled"
+                placeholder="留空自动随机生成，或输入如 30 2 * * *"
+                :disabled="!hostedMsgState.enabled || isDemo"
               />
             </div>
             
@@ -249,7 +318,7 @@ export default {
               <Input 
                 v-model="hostedMsgState.keepNum" 
                 placeholder="请输入要保留的最近的托管消息条数"
-                :disabled="!hostedMsgState.enabled"
+                :disabled="!hostedMsgState.enabled || isDemo"
               />
             </div>
 
@@ -264,7 +333,8 @@ export default {
                     </TooltipTrigger>
                     <TooltipContent class="max-w-xs">
                       <div class="text-sm">
-                        <p>cron如果不设置，默认是在每天的0点30分进行清理</p>
+                        <p>为避免并发冲击，系统已为每位用户默认随机打散在凌晨低峰期（1:00~4:59）执行</p>
+                        <p class="mt-1">点击“随机时间”可重新打散分配，亦可手动指定或留空自动随机分配</p>
                         <p class="mt-1">保留数目如果不设置，默认保留最近5000条</p>
                         <p class="mt-1">需要先启用开关才能生效</p>
                       </div>
@@ -277,7 +347,13 @@ export default {
                 <Button variant="outline" size="sm" @click="handleHostedMsgView">
                   查看日志
                 </Button>
-                <Button size="sm" @click="handleHostedMsgSubmit">
+                <Button
+                  size="sm"
+                  :disabled="isDemo"
+                  :class="{ 'opacity-50 cursor-not-allowed': isDemo }"
+                  :title="isDemo ? '演示模式已禁止修改清理配置' : '保存'"
+                  @click="handleHostedMsgSubmit"
+                >
                   保存
                 </Button>
               </div>

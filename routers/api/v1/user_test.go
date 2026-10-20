@@ -394,4 +394,144 @@ func TestDemoModeRestrictions(t *testing.T) {
 	}
 }
 
+func TestUserCleanSettingsAndIsolation(t *testing.T) {
+	router, adminUser, normalUser := setupUserRouter("clean_isolation")
+
+	apiV1 := router.Group("/api/v1")
+	apiV1.POST("/settings/set", EditSettings)
+	apiV1.GET("/settings/getsetting", GetUserSetting)
+
+	adminToken, _ := util.GenerateToken(adminUser.ID, adminUser.Username, adminUser.Password, adminUser.Role, 1)
+	userToken, _ := util.GenerateToken(normalUser.ID, normalUser.Username, normalUser.Password, normalUser.Role, 1)
+
+	// 1. 普通用户允许修改用户级设置：log_config
+	logConfigBody, _ := json.Marshal(map[string]interface{}{
+		"section": "log_config",
+		"data": map[string]string{
+			"cron":     "10 2 * * *",
+			"keep_num": "500",
+			"enabled":  "true",
+		},
+	})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/settings/set", bytes.NewBuffer(logConfigBody))
+	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for user modifying log_config, got %d, body: %s", w.Code, w.Body.String())
+	}
+
+	// 2. 普通用户尝试修改系统级设置：site_config -> 403 Forbidden
+	siteConfigBody, _ := json.Marshal(map[string]interface{}{
+		"section": "site_config",
+		"data": map[string]string{
+			"title": "Hacked Title",
+		},
+	})
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", "/api/v1/settings/set", bytes.NewBuffer(siteConfigBody))
+	req.Header.Set("Authorization", "Bearer "+userToken)
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+	var respBody map[string]interface{}
+	_ = json.Unmarshal(w.Body.Bytes(), &respBody)
+	if code, ok := respBody["code"].(float64); !ok || int(code) != 403 {
+		t.Fatalf("expected business code 403 for normal user modifying site_config, got %v, body: %s", respBody["code"], w.Body.String())
+	}
+
+	// 2.1 验证普通用户获取自身数据清理配置时已分配专属随机打散时间
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/api/v1/settings/getsetting?section=hosted_msg_config", nil)
+	req.Header.Set("Authorization", "Bearer "+userToken)
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for GetUserSetting, got %d", w.Code)
+	}
+	var getResp map[string]interface{}
+	_ = json.Unmarshal(w.Body.Bytes(), &getResp)
+	getData := getResp["data"].(map[string]interface{})
+	if getData["cron"] == "" || getData["cron"] == "30 0 * * *" {
+		t.Fatalf("expected randomized cron for user, but got: %v", getData["cron"])
+	}
+
+	// 3. 管理员修改 site_config -> 200 OK
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", "/api/v1/settings/set", bytes.NewBuffer(siteConfigBody))
+	req.Header.Set("Authorization", "Bearer "+adminToken)
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for admin modifying site_config, got %d, body: %s", w.Code, w.Body.String())
+	}
+
+	// 4. 数据层按用户清理隔离测试
+	// 4.1 日志隔离：为 admin 和 normalUser 分别插入 3 条日志
+	statusVal := 0
+	for i := 1; i <= 3; i++ {
+		logA := models.SendTasksLogs{
+			TaskID:    "T-USER-A",
+			Log:       "User A log",
+			Status:    &statusVal,
+			CreatedBy: normalUser.ID,
+		}
+		_ = logA.Add()
+
+		logB := models.SendTasksLogs{
+			TaskID:    "T-USER-B",
+			Log:       "User B log",
+			Status:    &statusVal,
+			CreatedBy: adminUser.ID,
+		}
+		_ = logB.Add()
+	}
+
+	// 执行仅清理 normalUser 的日志，保留 1 条
+	affectedA, err := models.DeleteOutDateLogs(1, normalUser.ID)
+	if err != nil {
+		t.Fatalf("failed to delete outdate logs for normalUser: %v", err)
+	}
+	if affectedA != 2 {
+		t.Fatalf("expected 2 logs deleted for normalUser, got %d", affectedA)
+	}
+
+	// 检查 admin 的 3 条日志是否完好无损
+	adminLogsCount, _ := models.GetSendLogsTotal("", "", map[string]interface{}{"created_by": adminUser.ID})
+	if adminLogsCount != 3 {
+		t.Fatalf("admin logs should remain 3, but got %d", adminLogsCount)
+	}
+
+	// 4.2 托管消息隔离：为 admin 和 normalUser 分别插入 3 条托管消息
+	for i := 1; i <= 3; i++ {
+		msgA := models.HostedMessage{
+			Title:     "Title A",
+			Content:   "Content A",
+			CreatedBy: normalUser.ID,
+		}
+		_ = msgA.Add()
+
+		msgB := models.HostedMessage{
+			Title:     "Title B",
+			Content:   "Content B",
+			CreatedBy: adminUser.ID,
+		}
+		_ = msgB.Add()
+	}
+
+	// 执行仅清理 normalUser 的托管消息，保留 1 条
+	affectedMsgA, err := models.DeleteOutDateHostedMessages(1, normalUser.ID)
+	if err != nil {
+		t.Fatalf("failed to delete outdate hosted messages for normalUser: %v", err)
+	}
+	if affectedMsgA != 2 {
+		t.Fatalf("expected 2 hosted messages deleted for normalUser, got %d", affectedMsgA)
+	}
+
+	// 检查 admin 的 3 条托管消息是否完好无损
+	adminMsgCount, _ := models.GetHostMessagesTotal("", map[string]interface{}{"created_by": adminUser.ID})
+	if adminMsgCount != 3 {
+		t.Fatalf("admin hosted messages should remain 3, but got %d", adminMsgCount)
+	}
+}
+
 

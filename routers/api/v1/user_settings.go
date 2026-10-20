@@ -6,6 +6,7 @@ import (
 	"message-nest/pkg/app"
 	"message-nest/pkg/constant"
 	"message-nest/pkg/e"
+	"message-nest/pkg/setting"
 	"message-nest/service/settings_service"
 	"net/http"
 )
@@ -50,6 +51,11 @@ func EditPasswd(c *gin.Context) {
 		req  EditUserPasswdReq
 	)
 
+	if setting.IsDemoMode() {
+		appG.CResponse(http.StatusForbidden, "演示模式下已禁止修改密码！", nil)
+		return
+	}
+
 	currentUserId := app.GetCurrentUserId(c)
 	currentUserName := app.GetCurrentUserName(c)
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
@@ -85,6 +91,12 @@ func EditSettings(c *gin.Context) {
 		appG = app.Gin{C: c}
 		req  SettingReq
 	)
+
+	if setting.IsDemoMode() {
+		appG.CResponse(http.StatusForbidden, "演示模式下禁止修改配置！", nil)
+		return
+	}
+
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
@@ -93,6 +105,15 @@ func EditSettings(c *gin.Context) {
 
 	currentUserId := app.GetCurrentUserId(c)
 	isAdmin := app.IsAdmin(c)
+
+	// 非管理员用户只允许修改用户级配置（日志清理、托管消息清理）
+	if !isAdmin {
+		if req.Section != constant.LogsCleanSectionName && req.Section != constant.HostedMsgCleanSectionName {
+			appG.CResponse(http.StatusForbidden, "普通用户无权修改系统级配置！", nil)
+			return
+		}
+	}
+
 	settingService := settings_service.UserSettings{
 		UserID:  currentUserId,
 		IsAdmin: isAdmin,
@@ -105,13 +126,18 @@ func EditSettings(c *gin.Context) {
 	for key, value := range req.Data {
 		err := settingService.EditSettings(req.Section, key, value, currentUserId)
 		if err != nil {
-			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("修改站点设置失败！错误原因：%s", err), nil)
+			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("修改设置失败！错误原因：%s", err), nil)
 			return
 		}
 	}
 
-	appG.CResponse(http.StatusOK, "修改站点设置成功！", nil)
-
+	msg := "修改设置成功！"
+	if req.Section == constant.LogsCleanSectionName {
+		msg = "修改日志清理设置成功！"
+	} else if req.Section == constant.HostedMsgCleanSectionName {
+		msg = "修改托管消息清理设置成功！"
+	}
+	appG.CResponse(http.StatusOK, msg, nil)
 }
 
 // RestDefaultSettings 重设默认设置

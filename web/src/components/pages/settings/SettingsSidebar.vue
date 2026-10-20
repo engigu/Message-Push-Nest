@@ -25,7 +25,7 @@ const settingsMenu = computed(() => {
     { id: 'password', name: '账号安全', icon: KeyIcon, adminOnly: false },
     { id: 'users', name: '用户管理', icon: UsersIcon, adminOnly: true },
     { id: 'oidc', name: '单点登录', icon: FingerprintIcon, adminOnly: true },
-    { id: 'clean', name: '数据清理', icon: TrashIcon, adminOnly: true },
+    { id: 'clean', name: '数据清理', icon: TrashIcon, adminOnly: false },
     { id: 'loginlogs', name: '登录日志', icon: HistoryIcon, adminOnly: true },
     { id: 'site', name: '站点设置', icon: SettingsIcon, adminOnly: true },
     { id: 'about', name: '站点关于', icon: InfoIcon, adminOnly: false }

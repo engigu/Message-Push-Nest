@@ -113,3 +113,14 @@ func GetSettingBySection(section string, createdBy ...string) ([]Settings, error
 	}
 	return settings, nil
 }
+
+// GetConfiguredUsersBySection 获取配置了某个 section 的所有独立用户 ID 列表
+func GetConfiguredUsersBySection(section string) ([]string, error) {
+	var userIDs []string
+	settingsTable := GetSchema(Settings{})
+	err := db.Table(settingsTable).
+		Where("section = ? AND created_by != '' AND created_by IS NOT NULL", section).
+		Distinct("created_by").
+		Pluck("created_by", &userIDs).Error
+	return userIDs, err
+}

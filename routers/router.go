@@ -117,6 +117,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 			// settings (通用用户自身设置)
 			authGroup.POST("/settings/setpasswd", v1.EditPasswd)
 			authGroup.GET("/settings/getsetting", v1.GetUserSetting)
+			authGroup.POST("/settings/set", v1.EditSettings)
 
 			// 用户自身 SSO 绑定与解绑
 			authGroup.GET("/auth/sso/bind", v1.StartSSOBind)
@@ -131,8 +132,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 				adminGroup.POST("/auth/oidc/test", v1.OidcTest)
 				adminGroup.POST("/auth/oauth2/test", v1.OAuth2Test)
 
-				// settings
-				adminGroup.POST("/settings/set", v1.EditSettings)
+				// settings (管理员重置系统设置)
 				adminGroup.POST("/settings/reset", v1.RestDefaultSettings)
 
 				// login logs
