@@ -23,7 +23,9 @@ import {
   EyeOff,
   ExternalLink
 } from 'lucide-vue-next'
+import { checkIsDemoMode } from '@/util/demo'
 
+const isDemo = ref(checkIsDemoMode())
 const loading = ref(false)
 const saving = ref(false)
 const testingOidc = ref(false)
@@ -63,14 +65,14 @@ const oidcRedirectUrl = computed(() => {
   if (typeof window === 'undefined') return ''
   const base = window.location.origin
   const prefix = config.pathPrefix || ''
-  return `${base}${prefix}/api/v1/auth/oidc/callback`
+  return `${base}${prefix}/api/v1/auth/sso/oidc/callback`
 })
 
 const oauth2RedirectUrl = computed(() => {
   if (typeof window === 'undefined') return ''
   const base = window.location.origin
   const prefix = config.pathPrefix || ''
-  return `${base}${prefix}/api/v1/auth/oauth2/callback`
+  return `${base}${prefix}/api/v1/auth/sso/oauth2/callback`
 })
 
 function cleanOidcIssuer() {
@@ -247,6 +249,11 @@ async function save() {
     }
   }
 
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前处于演示模式，已禁止修改单点登录配置！')
+    return
+  }
+
   saving.value = true
   try {
     const postData = {
@@ -289,6 +296,10 @@ async function save() {
 }
 
 async function handleTestOidc() {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前处于演示模式，已禁止测试第三方连接！')
+    return
+  }
   cleanOidcIssuer()
   if (!form.value.oidc_issuer.trim()) {
     toast.error('请先填写 Issuer 服务提供商根地址')
@@ -314,6 +325,10 @@ async function handleTestOidc() {
 }
 
 async function handleTestOAuth2() {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前处于演示模式，已禁止测试第三方连接！')
+    return
+  }
   if (!form.value.oauth2_auth_url.trim() || !form.value.oauth2_token_url.trim() || !form.value.oauth2_userinfo_url.trim()) {
     toast.error('请完整填写授权、令牌及用户信息端点')
     return
@@ -352,6 +367,11 @@ onMounted(() => {
     </CardHeader>
     <CardContent>
       <div class="setting-container">
+        <!-- 演示模式提示横幅 -->
+        <div v-if="isDemo" class="mb-4 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-2">
+          <span>⚠️ 当前系统运行于演示模式，已全局禁用第三方单点登录 (SSO) 与注册功能，相关配置仅供展示与只读预览。</span>
+        </div>
+
         <!-- 标签页切换 -->
         <Tabs v-model="activeTab" class="w-full">
           <TabsList class="grid w-full grid-cols-2 mb-4 sm:mb-6 h-9 sm:h-10">

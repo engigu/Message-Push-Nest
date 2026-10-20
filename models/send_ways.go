@@ -10,9 +10,9 @@ import (
 type SendWays struct {
 	UUIDModel
 
-	Name string `json:"name" gorm:"type:varchar(100) ;default:'';"`
-	Type string `json:"type" gorm:"type:varchar(100) ;default:'';index"`
-	Auth string `json:"auth" gorm:"type:varchar(2048) ;default:'';"`
+	Name string `json:"name" gorm:"type:varchar(100);default:'';index:idx_ways_name"`
+	Type string `json:"type" gorm:"type:varchar(100);default:'';index"`
+	Auth string `json:"auth" gorm:"type:varchar(2048);default:'';"`
 }
 
 func GenerateWayUniqueID() string {
@@ -95,26 +95,45 @@ func GetWayByID(id string) (SendWays, error) {
 	return way, nil
 }
 
-func GetWayByName(name string) (SendWays, error) {
+func GetWayByName(name string, createdBy ...string) (SendWays, error) {
 	var way SendWays
-	err := db.Where("name = ? ", name).Find(&way).Error
+	query := db.Where("name = ?", name)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
+	}
+	err := query.Limit(1).Find(&way).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return way, err
 	}
 	return way, nil
 }
 
-func DeleteMsgWay(id string) error {
-	if err := db.Where("id = ?", id).Delete(&SendWays{}).Error; err != nil {
-		return err
+func DeleteMsgWay(id string, createdBy ...string) error {
+	query := db.Where("id = ?", id)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
 	}
-
+	result := query.Delete(&SendWays{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if len(createdBy) > 0 && createdBy[0] != "" && result.RowsAffected == 0 {
+		return ErrNoPermissionOrNotFound
+	}
 	return nil
 }
 
-func EditSendWay(id string, data interface{}) error {
-	if err := db.Model(&SendWays{}).Where("id = ? ", id).Updates(data).Error; err != nil {
-		return err
+func EditSendWay(id string, data interface{}, createdBy ...string) error {
+	query := db.Model(&SendWays{}).Where("id = ?", id)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
+	}
+	result := query.Updates(data)
+	if result.Error != nil {
+		return result.Error
+	}
+	if len(createdBy) > 0 && createdBy[0] != "" && result.RowsAffected == 0 {
+		return ErrNoPermissionOrNotFound
 	}
 
 	return nil

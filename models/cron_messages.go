@@ -93,16 +93,32 @@ func GetCronMessagesTotal(name string, maps interface{}) (int64, error) {
 	return total, nil
 }
 
-func DeleteCronMsg(id string) error {
-	if err := db.Where("id = ?", id).Delete(&CronMessages{}).Error; err != nil {
-		return err
+func DeleteCronMsg(id string, createdBy ...string) error {
+	query := db.Where("id = ?", id)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
+	}
+	result := query.Delete(&CronMessages{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if len(createdBy) > 0 && createdBy[0] != "" && result.RowsAffected == 0 {
+		return ErrNoPermissionOrNotFound
 	}
 	return nil
 }
 
-func EditCronMsg(id string, data interface{}) error {
-	if err := db.Model(&CronMessages{}).Where("id = ? ", id).Updates(data).Error; err != nil {
-		return err
+func EditCronMsg(id string, data interface{}, createdBy ...string) error {
+	query := db.Model(&CronMessages{}).Where("id = ?", id)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
+	}
+	result := query.Updates(data)
+	if result.Error != nil {
+		return result.Error
+	}
+	if len(createdBy) > 0 && createdBy[0] != "" && result.RowsAffected == 0 {
+		return ErrNoPermissionOrNotFound
 	}
 	return nil
 }

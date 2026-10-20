@@ -8,12 +8,13 @@ import (
 
 // SendStats 发送统计表
 type SendStats struct {
-	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	TaskID   string `json:"task_id" gorm:"type:varchar(12);default:'';uniqueIndex:idx_task_type_day_status"`
-	TaskType string `json:"task_type" gorm:"type:varchar(20);default:'task';uniqueIndex:idx_task_type_day_status;comment:'任务类型：task-发信任务，template-模板任务'"`
-	Day      string `json:"day" gorm:"type:varchar(10);uniqueIndex:idx_task_type_day_status;index:idx_day_status"`
-	Status   string `json:"status" gorm:"type:varchar(20);uniqueIndex:idx_task_type_day_status;index:idx_day_status"`
-	Num      int64  `json:"num" gorm:"type:bigint;default:0"`
+	ID        uint   `gorm:"primaryKey;autoIncrement" json:"id"`
+	TaskID    string `json:"task_id" gorm:"type:varchar(12);default:'';uniqueIndex:idx_task_type_day_status"`
+	TaskType  string `json:"task_type" gorm:"type:varchar(20);default:'task';uniqueIndex:idx_task_type_day_status;comment:'任务类型：task-发信任务，template-模板任务'"`
+	Day       string `json:"day" gorm:"type:varchar(10);uniqueIndex:idx_task_type_day_status;index:idx_day_status;index:idx_stats_user_day_status,priority:2"`
+	Status    string `json:"status" gorm:"type:varchar(20);uniqueIndex:idx_task_type_day_status;index:idx_day_status;index:idx_stats_user_day_status,priority:3"`
+	Num       int64  `json:"num" gorm:"type:bigint;default:0"`
+	CreatedBy string `json:"created_by" gorm:"type:varchar(36);default:'';index:idx_created_by;index:idx_stats_user_day_status,priority:1"`
 }
 
 // SendStatsData 首页统计数据结构
@@ -50,10 +51,15 @@ type TaskTypeStatsData struct {
 }
 
 // GetSendStatsData 获取发送统计数据
-func GetSendStatsData(days int) (SendStatsData, error) {
+func GetSendStatsData(days int, createdBy ...string) (SendStatsData, error) {
 	var result SendStatsData
 	statsTable := GetSchema(SendStats{})
 	currDay := util.GetNowTimeStr()[:10]
+
+	userFilter := ""
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		userFilter = createdBy[0]
+	}
 
 	// 今日统计
 	var todayStats struct {
@@ -68,6 +74,9 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 			SUM(num) AS today_total_num
 		`).
 		Where("day = ?", currDay)
+	if userFilter != "" {
+		todayQuery = todayQuery.Where("created_by = ?", userFilter)
+	}
 
 	if err := todayQuery.Scan(&todayStats).Error; err == nil {
 		result.TodaySuccNum = todayStats.TodaySuccNum
@@ -87,6 +96,9 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 			SUM(CASE WHEN status = 'failed' THEN num ELSE 0 END) AS total_failed_num,
 			SUM(num) AS total_num
 		`)
+	if userFilter != "" {
+		totalQuery = totalQuery.Where("created_by = ?", userFilter)
+	}
 
 	if err := totalQuery.Scan(&totalStats).Error; err == nil {
 		result.TotalSuccNum = totalStats.TotalSuccNum
@@ -108,9 +120,11 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 				SUM(CASE WHEN status = 'failed' THEN num ELSE 0 END) AS failed_num,
 				SUM(num) AS total_num
 			`).
-			Where("day >= ?", pastDate).
-			Group("day").
-			Order("day DESC")
+			Where("day >= ?", pastDate)
+		if userFilter != "" {
+			dailyQuery = dailyQuery.Where("created_by = ?", userFilter)
+		}
+		dailyQuery = dailyQuery.Group("day").Order("day DESC")
 
 		dailyQuery.Scan(&dailyStats)
 		result.DailyStats = dailyStats
@@ -119,9 +133,11 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 	// 状态分布统计
 	var statusStats []StatusStatsData
 	statusQuery := db.Table(statsTable).
-		Select("status, SUM(num) AS num").
-		Group("status").
-		Order("num DESC")
+		Select("status, SUM(num) AS num")
+	if userFilter != "" {
+		statusQuery = statusQuery.Where("created_by = ?", userFilter)
+	}
+	statusQuery = statusQuery.Group("status").Order("num DESC")
 
 	statusQuery.Scan(&statusStats)
 	result.StatusStats = statusStats
@@ -129,9 +145,11 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 	// 任务类型分布统计
 	var taskTypeStats []TaskTypeStatsData
 	taskTypeQuery := db.Table(statsTable).
-		Select("task_type, SUM(num) AS num").
-		Group("task_type").
-		Order("num DESC")
+		Select("task_type, SUM(num) AS num")
+	if userFilter != "" {
+		taskTypeQuery = taskTypeQuery.Where("created_by = ?", userFilter)
+	}
+	taskTypeQuery = taskTypeQuery.Group("task_type").Order("num DESC")
 
 	taskTypeQuery.Scan(&taskTypeStats)
 	result.TaskTypeStats = taskTypeStats
@@ -140,10 +158,15 @@ func GetSendStatsData(days int) (SendStatsData, error) {
 }
 
 // GetSendStatsByTask 获取指定任务的统计数据
-func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
+func GetSendStatsByTask(taskID string, days int, createdBy ...string) (SendStatsData, error) {
 	var result SendStatsData
 	statsTable := GetSchema(SendStats{})
 	currDay := util.GetNowTimeStr()[:10]
+
+	userFilter := ""
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		userFilter = createdBy[0]
+	}
 
 	// 今日统计
 	var todayStats struct {
@@ -158,6 +181,9 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 			SUM(num) AS today_total_num
 		`).
 		Where("day = ? AND task_id = ?", currDay, taskID)
+	if userFilter != "" {
+		todayQuery = todayQuery.Where("created_by = ?", userFilter)
+	}
 
 	if err := todayQuery.Scan(&todayStats).Error; err == nil {
 		result.TodaySuccNum = todayStats.TodaySuccNum
@@ -178,6 +204,9 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 			SUM(num) AS total_num
 		`).
 		Where("task_id = ?", taskID)
+	if userFilter != "" {
+		totalQuery = totalQuery.Where("created_by = ?", userFilter)
+	}
 
 	if err := totalQuery.Scan(&totalStats).Error; err == nil {
 		result.TotalSuccNum = totalStats.TotalSuccNum
@@ -199,9 +228,11 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 				SUM(CASE WHEN status = 'failed' THEN num ELSE 0 END) AS failed_num,
 				SUM(num) AS total_num
 			`).
-			Where("day >= ? AND task_id = ?", pastDate, taskID).
-			Group("day").
-			Order("day DESC")
+			Where("day >= ? AND task_id = ?", pastDate, taskID)
+		if userFilter != "" {
+			dailyQuery = dailyQuery.Where("created_by = ?", userFilter)
+		}
+		dailyQuery = dailyQuery.Group("day").Order("day DESC")
 
 		dailyQuery.Scan(&dailyStats)
 		result.DailyStats = dailyStats
@@ -211,9 +242,11 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 	var statusStats []StatusStatsData
 	statusQuery := db.Table(statsTable).
 		Select("status, SUM(num) AS num").
-		Where("task_id = ?", taskID).
-		Group("status").
-		Order("num DESC")
+		Where("task_id = ?", taskID)
+	if userFilter != "" {
+		statusQuery = statusQuery.Where("created_by = ?", userFilter)
+	}
+	statusQuery = statusQuery.Group("status").Order("num DESC")
 
 	statusQuery.Scan(&statusStats)
 	result.StatusStats = statusStats
@@ -222,17 +255,22 @@ func GetSendStatsByTask(taskID string, days int) (SendStatsData, error) {
 }
 
 // IncrementSendStats 增加发送统计（用于实时更新统计数据）
-func IncrementSendStats(taskID string, taskType string, day string, status string, num int64) error {
+func IncrementSendStats(taskID string, taskType string, day string, status string, num int64, createdBy ...string) error {
+	cb := ""
+	if len(createdBy) > 0 {
+		cb = createdBy[0]
+	}
 	return db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "task_id"}, {Name: "task_type"}, {Name: "day"}, {Name: "status"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
 			"num": gorm.Expr("num + ?", num),
 		}),
 	}).Create(&SendStats{
-		TaskID:   taskID,
-		TaskType: taskType,
-		Day:      day,
-		Status:   status,
-		Num:      num,
+		TaskID:    taskID,
+		TaskType:  taskType,
+		Day:       day,
+		Status:    status,
+		Num:       num,
+		CreatedBy: cb,
 	}).Error
 }

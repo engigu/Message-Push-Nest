@@ -9,7 +9,7 @@ import (
 type SendTasks struct {
 	UUIDModel
 
-	Name string `json:"name" gorm:"type:varchar(100) ;default:'';"`
+	Name string `json:"name" gorm:"type:varchar(100);default:'';index:idx_tasks_name"`
 }
 
 func GenerateTaskUniqueID() string {
@@ -101,9 +101,10 @@ type SendTasksInsRes struct {
 }
 
 type TaskIns struct {
-	ID      string            `json:"id"`
-	Name    string            `json:"name"`
-	InsData []SendTasksInsRes `json:"ins_data"`
+	ID        string            `json:"id"`
+	Name      string            `json:"name"`
+	CreatedBy string            `json:"created_by"`
+	InsData   []SendTasksInsRes `json:"ins_data"`
 }
 
 // GetTasksIns 获取所有任务下所有的实例
@@ -131,6 +132,7 @@ func GetTasksIns(id string) (TaskIns, error) {
 
 	taskResult.ID = task.ID
 	taskResult.Name = task.Name
+	taskResult.CreatedBy = task.CreatedBy
 	taskResult.InsData = taskIns
 	return taskResult, nil
 }
@@ -153,24 +155,36 @@ func FindTaskByWayId(wayId string) []SendTasks {
 	return tasks
 }
 
-// 删除任务并删除所有关联的实例
-func DeleteMsgTask(id string) error {
-	tx := db.Begin()
-	if err := db.Where("id = ?", id).Delete(&SendTasks{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := db.Where("task_id = ?", id).Delete(&SendTasksIns{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
-	return nil
+// DeleteMsgTask 删除任务并级联删除所有关联的实例（行级原子校验租户防越权）
+func DeleteMsgTask(id string, createdBy ...string) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		delQuery := tx.Where("id = ?", id)
+		if len(createdBy) > 0 && createdBy[0] != "" {
+			delQuery = delQuery.Where("created_by = ?", createdBy[0])
+		}
+		result := delQuery.Delete(&SendTasks{})
+		if result.Error != nil {
+			return result.Error
+		}
+		if len(createdBy) > 0 && createdBy[0] != "" && result.RowsAffected == 0 {
+			return ErrNoPermissionOrNotFound
+		}
+		return tx.Where("task_id = ?", id).Delete(&SendTasksIns{}).Error
+	})
 }
 
-func EditSendTask(id string, data map[string]interface{}) error {
-	if err := db.Model(&SendTasks{}).Where("id = ? ", id).Updates(data).Error; err != nil {
-		return err
+// EditSendTask 原子更新任务（行级原子校验租户防越权）
+func EditSendTask(id string, data map[string]interface{}, createdBy ...string) error {
+	query := db.Model(&SendTasks{}).Where("id = ?", id)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
+	}
+	result := query.Updates(data)
+	if result.Error != nil {
+		return result.Error
+	}
+	if len(createdBy) > 0 && createdBy[0] != "" && result.RowsAffected == 0 {
+		return ErrNoPermissionOrNotFound
 	}
 
 	return nil

@@ -3,7 +3,6 @@ package oidc_service
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"strings"
 
 	coreos_oidc "github.com/coreos/go-oidc/v3/oidc"
@@ -179,10 +178,13 @@ func ResolveSSOStatus() gin.H {
 		}
 	}
 
-	isDemo := strings.ToLower(os.Getenv("DEMO_MODE")) == "true" || strings.ToLower(os.Getenv("RUN_MODE")) == "demo"
+	isDemo := setting.IsDemoMode()
+	if isDemo {
+		return gin.H{"enabled": false, "providers": []gin.H{}, "is_demo": true}
+	}
 
 	if len(providers) == 0 {
-		return gin.H{"enabled": false, "providers": []gin.H{}, "is_demo": isDemo}
+		return gin.H{"enabled": false, "providers": []gin.H{}, "is_demo": false}
 	}
 
 	return gin.H{
@@ -190,12 +192,15 @@ func ResolveSSOStatus() gin.H {
 		"providers": providers,
 		"type":      providers[0]["type"],
 		"name":      providers[0]["name"],
-		"is_demo":   isDemo,
+		"is_demo":   false,
 	}
 }
 
 // LoadOidcConfig 读取标准 OIDC 配置
 func LoadOidcConfig(redirectURL string) *Config {
+	if setting.IsDemoMode() {
+		return nil
+	}
 	r := NewSecurityReader()
 	if !r.Bool(constant.KeyOidcEnabled) {
 		return nil
@@ -220,6 +225,9 @@ func LoadOidcConfig(redirectURL string) *Config {
 
 // LoadOAuth2Config 读取通用 OAuth 2.0 配置
 func LoadOAuth2Config(redirectURL string) *Config {
+	if setting.IsDemoMode() {
+		return nil
+	}
 	r := NewSecurityReader()
 	if !r.Bool(constant.KeyOauth2Enabled) {
 		return nil

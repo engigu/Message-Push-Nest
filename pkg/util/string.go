@@ -1,27 +1,27 @@
 package util
 
 import (
-	"math/rand"
-	"time"
+	"crypto/rand"
+	"math/big"
 )
 
 func GenerateRandomString(length int) string {
-	source := rand.NewSource(time.Now().UnixNano())
-	random := rand.New(source)
-
 	charSet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	var result string
-	var charSetLen = len(charSet)
+	charSetLen := big.NewInt(int64(len(charSet)))
+	result := make([]byte, length)
 
 	for i := 0; i < length; i++ {
-		randomIndex := random.Intn(charSetLen)
-		result += string(charSet[randomIndex])
+		num, err := rand.Int(rand.Reader, charSetLen)
+		if err != nil {
+			result[i] = charSet[0]
+		} else {
+			result[i] = charSet[num.Int64()]
+		}
 	}
 
-	return result
+	return string(result)
 }
 
 func GenerateUniqueID() string {
-	randomString := GenerateRandomString(10)
-	return randomString
+	return GenerateRandomString(10)
 }

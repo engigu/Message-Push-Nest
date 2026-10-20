@@ -15,6 +15,7 @@ type SendWay struct {
 	Auth       string
 	CreatedOn  string
 
+	IsAdmin  bool
 	PageNum  int
 	PageSize int
 }
@@ -24,7 +25,14 @@ func (sw *SendWay) GetByID() (interface{}, error) {
 }
 
 func (sw *SendWay) NameIsExist(method string) error {
-	way, err := models.GetWayByName(sw.Name)
+	tenantID := ""
+	if !sw.IsAdmin {
+		tenantID = sw.CreatedBy
+		if method == "edit" && sw.ModifiedBy != "" {
+			tenantID = sw.ModifiedBy
+		}
+	}
+	way, err := models.GetWayByName(sw.Name, tenantID)
 	if err != nil {
 		return err
 	}
@@ -50,6 +58,10 @@ func (sw *SendWay) Add() error {
 }
 
 func (sw *SendWay) Edit() error {
+	tenantID := ""
+	if !sw.IsAdmin && sw.ModifiedBy != "" {
+		tenantID = sw.ModifiedBy
+	}
 	err := sw.NameIsExist("edit")
 	if err != nil {
 		return err
@@ -58,10 +70,14 @@ func (sw *SendWay) Edit() error {
 	data["modified_by"] = sw.ModifiedBy
 	data["name"] = sw.Name
 	data["auth"] = sw.Auth
-	return models.EditSendWay(sw.ID, data)
+	return models.EditSendWay(sw.ID, data, tenantID)
 }
 
 func (sw *SendWay) Delete() error {
+	tenantID := ""
+	if !sw.IsAdmin && sw.ModifiedBy != "" {
+		tenantID = sw.ModifiedBy
+	}
 	tasks := models.FindTaskByWayId(sw.ID)
 	if len(tasks) > 0 {
 		var names []string
@@ -70,24 +86,19 @@ func (sw *SendWay) Delete() error {
 		}
 		return fmt.Errorf("已经存在使用的任务，删除失败！任务名：%s", strings.Join(names, ", "))
 	}
-	return models.DeleteMsgWay(sw.ID)
+	return models.DeleteMsgWay(sw.ID, tenantID)
 }
 
 func (sw *SendWay) Count() (int64, error) {
-	return models.GetSendWaysTotal(sw.Name, sw.Type, sw.getMaps())
+	return models.GetSendWaysTotal(sw.Name, sw.Type, models.TenantMap(sw.IsAdmin, sw.CreatedBy))
 }
 
 func (sw *SendWay) GetAll() ([]models.SendWays, error) {
-	tags, err := models.GetSendWays(sw.PageNum, sw.PageSize, sw.Name, sw.Type, sw.getMaps())
+	tags, err := models.GetSendWays(sw.PageNum, sw.PageSize, sw.Name, sw.Type, models.TenantMap(sw.IsAdmin, sw.CreatedBy))
 	if err != nil {
 		return nil, err
 	}
 	return tags, nil
-}
-
-func (sw *SendWay) getMaps() map[string]interface{} {
-	maps := make(map[string]interface{})
-	return maps
 }
 
 // getValidator 根据渠道类型获取对应的验证器

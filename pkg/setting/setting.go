@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-ini/ini"
@@ -13,9 +14,22 @@ import (
 type App struct {
 	JwtSecret string
 	LogLevel  string
+	RunMode   string
+	DemoMode  bool
 }
 
 var AppSetting = &App{}
+
+// IsDemoMode 判定当前是否运行在演示模式下 (环境变量 DEMO_MODE/RUN_MODE 或配置文件配置)
+func IsDemoMode() bool {
+	if strings.ToLower(os.Getenv("DEMO_MODE")) == "true" || strings.ToLower(os.Getenv("RUN_MODE")) == "demo" {
+		return true
+	}
+	if strings.ToLower(AppSetting.RunMode) == "demo" || AppSetting.DemoMode {
+		return true
+	}
+	return false
+}
 
 type Server struct {
 	HttpPort     int
@@ -37,6 +51,12 @@ type Database struct {
 	TablePrefix string
 	SqlDebug    string
 	Ssl         string
+
+	// 连接池配置
+	MaxIdleConns    int
+	MaxOpenConns    int
+	ConnMaxLifetime int // 分钟
+	ConnMaxIdleTime int // 分钟
 }
 
 var DatabaseSetting = &Database{}
@@ -63,6 +83,9 @@ func createConfFolder() {
 func Setup() {
 	var err error
 	intPath := "conf/app.ini"
+	if !fileExists(intPath) && fileExists("../conf/app.ini") {
+		intPath = "../conf/app.ini"
+	}
 	createConfFolder()
 
 	if fileExists(intPath) {
@@ -80,10 +103,28 @@ func Setup() {
 		loadConfigFromEnv()
 	}
 
+	// 保证数据库连接池有高可用默认值
+	ensureDatabasePoolSettings()
+
 	ServerSetting.ReadTimeout = ServerSetting.ReadTimeout * time.Second
 	ServerSetting.WriteTimeout = ServerSetting.WriteTimeout * time.Second
 
 	ensureJwtSecret()
+}
+
+func ensureDatabasePoolSettings() {
+	if DatabaseSetting.MaxIdleConns <= 0 {
+		DatabaseSetting.MaxIdleConns = 2
+	}
+	if DatabaseSetting.MaxOpenConns <= 0 {
+		DatabaseSetting.MaxOpenConns = 20
+	}
+	if DatabaseSetting.ConnMaxLifetime <= 0 {
+		DatabaseSetting.ConnMaxLifetime = 30 // 30 分钟
+	}
+	if DatabaseSetting.ConnMaxIdleTime <= 0 {
+		DatabaseSetting.ConnMaxIdleTime = 10 // 10 分钟
+	}
 }
 
 func ensureJwtSecret() {

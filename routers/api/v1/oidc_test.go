@@ -18,10 +18,8 @@ func setupTestRouter() *gin.Engine {
 	apiV1 := r.Group("/api/v1")
 	{
 		apiV1.GET("/auth/sso/status", GetSSOStatus)
-		apiV1.GET("/auth/oidc/login", OidcLogin)
-		apiV1.GET("/auth/oidc/callback", OidcCallback)
-		apiV1.GET("/auth/oauth2/login", OAuth2Login)
-		apiV1.GET("/auth/oauth2/callback", OAuth2Callback)
+		apiV1.GET("/auth/sso/:provider/login", SSOLogin)
+		apiV1.GET("/auth/sso/:provider/callback", SSOCallback)
 		apiV1.POST("/auth/oidc/test", OidcTest)
 		apiV1.POST("/auth/oauth2/test", OAuth2Test)
 	}
@@ -54,7 +52,7 @@ func TestGetSSOStatusDisabled(t *testing.T) {
 func TestOidcLoginWithoutConfig(t *testing.T) {
 	r := setupTestRouter()
 
-	req, _ := http.NewRequest(http.MethodGet, "/api/v1/auth/oidc/login", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/auth/sso/oidc/login", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -66,7 +64,7 @@ func TestOidcLoginWithoutConfig(t *testing.T) {
 func TestOidcCallbackStateMismatch(t *testing.T) {
 	r := setupTestRouter()
 
-	req, _ := http.NewRequest(http.MethodGet, "/api/v1/auth/oidc/callback?state=wrong_state&code=test_code", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/auth/sso/oidc/callback?state=wrong_state&code=test_code", nil)
 	req.AddCookie(&http.Cookie{
 		Name:  oidcStateCookie,
 		Value: "correct_state.oidc./",

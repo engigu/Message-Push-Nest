@@ -55,20 +55,20 @@ func ClearSiteConfigCache() {
 	siteConfigCache.lastUpdate = time.Time{}
 }
 
-// IsSiteConfigCacheValid 检查缓存是否有效（可选：可以设置缓存过期时间）
+// IsSiteConfigCacheValid 检查缓存是否有效（支持短期缓存过期，避免数据库直改无法感知）
 func IsSiteConfigCacheValid() bool {
 	siteConfigCache.mutex.RLock()
 	defer siteConfigCache.mutex.RUnlock()
-	
+
 	// 如果缓存为空，认为无效
 	if len(siteConfigCache.data) == 0 {
 		return false
 	}
-	
-	// 可以在这里添加缓存过期逻辑，比如缓存5分钟后过期
-	// if time.Since(siteConfigCache.lastUpdate) > 5*time.Minute {
-	//     return false
-	// }
-	
+
+	// 缓存 10 秒后自动过期，既能抗住高频并发请求，又能及时感知到数据库底层变更
+	if time.Since(siteConfigCache.lastUpdate) > 10*time.Second {
+		return false
+	}
+
 	return true
 }

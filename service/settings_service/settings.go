@@ -6,9 +6,9 @@ import (
 	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/constant"
+	"message-nest/pkg/setting"
 	"message-nest/pkg/util"
 	"message-nest/service/cron_service"
-	"os"
 	"strconv"
 	"strings"
 
@@ -17,13 +17,15 @@ import (
 
 type UserSettings struct {
 	UserName    string
+	UserID      string
+	IsAdmin     bool
 	OldPassword string
 	NewPassword string
 }
 
 // EditUserPasswd 用户设置密码
 func (us *UserSettings) EditUserPasswd() error {
-	if strings.ToLower(os.Getenv("DEMO_MODE")) == "true" || strings.ToLower(os.Getenv("RUN_MODE")) == "demo" {
+	if setting.IsDemoMode() {
 		return errors.New("当前处于演示模式，已禁止修改密码！")
 	}
 	ok, _ := models.CheckAuth(us.UserName, us.OldPassword)
@@ -31,7 +33,8 @@ func (us *UserSettings) EditUserPasswd() error {
 		return errors.New("旧密码校验失败！")
 	}
 	var user = map[string]interface{}{
-		"password": us.NewPassword,
+		"password":    us.NewPassword,
+		"modified_by": us.UserID,
 	}
 	return models.EditUser(us.UserName, user)
 }
@@ -46,7 +49,7 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 	}
 
 	result := make(map[string]string)
-	settings, err := models.GetSettingBySection(section)
+	settings, err := models.GetSettingBySection(section, us.UserID)
 	if err != nil {
 		return result, err
 	}
@@ -72,17 +75,20 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 }
 
 // EditSettings 便捷自定义设置
-func (us *UserSettings) EditSettings(section string, key string, value string, currentUser string) error {
-	setting, _ := models.GetSettingByKey(section, key)
-	if setting.ID <= 0 {
+func (us *UserSettings) EditSettings(section string, key string, value string, currentUserID string) error {
+	var setting models.Settings
+	if currentUserID != "" {
+		setting, _ = models.GetSettingByUser(section, key, currentUserID)
+	} else {
+		setting, _ = models.GetSettingByKey(section, key)
+	}
+	if setting.ID == 0 {
 		err := models.AddOneSetting(models.Settings{
-			IDModel: models.IDModel{
-				CreatedBy:  currentUser,
-				ModifiedBy: currentUser,
-			},
-			Section: section,
-			Key:     key,
-			Value:   value,
+			Section:    section,
+			Key:        key,
+			Value:      value,
+			CreatedBy:  currentUserID,
+			ModifiedBy: currentUserID,
 		})
 		// 如果是site_config，清除缓存
 		if section == constant.SiteSettingSectionName {
@@ -97,7 +103,7 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 		data["section"] = section
 		data["key"] = key
 		data["value"] = value
-		data["modified_by"] = currentUser
+		data["modified_by"] = currentUserID
 		err := models.EditSetting(setting.ID, data)
 		// 更新日志清理配置
 		if section == constant.LogsCleanSectionName {
@@ -135,6 +141,7 @@ type SiteConfig struct {
 	CookieExpDays       string `json:"cookie_exp_days" validate:"omitempty,numeric,min=1,max=365" label:"cookie过期天数"`
 	ThemeColor          string `json:"theme_color" validate:"omitempty,max=20" label:"主题颜色"`
 	EnablePublicPreview string `json:"enable_public_preview" validate:"omitempty,oneof=true false" label:"是否启用公开消息预览"`
+	AllowRegistration   string `json:"allow_registration" validate:"omitempty,oneof=true false" label:"是否允许公开注册"`
 }
 
 type LogConfig struct {
@@ -173,6 +180,22 @@ func GetCookieExpDays() int {
 	return 1
 }
 
+// IsRegistrationAllowed 检查系统是否开放自主注册
+func IsRegistrationAllowed() bool {
+	// 演示模式下强制禁用自主注册
+	if setting.IsDemoMode() {
+		return false
+	}
+	if IsSiteConfigCacheValid() {
+		cache := GetSiteConfigCache()
+		if allow, ok := cache[constant.SiteSettingAllowRegistration]; ok {
+			return allow == "true"
+		}
+	}
+	s, _ := models.GetSettingByKey(constant.SiteSettingSectionName, constant.SiteSettingAllowRegistration)
+	return s.Value == "true"
+}
+
 // ValidateDiffSetting 校验不同的设置
 func (us *UserSettings) ValidateDiffSetting(section string, data map[string]string) string {
 	if section == constant.SiteSettingSectionName {
@@ -183,6 +206,7 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		config.CookieExpDays = data["cookie_exp_days"]
 		config.ThemeColor = data["theme_color"]
 		config.EnablePublicPreview = data["enable_public_preview"]
+		config.AllowRegistration = data["allow_registration"]
 		_, errStr := app.CommonPlaygroundValid(config)
 		return errStr
 	}

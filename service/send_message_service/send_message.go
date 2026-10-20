@@ -46,6 +46,7 @@ type SendMessageService struct {
 	MarkDown     string
 	CallerIp     string
 	HostedMsgKey string // 预生成的托管消息唯一 key (如开启预览)
+	CreatedBy    string // 任务/模板所属用户ID
 
 	// @提及相关字段
 	AtMobiles []string
@@ -114,6 +115,12 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 			return task, errors.New(errStr)
 		}
 
+		// 获取模板信息以获取其归属人
+		tmpl, err := models.GetTemplateByID(sm.TemplateID)
+		if err == nil && tmpl != nil {
+			sm.CreatedBy = tmpl.CreatedBy
+		}
+
 		// 获取模板关联的实例列表
 		insList, err := models.GetTemplateInsList(sm.TemplateID)
 		if err != nil {
@@ -130,6 +137,7 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 		// 构造虚拟任务对象（用于兼容现有发送逻辑）
 		// 将模板ID作为TaskID使用，便于日志记录
 		task.ID = sm.TaskID // 使用传入的TaskID（实际是模板ID）
+		task.CreatedBy = sm.CreatedBy
 		task.InsData = make([]models.SendTasksInsRes, 0, len(insList))
 		for _, ins := range insList {
 			task.InsData = append(task.InsData, ins)
@@ -163,6 +171,10 @@ func (sm *SendMessageService) SendPreCheck() (models.TaskIns, error) {
 			errStr = fmt.Sprintf("任务[%s]没有关联任何实例！！", sm.TaskID)
 			entry.Error(errStr)
 			return task, errors.New(errStr)
+		}
+		// 继承任务归属人
+		if sm.CreatedBy == "" {
+			sm.CreatedBy = task.CreatedBy
 		}
 		// 设置任务名称用于日志记录
 		if sm.Name == "" {
@@ -339,12 +351,14 @@ func (sm *SendMessageService) RecordSendLog() {
 	}
 
 	log := models.SendTasksLogs{
-		Log:      strings.Join(sm.LogOutput, "\n"),
-		TaskID:   sm.TaskID,
-		Type:     logType,
-		Name:     sm.Name,
-		Status:   &sm.Status,
-		CallerIp: sm.CallerIp,
+		Log:        strings.Join(sm.LogOutput, "\n"),
+		TaskID:     sm.TaskID,
+		Type:       logType,
+		Name:       sm.Name,
+		Status:     &sm.Status,
+		CallerIp:   sm.CallerIp,
+		CreatedBy:  sm.CreatedBy,
+		ModifiedBy: sm.CreatedBy,
 	}
 	err := log.Add()
 	if err != nil {
@@ -371,8 +385,8 @@ func (sm *SendMessageService) UpdateSendStats() {
 		status = "failed"
 	}
 
-	// 更新统计：每次任务执行记录为1次
-	err := models.IncrementSendStats(sm.TaskID, taskType, currentDay, status, 1)
+	// 更新统计：每次任务执行记录为1次，包含归属人
+	err := models.IncrementSendStats(sm.TaskID, taskType, currentDay, status, 1, sm.CreatedBy)
 	if err != nil {
 		logging.Sender.Errorf("更新发送统计失败：%s", err)
 	}

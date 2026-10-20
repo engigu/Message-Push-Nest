@@ -12,6 +12,7 @@ type SendTaskInsService struct {
 	ModifiedBy string
 	CreatedOn  string
 
+	IsAdmin  bool
 	PageNum  int
 	PageSize int
 	Enable   int
@@ -64,18 +65,13 @@ func (st *SendTaskInsService) Update(data map[string]interface{}) error {
 }
 
 func (st *SendTaskInsService) Count() (int64, error) {
-	return models.GetSendTasksTotal(st.Name, st.getMaps())
+	return models.GetSendTasksTotal(st.Name, models.TenantMap(st.IsAdmin, st.CreatedBy))
 }
 
 func (st *SendTaskInsService) GetAll() ([]models.SendTasks, error) {
-	tasks, err := models.GetSendTasks(st.PageNum, st.PageSize, st.Name, st.getMaps())
+	tasks, err := models.GetSendTasks(st.PageNum, st.PageSize, st.Name, models.TenantMap(st.IsAdmin, st.CreatedBy))
 	if err != nil {
 		return nil, err
 	}
 	return tasks, nil
-}
-
-func (st *SendTaskInsService) getMaps() map[string]interface{} {
-	maps := make(map[string]interface{})
-	return maps
 }

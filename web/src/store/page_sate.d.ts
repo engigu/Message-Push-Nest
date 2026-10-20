@@ -1,6 +1,10 @@
 export interface PageState {
   isLogin: boolean;
   Token: string;
+  userId: string;
+  userName: string;
+  userRole: string;
+  isAdmin: boolean;
   isShowAddWayDialog: boolean;
   siteConfigData: any;
   ShowDialogData: any;

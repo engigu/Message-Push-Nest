@@ -1,6 +1,9 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+	"gorm.io/gorm"
+)
 
 type SendTasksIns struct {
 	UUIDModel
@@ -79,26 +82,48 @@ type InsNtfyConfig struct {
 type InsGotifyConfig struct {
 }
 
-// ManyAddTaskIns 批量添加实例
+// ManyAddTaskIns 批量添加实例（批量排重 + 批量单次插入，消灭 N+1 查询）
 func ManyAddTaskIns(taskIns []SendTasksIns) error {
-	tx := db.Begin()
+	if len(taskIns) == 0 {
+		return nil
+	}
+
+	// 1. 批量收集待插入的 ID
+	ids := make([]string, 0, len(taskIns))
 	for _, ins := range taskIns {
-		// 存在就跳过这条ins记录
-		var existing SendTasksIns
-		err := db.Select("id").Where("id = ?", ins.ID).Limit(1).Find(&existing).Error
-		if err == nil && existing.ID != "" {
+		if ins.ID != "" {
+			ids = append(ids, ins.ID)
+		}
+	}
+
+	// 2. 一次性批量查询数据库中已存在的 ID
+	existingIDs := make(map[string]bool)
+	if len(ids) > 0 {
+		var foundIDs []string
+		if err := db.Model(&SendTasksIns{}).Where("id IN ?", ids).Pluck("id", &foundIDs).Error; err == nil {
+			for _, id := range foundIDs {
+				existingIDs[id] = true
+			}
+		}
+	}
+
+	// 3. 过滤出真正需要新增的记录
+	toInsert := make([]SendTasksIns, 0, len(taskIns))
+	for _, ins := range taskIns {
+		if ins.ID != "" && existingIDs[ins.ID] {
 			continue
 		}
-		if err := tx.Create(&ins).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
+		toInsert = append(toInsert, ins)
 	}
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return err
+
+	if len(toInsert) == 0 {
+		return nil
 	}
-	return nil
+
+	// 4. 单次批量事务写入 (分批大小为 100)
+	return db.Transaction(func(tx *gorm.DB) error {
+		return tx.CreateInBatches(toInsert, 100).Error
+	})
 }
 
 // AddTaskInsOne 添加一条实例

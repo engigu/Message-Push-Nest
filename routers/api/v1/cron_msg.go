@@ -27,8 +27,13 @@ func DeleteCronMsgTask(c *gin.Context) {
 		return
 	}
 
+	currentUserId := app.GetCurrentUserId(c)
+	isAdmin := app.IsAdmin(c)
+
 	CronMsgService := cron_msg_service.CronMsgService{
-		ID: req.ID,
+		ID:        req.ID,
+		CreatedBy: currentUserId,
+		IsAdmin:   isAdmin,
 	}
 	msg, _ := CronMsgService.GetByID()
 
@@ -48,9 +53,11 @@ func GetCronMsgList(c *gin.Context) {
 
 	offset, limit := util.GetPageSize(c)
 	CronMsgService := cron_msg_service.CronMsgService{
-		Name:     name,
-		PageNum:  offset,
-		PageSize: limit,
+		Name:      name,
+		PageNum:   offset,
+		PageSize:  limit,
+		CreatedBy: app.GetCurrentUserId(c),
+		IsAdmin:   app.IsAdmin(c),
 	}
 	tasks, err := CronMsgService.GetAll()
 	if err != nil {
@@ -86,7 +93,7 @@ func AddCronMsgTask(c *gin.Context) {
 		req  AddCronMsgTaskReq
 	)
 
-	currentUser := app.GetCurrentUserName(c)
+	currentUserId := app.GetCurrentUserId(c)
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
@@ -100,8 +107,8 @@ func AddCronMsgTask(c *gin.Context) {
 		Title:      req.Title,
 		Content:    req.Content,
 		Url:        req.Url,
-		CreatedBy:  currentUser,
-		ModifiedBy: currentUser,
+		CreatedBy:  currentUserId,
+		ModifiedBy: currentUserId,
 	}
 
 	uuidstr, err := CronMsgService.Add()
@@ -140,8 +147,13 @@ func EditCronMsgTask(c *gin.Context) {
 		return
 	}
 
+	currentUserId := app.GetCurrentUserId(c)
+	isAdmin := app.IsAdmin(c)
+
 	CronMsgService := cron_msg_service.CronMsgService{
-		ID: req.ID,
+		ID:        req.ID,
+		CreatedBy: currentUserId,
+		IsAdmin:   isAdmin,
 	}
 
 	data := make(map[string]interface{})
@@ -152,6 +164,7 @@ func EditCronMsgTask(c *gin.Context) {
 	data["content"] = req.Content
 	data["url"] = req.Url
 	data["enable"] = req.Enable
+	data["modified_by"] = currentUserId
 	err := CronMsgService.Edit(data)
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, "编辑定时消息失败！", nil)

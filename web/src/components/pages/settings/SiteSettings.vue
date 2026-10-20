@@ -11,7 +11,9 @@ import { LocalStieConfigUtils } from '@/util/localSiteConfig'
 import { HelpCircleIcon, CheckIcon } from 'lucide-vue-next'
 import { THEMES, applyTheme, getStoredTheme } from '@/util/theme'
 import { Switch } from '@/components/ui/switch'
+import { checkIsDemoMode } from '@/util/demo'
 
+const isDemo = ref(checkIsDemoMode())
 const currentThemeColor = ref(getStoredTheme())
 
 const changeTheme = (themeKey: string) => {
@@ -28,11 +30,16 @@ const state = reactive({
   cookieExpDays: '',
   theme_color: getStoredTheme(),
   enable_public_preview: 'true',
+  allow_registration: 'false',
   section: 'site_config',
 })
 
 // 提交设置
 const handleSubmit = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前处于演示模式，已禁止修改站点配置！')
+    return
+  }
   try {
     const postData = {
       section: state.section,
@@ -44,6 +51,7 @@ const handleSubmit = async () => {
         cookie_exp_days: state.cookieExpDays.toString(),
         theme_color: state.theme_color,
         enable_public_preview: state.enable_public_preview,
+        allow_registration: state.allow_registration,
       },
     }
     const response = await request.post('/settings/set', postData)
@@ -58,6 +66,10 @@ const handleSubmit = async () => {
 
 // 恢复默认设置
 const handleSubmitReset = async () => {
+  if (isDemo.value || checkIsDemoMode()) {
+    toast.error('当前处于演示模式，已禁止恢复默认设置！')
+    return
+  }
   try {
     const response = await request.post('/settings/reset', {})
     if (response.data.code === 200) {
@@ -85,6 +97,7 @@ const getSiteConfig = async () => {
       state.cookieExpDays = data.cookie_exp_days || '1'
       state.theme_color = data.theme_color || 'blue'
       state.enable_public_preview = data.enable_public_preview !== undefined ? data.enable_public_preview : 'true'
+      state.allow_registration = data.allow_registration !== undefined ? data.allow_registration : 'false'
 
       // 同步当前选中的主题状态
       currentThemeColor.value = state.theme_color
@@ -192,6 +205,26 @@ export default {
             <Switch 
               :modelValue="state.enable_public_preview === 'true'" 
               @update:modelValue="(val: boolean) => state.enable_public_preview = val ? 'true' : 'false'" 
+            />
+          </div>
+
+          <!-- 开放用户注册 -->
+          <div class="flex items-center justify-between p-3 border border-dashed border-border rounded-lg bg-muted/20">
+            <div class="space-y-0.5">
+              <label class="text-sm font-semibold text-foreground flex items-center gap-2">
+                <span>开放用户注册</span>
+                <span v-if="isDemo" class="text-[11px] font-normal text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                  演示模式已强制关闭
+                </span>
+              </label>
+              <p class="text-xs text-muted-foreground">
+                {{ isDemo ? '当前系统处于演示模式，自主注册已全局强制禁用' : '允许访客在前台登录页自主注册账号（注册用户默认为普通用户，数据独立隔离）' }}
+              </p>
+            </div>
+            <Switch 
+              :disabled="isDemo"
+              :modelValue="!isDemo && state.allow_registration === 'true'" 
+              @update:modelValue="(val: boolean) => state.allow_registration = val ? 'true' : 'false'" 
             />
           </div>
 

@@ -5,17 +5,26 @@ import (
 )
 
 type StatisticService struct {
-	TaskID string
-	Days   int
+	TaskID    string
+	Days      int
+	CreatedBy string
+	IsAdmin   bool
+}
+
+func (sw *StatisticService) getUserFilter() string {
+	if !sw.IsAdmin && sw.CreatedBy != "" {
+		return sw.CreatedBy
+	}
+	return ""
 }
 
 func (sw *StatisticService) GetStatisticData() (models.StatisticData, error) {
-	return models.GetStatisticData()
+	return models.GetStatisticData(sw.getUserFilter())
 }
 
 // GetBasicStatisticData 获取基础统计数据
 func (sw *StatisticService) GetBasicStatisticData() (models.BasicStatisticData, error) {
-	return models.GetBasicStatisticData()
+	return models.GetBasicStatisticData(sw.getUserFilter())
 }
 
 // GetTrendStatisticData 获取趋势统计数据
@@ -24,12 +33,12 @@ func (sw *StatisticService) GetTrendStatisticData() (models.TrendStatisticData, 
 	if days <= 0 {
 		days = 30 // 默认30天
 	}
-	return models.GetTrendStatisticData(days)
+	return models.GetTrendStatisticData(days, sw.getUserFilter())
 }
 
 // GetChannelStatisticData 获取渠道统计数据
 func (sw *StatisticService) GetChannelStatisticData() (models.ChannelStatisticData, error) {
-	return models.GetChannelStatisticData()
+	return models.GetChannelStatisticData(sw.getUserFilter())
 }
 
 // GetSendStatsData 获取发送统计数据（基于 send_stats 表）
@@ -38,7 +47,7 @@ func (sw *StatisticService) GetSendStatsData() (models.SendStatsData, error) {
 	if days <= 0 {
 		days = 30 // 默认30天
 	}
-	return models.GetSendStatsData(days)
+	return models.GetSendStatsData(days, sw.getUserFilter())
 }
 
 // GetSendStatsByTask 获取指定任务的发送统计数据
@@ -48,5 +57,5 @@ func (sw *StatisticService) GetSendStatsByTask() (models.SendStatsData, error) {
 		days = 30 // 默认30天
 	}
 
-	return models.GetSendStatsByTask(sw.TaskID, days)
+	return models.GetSendStatsByTask(sw.TaskID, days, sw.getUserFilter())
 }

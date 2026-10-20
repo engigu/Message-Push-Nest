@@ -13,6 +13,9 @@ type SendTaskLogsService struct {
 	Name   string
 	Query  string
 
+	CreatedBy string
+	IsAdmin   bool
+
 	PageNum  int
 	PageSize int
 }
@@ -35,13 +38,13 @@ func (st *SendTaskLogsService) getMaps() map[string]interface{} {
 		decodedString, err := url.QueryUnescape(st.Query)
 		if err != nil {
 			logrus.Errorf("queryUrl编码解码失败: %s", err)
-			return maps
+			return models.TenantMap(st.IsAdmin, st.CreatedBy)
 		}
 		err = json.Unmarshal([]byte(decodedString), &maps)
 		if err != nil {
 			logrus.Errorf("queryJson反序列化失败: %s", err)
-			return maps
+			return models.TenantMap(st.IsAdmin, st.CreatedBy)
 		}
 	}
-	return maps
+	return models.TenantMap(st.IsAdmin, st.CreatedBy, maps)
 }

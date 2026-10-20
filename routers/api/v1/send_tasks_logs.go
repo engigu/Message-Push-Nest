@@ -17,11 +17,13 @@ func GetTaskSendLogsList(c *gin.Context) {
 
 	offset, limit := util.GetPageSize(c)
 	logsService := send_logs_service.SendTaskLogsService{
-		TaskId:   taskId,
-		Name:     name,
-		PageNum:  offset,
-		PageSize: limit,
-		Query:    query,
+		TaskId:    taskId,
+		Name:      name,
+		PageNum:   offset,
+		PageSize:  limit,
+		Query:     query,
+		CreatedBy: app.GetCurrentUserId(c),
+		IsAdmin:   app.IsAdmin(c),
 	}
 	ways, err := logsService.GetAll()
 	if err != nil {

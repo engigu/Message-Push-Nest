@@ -18,7 +18,10 @@ func GetStatisticData(c *gin.Context) {
 	// 获取类型参数
 	statisticType := c.Query("type")
 	
-	msgService := statistic_service.StatisticService{}
+	msgService := statistic_service.StatisticService{
+		CreatedBy: app.GetCurrentUserId(c),
+		IsAdmin:   app.IsAdmin(c),
+	}
 	
 	switch statisticType {
 	case "basic":
@@ -83,7 +86,9 @@ func GetSendStatsByTask(c *gin.Context) {
 	}
 
 	msgService := statistic_service.StatisticService{
-		TaskID: taskID,
+		TaskID:    taskID,
+		CreatedBy: app.GetCurrentUserId(c),
+		IsAdmin:   app.IsAdmin(c),
 	}
 
 	data, err := msgService.GetSendStatsByTask()

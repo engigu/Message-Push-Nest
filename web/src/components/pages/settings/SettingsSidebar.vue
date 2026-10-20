@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { KeyIcon, TrashIcon, SettingsIcon, InfoIcon, HistoryIcon, FingerprintIcon } from 'lucide-vue-next'
+import { KeyIcon, TrashIcon, SettingsIcon, InfoIcon, HistoryIcon, FingerprintIcon, UsersIcon } from 'lucide-vue-next'
+import { usePageState } from '@/store/page_sate'
 
 // 定义props
 interface Props {
@@ -15,15 +17,25 @@ interface Emits {
 defineProps<Props>()
 defineEmits<Emits>()
 
-// 设置菜单项
-const settingsMenu = [
-  { id: 'password', name: '重置密码', icon: KeyIcon },
-  { id: 'oidc', name: '单点登录', icon: FingerprintIcon },
-  { id: 'clean', name: '数据清理', icon: TrashIcon },
-  { id: 'loginlogs', name: '登录日志', icon: HistoryIcon },
-  { id: 'site', name: '站点设置', icon: SettingsIcon },
-  { id: 'about', name: '站点关于', icon: InfoIcon }
-]
+const pageState = usePageState()
+
+// 过滤后的设置菜单项
+const settingsMenu = computed(() => {
+  const baseMenu = [
+    { id: 'password', name: '账号安全', icon: KeyIcon, adminOnly: false },
+    { id: 'users', name: '用户管理', icon: UsersIcon, adminOnly: true },
+    { id: 'oidc', name: '单点登录', icon: FingerprintIcon, adminOnly: true },
+    { id: 'clean', name: '数据清理', icon: TrashIcon, adminOnly: true },
+    { id: 'loginlogs', name: '登录日志', icon: HistoryIcon, adminOnly: true },
+    { id: 'site', name: '站点设置', icon: SettingsIcon, adminOnly: true },
+    { id: 'about', name: '站点关于', icon: InfoIcon, adminOnly: false }
+  ]
+
+  if (pageState.isAdmin) {
+    return baseMenu
+  }
+  return baseMenu.filter(item => !item.adminOnly)
+})
 </script>
 
 <script lang="ts">

@@ -32,24 +32,19 @@ func ResolveUser(cfg *Config, claims *Claims) (*models.Auth, bool, error) {
 		return nil, false, fmt.Errorf("身份标识 (sub) 不能为空")
 	}
 
-	qualifiedSub := fmt.Sprintf("%s:%s", cfg.Type, claims.Sub)
-
-	// 1. 尝试直接匹配 subject（兼容直接 sub 与带前缀格式）
-	user, err := models.GetUserByOidcSubject(claims.Sub)
-	if err == nil && user != nil && user.ID > 0 {
-		return user, false, nil
-	}
-	user, err = models.GetUserByOidcSubject(qualifiedSub)
-	if err == nil && user != nil && user.ID > 0 {
+	// 1. 尝试从独立身份关联表（并平滑兜底 Auth 表）匹配该 Provider 和 Subject
+	user, err := models.GetUserBySSO(cfg.Type, claims.Sub)
+	if err == nil && user != nil && user.ID != "" {
 		return user, false, nil
 	}
 
-	// 2. 匹配已有账号（相同邮箱且尚未绑定其他第三方账号），自动关联
+	// 2. 匹配已有账号（相同邮箱），自动关联至该 Provider
 	if claims.Email != "" {
 		user, err = models.GetUserByEmail(claims.Email)
-		if err == nil && user != nil && user.ID > 0 {
-			_ = models.UpdateUserOidcSubject(user.ID, claims.Sub)
+		if err == nil && user != nil && user.ID != "" {
+			_ = models.BindUserSSO(user.ID, cfg.Type, claims.Sub, claims.Email)
 			user.OidcSubject = claims.Sub
+			user.AuthProvider = cfg.Type
 			return user, false, nil
 		}
 	}
@@ -70,10 +65,14 @@ func ResolveUser(cfg *Config, claims *Claims) (*models.Auth, bool, error) {
 	finalUsername := UniqueUsername(username)
 	randomPassword := util.GenerateRandomString(16)
 
-	created, err := models.AddOidcUser(finalUsername, randomPassword, claims.Email, claims.Sub)
+	created, err := models.AddSSOUser(finalUsername, randomPassword, claims.Email, claims.Sub, cfg.Type)
 	if err != nil {
 		return nil, false, fmt.Errorf("自动开通账号失败: %w", err)
 	}
+
+	// 在独立关联表中登记绑定
+	_ = models.BindUserSSO(created.ID, cfg.Type, claims.Sub, claims.Email)
+
 	return created, true, nil
 }
 
@@ -85,7 +84,7 @@ func UniqueUsername(base string) string {
 	}
 	for i := 0; i < 20; i++ {
 		u, err := models.GetUserByUsername(candidate)
-		if err != nil || u == nil || u.ID == 0 {
+		if err != nil || u == nil || u.ID == "" {
 			return candidate
 		}
 		candidate = fmt.Sprintf("%s_%s", base, util.GenerateRandomString(4))

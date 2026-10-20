@@ -87,7 +87,7 @@ func AddManyTasksIns(c *gin.Context) {
 		req  AddManyTasksInsReq
 	)
 
-	currentUser := app.GetCurrentUserName(c)
+	currentUserID := app.GetCurrentUserId(c)
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
@@ -106,8 +106,8 @@ func AddManyTasksIns(c *gin.Context) {
 			taskIns = append(taskIns, models.SendTasksIns{
 				UUIDModel: models.UUIDModel{
 					ID:         data.ID,
-					CreatedBy:  currentUser,
-					ModifiedBy: currentUser,
+					CreatedBy:  currentUserID,
+					ModifiedBy: currentUserID,
 				},
 				TaskID:      data.TaskId,
 				WayID:       data.WayID,
@@ -127,9 +127,10 @@ func AddManyTasksIns(c *gin.Context) {
 	}
 
 	sendTaskService := send_task_service.SendTaskService{
-		ID:        req.TaskId,
-		Name:      req.TaskName,
-		CreatedBy: currentUser,
+		ID:         req.TaskId,
+		Name:       req.TaskName,
+		CreatedBy:  currentUserID,
+		ModifiedBy: currentUserID,
 	}
 	errAdd := sendTaskService.AddWithID()
 	if errAdd != nil {
@@ -148,7 +149,7 @@ func AddTasksIns(c *gin.Context) {
 		req  SendTasksInsReq
 	)
 
-	//currentUser := app.GetCurrentUserName(c)
+	currentUserID := app.GetCurrentUserId(c)
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
@@ -157,14 +158,17 @@ func AddTasksIns(c *gin.Context) {
 
 	sendTaskInsService := send_ins_service.SendTaskInsService{}
 	err := sendTaskInsService.AddOne(models.SendTasksIns{
-		UUIDModel:   models.UUIDModel{ID: req.ID},
+		UUIDModel: models.UUIDModel{
+			ID:         req.ID,
+			CreatedBy:  currentUserID,
+			ModifiedBy: currentUserID,
+		},
 		TaskID:      req.TaskId,
 		WayID:       req.WayID,
 		WayType:     req.WayType,
 		ContentType: req.ContentType,
 		Config:      req.Config,
 		Extra:       req.Extra,
-		//Cre:         req.Extra,
 	})
 	if err != "" {
 		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("添加实例失败！错误原因：%s", err), nil)

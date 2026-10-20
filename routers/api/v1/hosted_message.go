@@ -18,9 +18,11 @@ func GetHostMessageList(c *gin.Context) {
 
 	offset, limit := util.GetPageSize(c)
 	messageService := hosted_message_service.HostMessageService{
-		Text:     text,
-		PageNum:  offset,
-		PageSize: limit,
+		Text:      text,
+		PageNum:   offset,
+		PageSize:  limit,
+		CreatedBy: app.GetCurrentUserId(c),
+		IsAdmin:   app.IsAdmin(c),
 	}
 	ways, err := messageService.GetAll()
 	if err != nil {

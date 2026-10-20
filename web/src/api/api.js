@@ -31,7 +31,9 @@ request.interceptors.request.use(
             config.url = '/api/v1' + config.url;
         }
         const token = pageState.Token || localStorage.getItem(CONSTANT.STORE_TOKEN_NAME);
-        if (token && !CONSTANT.NO_AUTH_URL.includes(config.url)) {
+        // 统一基于领域命名空间判断公开接口：凡 /auth/ 或 /public/ 下的请求均无需携带 Token
+        const isPublic = config.url.startsWith('/api/v1/auth/') || config.url.startsWith('/api/v1/public/');
+        if (token && !isPublic) {
             config.headers = {
                 ...config.headers,
                 'm-token': token,

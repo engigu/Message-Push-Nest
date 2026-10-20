@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"message-nest/middleware"
 	"message-nest/pkg/setting"
-	"message-nest/routers/api"
 	"message-nest/routers/api/v1"
 	"message-nest/routers/api/v2"
 	"net/http"
@@ -85,6 +84,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 	app := gin.New()
 	app.Use(middleware.LogMiddleware())
 	app.Use(gin.Recovery())
+	app.Use(middleware.SecurityHeaders()) // 注入企业级安全响应头 (防 MIME 嗅探/点击劫持/XSS)
 
 	AppendCors(app)
 	
@@ -107,22 +107,51 @@ func InitRouter(f embed.FS) *gin.Engine {
 	// API v1
 	apiV1 := router.Group("/api/v1")
 	{
-		// 公开免鉴权接口
-		apiV1.POST("/auth", api.GetAuth)
-		apiV1.GET("/hostedmessages/preview", v1.GetHostMessagePreview)
-		apiV1.GET("/auth/sso/status", v1.GetSSOStatus)
-		apiV1.GET("/auth/oidc/login", v1.OidcLogin)
-		apiV1.GET("/auth/oidc/callback", v1.OidcCallback)
-		apiV1.GET("/auth/oauth2/login", v1.OAuth2Login)
-		apiV1.GET("/auth/oauth2/callback", v1.OAuth2Callback)
+		// 统一注册公开免鉴权接口组 (/auth 与 /public)
+		RegisterPublicRoutes(apiV1)
 
 		// 业务接口（需要 JWT 鉴权）
 		authGroup := apiV1.Group("")
 		authGroup.Use(middleware.JWT())
 		{
-			// sso / oidc / oauth2 test
-			authGroup.POST("/auth/oidc/test", v1.OidcTest)
-			authGroup.POST("/auth/oauth2/test", v1.OAuth2Test)
+			// settings (通用用户自身设置)
+			authGroup.POST("/settings/setpasswd", v1.EditPasswd)
+			authGroup.GET("/settings/getsetting", v1.GetUserSetting)
+
+			// 用户自身 SSO 绑定与解绑
+			authGroup.GET("/auth/sso/bind", v1.StartSSOBind)
+			authGroup.GET("/auth/sso/profile", v1.GetSSOProfile)
+			authGroup.POST("/auth/sso/unbind", v1.UnbindMySSO)
+
+			// 管理员专属接口
+			adminGroup := authGroup.Group("")
+			adminGroup.Use(middleware.AdminRequired())
+			{
+				// sso / oidc / oauth2 test
+				adminGroup.POST("/auth/oidc/test", v1.OidcTest)
+				adminGroup.POST("/auth/oauth2/test", v1.OAuth2Test)
+
+				// settings
+				adminGroup.POST("/settings/set", v1.EditSettings)
+				adminGroup.POST("/settings/reset", v1.RestDefaultSettings)
+
+				// login logs
+				adminGroup.GET("/loginlogs/recent", v1.GetRecentLoginLogs)
+
+				// user management (支持 RESTful 与 RPC 兼容路径)
+				adminGroup.GET("/users", v1.GetUserList)
+				adminGroup.GET("/users/list", v1.GetUserList)
+				adminGroup.POST("/users", v1.AddUser)
+				adminGroup.POST("/users/add", v1.AddUser)
+				adminGroup.PUT("/users", v1.EditUser)
+				adminGroup.POST("/users/edit", v1.EditUser)
+				adminGroup.DELETE("/users", v1.DeleteUser)
+				adminGroup.POST("/users/delete", v1.DeleteUser)
+				adminGroup.POST("/users/resetpasswd", v1.ResetUserPassword)
+				adminGroup.POST("/users/reset-passwd", v1.ResetUserPassword)
+				adminGroup.POST("/users/unbind-sso", v1.AdminUnbindUserSSO)
+			}
+
 			// sendways
 			authGroup.POST("/sendways/add", v1.AddMsgSendWay)
 			authGroup.POST("/sendways/delete", v1.DeleteMsgSendWay)
@@ -149,15 +178,6 @@ func InitRouter(f embed.FS) *gin.Engine {
 			authGroup.POST("/message/send", v1.DoSendMassage)
 
 			authGroup.GET("/sendlogs/list", v1.GetTaskSendLogsList)
-
-			// settings
-			authGroup.POST("/settings/setpasswd", v1.EditPasswd)
-			authGroup.POST("/settings/set", v1.EditSettings)
-			authGroup.POST("/settings/reset", v1.RestDefaultSettings)
-			authGroup.GET("/settings/getsetting", v1.GetUserSetting)
-
-			// login logs
-			authGroup.GET("/loginlogs/recent", v1.GetRecentLoginLogs)
 
 			// statistic
 			authGroup.GET("/statistic", v1.GetStatisticData)

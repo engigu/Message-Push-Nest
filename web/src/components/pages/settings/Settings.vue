@@ -7,6 +7,7 @@ import SiteSettings from './SiteSettings.vue'
 import AboutSettings from './AboutSettings.vue'
 import LoginLogs from './LoginLogs.vue'
 import OidcSettings from './OidcSettings.vue'
+import UserManagement from './UserManagement.vue'
 
 // 当前选中的设置项
 const activeTab = ref('password')
@@ -25,6 +26,9 @@ const activeTab = ref('password')
       <div class="flex-1">
         <!-- 重置密码 -->
         <PasswordSettings v-if="activeTab === 'password'" />
+
+        <!-- 用户管理（仅管理员） -->
+        <UserManagement v-if="activeTab === 'users'" />
 
         <!-- 单点登录 (OIDC / OAuth 2.0) -->
         <OidcSettings v-if="activeTab === 'oidc'" />

@@ -26,6 +26,8 @@ type CronMsgService struct {
 	ModifiedBy string
 	CreatedOn  string
 
+	IsAdmin bool
+
 	PageNum  int
 	PageSize int
 }
@@ -35,7 +37,14 @@ func (st *CronMsgService) Add() (string, error) {
 }
 
 func (st *CronMsgService) Edit(data map[string]interface{}) error {
-	return models.EditCronMsg(st.ID, data)
+	tenantID := ""
+	if !st.IsAdmin {
+		tenantID = st.CreatedBy
+		if st.ModifiedBy != "" {
+			tenantID = st.ModifiedBy
+		}
+	}
+	return models.EditCronMsg(st.ID, data, tenantID)
 }
 
 func (st *CronMsgService) GetByID() (models.CronMessages, error) {
@@ -43,11 +52,11 @@ func (st *CronMsgService) GetByID() (models.CronMessages, error) {
 }
 
 func (st *CronMsgService) Count() (int64, error) {
-	return models.GetCronMessagesTotal(st.Name, st.getMaps())
+	return models.GetCronMessagesTotal(st.Name, models.TenantMap(st.IsAdmin, st.CreatedBy))
 }
 
 func (st *CronMsgService) GetAll() ([]CronMsgResult, error) {
-	msgs, err := models.GetCronMessages(st.PageNum, st.PageSize, st.Name, st.getMaps())
+	msgs, err := models.GetCronMessages(st.PageNum, st.PageSize, st.Name, models.TenantMap(st.IsAdmin, st.CreatedBy))
 	if err != nil {
 		return nil, err
 	}
@@ -66,13 +75,15 @@ func (st *CronMsgService) FillNextExecTime(msgs []models.CronMessages) []CronMsg
 	return result
 }
 
-func (st *CronMsgService) getMaps() map[string]interface{} {
-	maps := make(map[string]interface{})
-	return maps
-}
-
 func (st *CronMsgService) Delete() error {
-	return models.DeleteCronMsg(st.ID)
+	tenantID := ""
+	if !st.IsAdmin {
+		tenantID = st.CreatedBy
+		if st.ModifiedBy != "" {
+			tenantID = st.ModifiedBy
+		}
+	}
+	return models.DeleteCronMsg(st.ID, tenantID)
 }
 
 // GetCronNextTime 获取下次的执行时间

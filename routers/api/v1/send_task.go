@@ -28,12 +28,15 @@ func DeleteMsgSendTask(c *gin.Context) {
 		return
 	}
 
+	currentUserID := app.GetCurrentUserId(c)
 	MsgSendTaskService := send_task_service.SendTaskService{
-		ID: req.ID,
+		ID:         req.ID,
+		ModifiedBy: currentUserID,
+		IsAdmin:    app.IsAdmin(c),
 	}
 	err := MsgSendTaskService.Delete()
 	if err != nil {
-		appG.CResponse(http.StatusBadRequest, "删除发信任务失败！", nil)
+		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("删除发信任务失败！%s", err), nil)
 		return
 	}
 
@@ -46,10 +49,13 @@ func GetMsgSendTaskList(c *gin.Context) {
 	name := c.Query("name")
 
 	offset, limit := util.GetPageSize(c)
+	currentUserID := app.GetCurrentUserId(c)
 	MsgSendTaskService := send_task_service.SendTaskService{
-		Name:     name,
-		PageNum:  offset,
-		PageSize: limit,
+		Name:      name,
+		CreatedBy: currentUserID,
+		IsAdmin:   app.IsAdmin(c),
+		PageNum:   offset,
+		PageSize:  limit,
 	}
 	tasks, err := MsgSendTaskService.GetAll()
 	if err != nil {
@@ -80,7 +86,7 @@ func AddMsgSendTask(c *gin.Context) {
 		req  AddMsgSendTaskReq
 	)
 
-	currentUser := app.GetCurrentUserName(c)
+	currentUserID := app.GetCurrentUserId(c)
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
@@ -89,8 +95,8 @@ func AddMsgSendTask(c *gin.Context) {
 
 	MsgSendTaskService := send_task_service.SendTaskService{
 		Name:       req.Name,
-		CreatedBy:  currentUser,
-		ModifiedBy: currentUser,
+		CreatedBy:  currentUserID,
+		ModifiedBy: currentUserID,
 	}
 
 	err := MsgSendTaskService.Add()
@@ -115,6 +121,7 @@ func EditMsgSendTask(c *gin.Context) {
 		req  EditMsgSendTaskReq
 	)
 
+	currentUserID := app.GetCurrentUserId(c)
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errMsg, nil)
@@ -122,7 +129,9 @@ func EditMsgSendTask(c *gin.Context) {
 	}
 
 	MsgSendTaskService := send_task_service.SendTaskService{
-		ID: req.ID,
+		ID:         req.ID,
+		ModifiedBy: currentUserID,
+		IsAdmin:    app.IsAdmin(c),
 	}
 
 	var data = map[string]interface{}{

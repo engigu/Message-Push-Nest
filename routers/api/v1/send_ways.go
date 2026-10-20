@@ -28,8 +28,11 @@ func DeleteMsgSendWay(c *gin.Context) {
 		return
 	}
 
+	currentUserID := app.GetCurrentUserId(c)
 	sendWayService := send_way_service.SendWay{
-		ID: req.ID,
+		ID:         req.ID,
+		ModifiedBy: currentUserID,
+		IsAdmin:    app.IsAdmin(c),
 	}
 	err := sendWayService.Delete()
 	if err != nil {
@@ -70,11 +73,14 @@ func GetMsgSendWayList(c *gin.Context) {
 	type_ := c.Query("type")
 
 	offset, limit := util.GetPageSize(c)
+	currentUserID := app.GetCurrentUserId(c)
 	sendWayService := send_way_service.SendWay{
-		Name:     name,
-		Type:     type_,
-		PageNum:  offset,
-		PageSize: limit,
+		Name:      name,
+		Type:      type_,
+		CreatedBy: currentUserID,
+		IsAdmin:   app.IsAdmin(c),
+		PageNum:   offset,
+		PageSize:  limit,
 	}
 	ways, err := sendWayService.GetAll()
 	if err != nil {
@@ -106,7 +112,7 @@ func AddMsgSendWay(c *gin.Context) {
 		appG = app.Gin{C: c}
 		req  AddMsgSendWayReq
 	)
-	currentUser := app.GetCurrentUserName(c)
+	currentUserID := app.GetCurrentUserId(c)
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
@@ -117,8 +123,8 @@ func AddMsgSendWay(c *gin.Context) {
 		Name:       req.Name,
 		Type:       req.Type,
 		Auth:       req.Auth,
-		CreatedBy:  currentUser,
-		ModifiedBy: currentUser,
+		CreatedBy:  currentUserID,
+		ModifiedBy: currentUserID,
 	}
 
 	diffMsg, _ := sendWayService.ValidateDiffWay()
@@ -151,7 +157,7 @@ func EditSendWay(c *gin.Context) {
 		req  = EditSendWayReq{}
 	)
 
-	currentUser := app.GetCurrentUserName(c)
+	currentUserID := app.GetCurrentUserId(c)
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errMsg, nil)
@@ -163,7 +169,8 @@ func EditSendWay(c *gin.Context) {
 		Name:       req.Name,
 		Type:       req.Type,
 		Auth:       req.Auth,
-		ModifiedBy: currentUser,
+		ModifiedBy: currentUserID,
+		IsAdmin:    app.IsAdmin(c),
 	}
 
 	diffMsg, _ := sendWayService.ValidateDiffWay()

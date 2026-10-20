@@ -44,22 +44,37 @@ func (t *Template) Add() error {
 	return nil
 }
 
-// Update 更新消息模板
-func (t *Template) Update() error {
-	// 使用 Select 明确指定要更新的字段，包括布尔值字段，排除不应更新的时间戳字段
-	if err := db.Model(&Template{}).Where("id = ?", t.ID).
-		Select("name", "description", "text_template", "html_template", "markdown_template", 
+// Update 更新消息模板（行级原子租户防越权）
+func (t *Template) Update(createdBy ...string) error {
+	query := db.Model(&Template{}).Where("id = ?", t.ID)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
+	}
+	result := query.
+		Select("name", "description", "text_template", "html_template", "markdown_template",
 			"placeholders", "at_mobiles", "at_user_ids", "is_at_all", "status", "modified_by").
-		Updates(t).Error; err != nil {
-		return err
+		Updates(t)
+	if result.Error != nil {
+		return result.Error
+	}
+	if len(createdBy) > 0 && createdBy[0] != "" && result.RowsAffected == 0 {
+		return ErrNoPermissionOrNotFound
 	}
 	return nil
 }
 
-// Delete 删除消息模板
-func (t *Template) Delete() error {
-	if err := db.Where("id = ?", t.ID).Delete(&Template{}).Error; err != nil {
-		return err
+// Delete 删除消息模板（行级原子租户防越权）
+func (t *Template) Delete(createdBy ...string) error {
+	query := db.Where("id = ?", t.ID)
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		query = query.Where("created_by = ?", createdBy[0])
+	}
+	result := query.Delete(&Template{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if len(createdBy) > 0 && createdBy[0] != "" && result.RowsAffected == 0 {
+		return ErrNoPermissionOrNotFound
 	}
 	return nil
 }

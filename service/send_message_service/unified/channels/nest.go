@@ -41,9 +41,11 @@ func (c *MessageNestChannel) SendUnified(msgObj interface{}, ins models.SendTask
 	}
 
 	messageService := hosted_message_service.HostMessageService{
-		Title:   content.Title,
-		Content: formattedContent,
-		Type:    contentType,
+		Title:      content.Title,
+		Content:    formattedContent,
+		Type:       contentType,
+		CreatedBy:  ins.CreatedBy,
+		ModifiedBy: ins.CreatedBy,
 	}
 	
 	if content.Extra != nil {

@@ -13,6 +13,9 @@ type HostedMessage struct {
 	Type      string `json:"type" gorm:"type:varchar(100);default:'';index"`
 	UniqueKey string `json:"unique_key" gorm:"type:varchar(50);uniqueIndex;default:''"`
 
+	CreatedBy  string `json:"created_by" gorm:"type:varchar(36);default:'';index"`
+	ModifiedBy string `json:"modified_by" gorm:"type:varchar(36);default:'';"`
+
 	CreatedAt util.Time `json:"created_on" gorm:"column:created_on;autoCreateTime"`
 	UpdatedAt util.Time `json:"modified_on" gorm:"column:modified_on;autoUpdateTime;"`
 }
@@ -35,6 +38,8 @@ type HostMessageResult struct {
 	Content    string    `json:"content"`
 	Type       string    `json:"type"`
 	UniqueKey  string    `json:"unique_key"`
+	CreatedBy  string    `json:"created_by"`
+	ModifiedBy string    `json:"modified_by"`
 	CreatedOn  util.Time `json:"created_on"`
 	ModifiedOn util.Time `json:"modified_on"`
 }
@@ -95,7 +100,7 @@ func DeleteOutDateHostedMessages(keepNum int) (int, error) {
 	var threshold HostedMessage
 	result := db.Model(&HostedMessage{}).
 		Select("id").
-		Order("created_on DESC").
+		Order("created_on DESC, id DESC").
 		Offset(keepNum - 1).
 		Limit(1).
 		Find(&threshold)

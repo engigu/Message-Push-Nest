@@ -8,15 +8,18 @@ import (
 
 // 初始化环境的设置数据
 type InitSettingService struct {
+	AdminID string
 }
 
 func (es *InitSettingService) CommonAddSetting(section string, key string, value string) {
 	setting, _ := models.GetSettingByKey(section, key)
 	if setting.ID <= 0 {
 		err := models.AddOneSetting(models.Settings{
-			Section: section,
-			Key:     key,
-			Value:   value,
+			Section:    section,
+			Key:        key,
+			Value:      value,
+			CreatedBy:  es.AdminID,
+			ModifiedBy: es.AdminID,
 		})
 		if err != nil {
 			logging.Init.Errorf("初始化%s:%s失败", section, key)

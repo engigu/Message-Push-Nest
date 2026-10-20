@@ -20,8 +20,13 @@ func GetUserSetting(c *gin.Context) {
 		appG = app.Gin{C: c}
 	)
 	section := c.Query("section")
+	currentUserId := app.GetCurrentUserId(c)
+	isAdmin := app.IsAdmin(c)
 
-	settingService := settings_service.UserSettings{}
+	settingService := settings_service.UserSettings{
+		UserID:  currentUserId,
+		IsAdmin: isAdmin,
+	}
 	settings, err := settingService.GetUserSetting(section)
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("获取失败！错误原因：%s", err), nil)
@@ -45,7 +50,8 @@ func EditPasswd(c *gin.Context) {
 		req  EditUserPasswdReq
 	)
 
-	currentUser := app.GetCurrentUserName(c)
+	currentUserId := app.GetCurrentUserId(c)
+	currentUserName := app.GetCurrentUserName(c)
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
@@ -53,7 +59,8 @@ func EditPasswd(c *gin.Context) {
 	}
 
 	settingService := settings_service.UserSettings{
-		UserName:    currentUser,
+		UserName:    currentUserName,
+		UserID:      currentUserId,
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
 	}
@@ -84,15 +91,19 @@ func EditSettings(c *gin.Context) {
 		return
 	}
 
-	currentUser := app.GetCurrentUserName(c)
-	settingService := settings_service.UserSettings{}
+	currentUserId := app.GetCurrentUserId(c)
+	isAdmin := app.IsAdmin(c)
+	settingService := settings_service.UserSettings{
+		UserID:  currentUserId,
+		IsAdmin: isAdmin,
+	}
 	diffStr := settingService.ValidateDiffSetting(req.Section, req.Data)
 	if diffStr != "" {
 		appG.CResponse(http.StatusBadRequest, diffStr, nil)
 		return
 	}
 	for key, value := range req.Data {
-		err := settingService.EditSettings(req.Section, key, value, currentUser)
+		err := settingService.EditSettings(req.Section, key, value, currentUserId)
 		if err != nil {
 			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("修改站点设置失败！错误原因：%s", err), nil)
 			return
@@ -109,11 +120,15 @@ func RestDefaultSettings(c *gin.Context) {
 		appG = app.Gin{C: c}
 	)
 
-	currentUser := app.GetCurrentUserName(c)
-	settingService := settings_service.UserSettings{}
+	currentUserId := app.GetCurrentUserId(c)
+	isAdmin := app.IsAdmin(c)
+	settingService := settings_service.UserSettings{
+		UserID:  currentUserId,
+		IsAdmin: isAdmin,
+	}
 
 	for key, value := range constant.SiteSiteDefaultValueMap {
-		err := settingService.EditSettings(constant.SiteSettingSectionName, key, value, currentUser)
+		err := settingService.EditSettings(constant.SiteSettingSectionName, key, value, currentUserId)
 		if err != nil {
 			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("重设站点设置失败！错误原因：%s", err), nil)
 			return

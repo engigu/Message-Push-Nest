@@ -11,10 +11,10 @@ const (
 	SSOTypeOIDC   = "oidc"
 	SSOTypeOAuth2 = "oauth2"
 
-	PathAuthOidcLogin      = "/api/v1/auth/oidc/login"
-	PathAuthOidcCallback   = "/api/v1/auth/oidc/callback"
-	PathAuthOAuth2Login    = "/api/v1/auth/oauth2/login"
-	PathAuthOAuth2Callback = "/api/v1/auth/oauth2/callback"
+	PathAuthOidcLogin      = "/api/v1/auth/sso/oidc/login"
+	PathAuthOidcCallback   = "/api/v1/auth/sso/oidc/callback"
+	PathAuthOAuth2Login    = "/api/v1/auth/sso/oauth2/login"
+	PathAuthOAuth2Callback = "/api/v1/auth/sso/oauth2/callback"
 
 	KeyOidcEnabled      = "oidc_enabled"
 	KeyOidcIssuer       = "oidc_issuer"
@@ -34,6 +34,8 @@ const (
 	KeyOauth2ClientSecret = "oauth2_client_secret"
 	KeyOauth2Scopes       = "oauth2_scopes"
 	KeyOauth2AutoCreate   = "oauth2_auto_create"
+
+	SiteSettingAllowRegistration = "allow_registration"
 )
 
 //const SiteSettingTitleKeyName = "title"
@@ -49,6 +51,7 @@ var SiteSiteDefaultValueMap = map[string]string{
 	"cookie_exp_days":       "1",
 	"theme_color":           "blue",
 	"enable_public_preview": "true",
+	"allow_registration":    "false",
 }
 
 // 日志清理自定义

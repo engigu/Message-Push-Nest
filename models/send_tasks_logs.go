@@ -8,15 +8,18 @@ import (
 
 type SendTasksLogs struct {
 	ID       int    `gorm:"primaryKey" json:"id" `
-	TaskID   string `json:"task_id" gorm:"type:varchar(12) ;default:'';index:task_id"`
-	Type     string `json:"type" gorm:"type:varchar(20) ;default:'task';comment:'类型：task-任务，template-模板'"`
-	Name     string `json:"name" gorm:"type:varchar(256) ;default:'';comment:'任务或模板名称'"`
-	Log      string `json:"log" gorm:"type:text ;"`
-	Status   *int   `json:"status" gorm:"type:int ;default:0;"`
-	CallerIp string `json:"caller_ip" gorm:"type:varchar(256) ;default:'';"`
+	TaskID   string `json:"task_id" gorm:"type:varchar(12);default:'';index:task_id;index:idx_logs_task_time,priority:1"`
+	Type     string `json:"type" gorm:"type:varchar(20);default:'task';comment:'类型：task-任务，template-模板'"`
+	Name     string `json:"name" gorm:"type:varchar(256);default:'';comment:'任务或模板名称'"`
+	Log      string `json:"log" gorm:"type:text;"`
+	Status   *int   `json:"status" gorm:"type:int;default:0;"`
+	CallerIp string `json:"caller_ip" gorm:"type:varchar(256);default:'';"`
 
-	CreatedAt util.Time `json:"created_on" gorm:"column:created_on;autoCreateTime "`
-	UpdatedAt util.Time `json:"modified_on" gorm:"column:modified_on;autoUpdateTime ;"`
+	CreatedBy  string `json:"created_by" gorm:"type:varchar(36);default:'';index;index:idx_logs_user_time,priority:1"`
+	ModifiedBy string `json:"modified_by" gorm:"type:varchar(36);default:'';"`
+
+	CreatedAt util.Time `json:"created_on" gorm:"column:created_on;autoCreateTime;index:idx_logs_created_on;index:idx_logs_user_time,priority:2;index:idx_logs_task_time,priority:2"`
+	UpdatedAt util.Time `json:"modified_on" gorm:"column:modified_on;autoUpdateTime;"`
 }
 
 // Add 添加日志记录
@@ -38,6 +41,8 @@ type LogsResult struct {
 	ModifiedOn util.Time `json:"modified_on"`
 	Status     int       `json:"status"`
 	CallerIp   string    `json:"caller_ip"`
+	CreatedBy  string    `json:"created_by"`
+	ModifiedBy string    `json:"modified_by"`
 }
 
 // GetSendLogs 获取所有日志记录
@@ -51,7 +56,13 @@ func GetSendLogs(pageNum int, pageSize int, name string, taskId string, maps map
 	dayVal, ok := maps["day_created_on"]
 	if ok {
 		delete(maps, "day_created_on")
-		query = query.Where(fmt.Sprintf("DATE(%s.created_on) = ?", logt), dayVal)
+		if dayStr, isStr := dayVal.(string); isStr && len(dayStr) >= 10 {
+			dayPrefix := dayStr[:10]
+			query = query.Where(fmt.Sprintf("%s.created_on >= ? AND %s.created_on <= ?", logt, logt),
+				dayPrefix+" 00:00:00", dayPrefix+" 23:59:59.999")
+		} else {
+			query = query.Where(fmt.Sprintf("DATE(%s.created_on) = ?", logt), dayVal)
+		}
 	}
 
 	query = query.Where(maps)
@@ -137,7 +148,13 @@ func GetSendLogsTotal(name string, taskId string, maps map[string]interface{}) (
 	dayVal, ok := maps["day_created_on"]
 	if ok {
 		delete(maps, "day_created_on")
-		query = query.Where(fmt.Sprintf("DATE(%s.created_on) = ?", logt), dayVal)
+		if dayStr, isStr := dayVal.(string); isStr && len(dayStr) >= 10 {
+			dayPrefix := dayStr[:10]
+			query = query.Where(fmt.Sprintf("%s.created_on >= ? AND %s.created_on <= ?", logt, logt),
+				dayPrefix+" 00:00:00", dayPrefix+" 23:59:59.999")
+		} else {
+			query = query.Where(fmt.Sprintf("DATE(%s.created_on) = ?", logt), dayVal)
+		}
 	}
 
 	query = query.Where(maps)
@@ -162,7 +179,7 @@ func DeleteOutDateLogs(keepNum int) (int, error) {
 	var threshold SendTasksLogs
 	result := db.Model(&SendTasksLogs{}).
 		Select("id").
-		Order("created_on DESC").
+		Order("created_on DESC, id DESC").
 		Offset(keepNum - 1).
 		Limit(1).
 		Find(&threshold)
@@ -228,7 +245,7 @@ type WayCateData struct {
 }
 
 // GetStatisticData 获取统计数据
-func GetStatisticData() (StatisticData, error) {
+func GetStatisticData(createdBy ...string) (StatisticData, error) {
 	var statistic StatisticData
 	var latestData []LatestSendData
 	var wayCateData []WayCateData
@@ -238,19 +255,29 @@ func GetStatisticData() (StatisticData, error) {
 	wayst := GetSchema(SendWays{})
 	currDay := util.GetNowTimeStr()[:10]
 
+	userFilter := ""
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		userFilter = createdBy[0]
+	}
+
 	// 今日统计数据
 	var todayStats struct {
 		TodayTotalNum  int `gorm:"column:today_total_num"`
 		TodaySuccNum   int `gorm:"column:today_succ_num"`
 		TodayFailedNum int `gorm:"column:today_failed_num"`
 	}
+	startOfToday := currDay + " 00:00:00"
+	endOfToday := currDay + " 23:59:59.999"
 	query := db.
 		Table(logt).
 		Select(`
 	COUNT(*) AS today_total_num,
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
-		Where("DATE(created_on) = ?", currDay)
+		Where("created_on >= ? AND created_on <= ?", startOfToday, endOfToday)
+	if userFilter != "" {
+		query = query.Where("created_by = ?", userFilter)
+	}
 
 	if err := query.Scan(&todayStats).Error; err == nil {
 		statistic.TodayTotalNum = todayStats.TodayTotalNum
@@ -260,19 +287,31 @@ func GetStatisticData() (StatisticData, error) {
 
 	// 	全部消息统计数据
 	var messageTotalNum int
-	if err := db.Table(logt).Select(`COUNT(*)`).Scan(&messageTotalNum).Error; err == nil {
+	msgQuery := db.Table(logt).Select(`COUNT(*)`)
+	if userFilter != "" {
+		msgQuery = msgQuery.Where("created_by = ?", userFilter)
+	}
+	if err := msgQuery.Scan(&messageTotalNum).Error; err == nil {
 		statistic.MessageTotalNum = messageTotalNum
 	}
 
 	// 	托管消息统计数据
 	var hostedMessageTotalNum int
-	if err := db.Table(hostedt).Select(`COUNT(*)`).Scan(&hostedMessageTotalNum).Error; err == nil {
+	hostedQuery := db.Table(hostedt).Select(`COUNT(*)`)
+	if userFilter != "" {
+		hostedQuery = hostedQuery.Where("created_by = ?", userFilter)
+	}
+	if err := hostedQuery.Scan(&hostedMessageTotalNum).Error; err == nil {
 		statistic.HostedMessageTotalNum = hostedMessageTotalNum
 	}
 
 	// 发送渠道统计数据
 	var waysTotalNum int
-	if err := db.Table(wayst).Select(`COUNT(*)`).Scan(&waysTotalNum).Error; err == nil {
+	waysQuery := db.Table(wayst).Select(`COUNT(*)`)
+	if userFilter != "" {
+		waysQuery = waysQuery.Where("created_by = ?", userFilter)
+	}
+	if err := waysQuery.Scan(&waysTotalNum).Error; err == nil {
 		statistic.WaysTotalNum = waysTotalNum
 	}
 
@@ -296,18 +335,23 @@ func GetStatisticData() (StatisticData, error) {
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
 	COUNT(*) AS num`, dayExpr)).
-		Where(fmt.Sprintf(" created_on >= '%s' and created_on <= '%s' ", pastDate, nextDate)).
-		Group("day").
-		Order("day")
+		Where(fmt.Sprintf(" created_on >= '%s' and created_on <= '%s' ", pastDate, nextDate))
+	if userFilter != "" {
+		queryData = queryData.Where("created_by = ?", userFilter)
+	}
+	queryData = queryData.Group("day").Order("day")
 
 	queryData.Scan(&latestData)
 
 	// 消息实例分类数目
-	db.
+	wayCateQuery := db.
 		Table(inst).
 		Select(fmt.Sprintf("%s.name as way_name, count(%s.id) as count_num", wayst, wayst)).
-		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", wayst, inst, wayst)).
-		Group(fmt.Sprintf("%s.id", wayst)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", wayst, inst, wayst))
+	if userFilter != "" {
+		wayCateQuery = wayCateQuery.Where(fmt.Sprintf("%s.created_by = ?", inst), userFilter)
+	}
+	wayCateQuery.Group(fmt.Sprintf("%s.id", wayst)).
 		Scan(&wayCateData)
 
 	statistic.LatestSendData = latestData
@@ -316,11 +360,16 @@ func GetStatisticData() (StatisticData, error) {
 }
 
 // GetBasicStatisticData 获取基础统计数据
-func GetBasicStatisticData() (BasicStatisticData, error) {
+func GetBasicStatisticData(createdBy ...string) (BasicStatisticData, error) {
 	var statistic BasicStatisticData
 	logt := GetSchema(SendTasksLogs{})
 	hostedt := GetSchema(HostedMessage{})
 	currDay := util.GetNowTimeStr()[:10]
+
+	userFilter := ""
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		userFilter = createdBy[0]
+	}
 
 	// 今日统计数据
 	var todayStats struct {
@@ -328,13 +377,18 @@ func GetBasicStatisticData() (BasicStatisticData, error) {
 		TodaySuccNum   int `gorm:"column:today_succ_num"`
 		TodayFailedNum int `gorm:"column:today_failed_num"`
 	}
+	startOfToday := currDay + " 00:00:00"
+	endOfToday := currDay + " 23:59:59.999"
 	query := db.
 		Table(logt).
 		Select(`
 	COUNT(*) AS today_total_num,
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
-		Where("DATE(created_on) = ?", currDay)
+		Where("created_on >= ? AND created_on <= ?", startOfToday, endOfToday)
+	if userFilter != "" {
+		query = query.Where("created_by = ?", userFilter)
+	}
 
 	if err := query.Scan(&todayStats).Error; err == nil {
 		statistic.TodayTotalNum = todayStats.TodayTotalNum
@@ -344,20 +398,32 @@ func GetBasicStatisticData() (BasicStatisticData, error) {
 
 	// 全部消息统计数据
 	var messageTotalNum int
-	if err := db.Table(logt).Select(`COUNT(*)`).Scan(&messageTotalNum).Error; err == nil {
+	msgQuery := db.Table(logt).Select(`COUNT(*)`)
+	if userFilter != "" {
+		msgQuery = msgQuery.Where("created_by = ?", userFilter)
+	}
+	if err := msgQuery.Scan(&messageTotalNum).Error; err == nil {
 		statistic.MessageTotalNum = messageTotalNum
 	}
 
 	// 托管消息统计数据
 	var hostedMessageTotalNum int
-	if err := db.Table(hostedt).Select(`COUNT(*)`).Scan(&hostedMessageTotalNum).Error; err == nil {
+	hostedQuery := db.Table(hostedt).Select(`COUNT(*)`)
+	if userFilter != "" {
+		hostedQuery = hostedQuery.Where("created_by = ?", userFilter)
+	}
+	if err := hostedQuery.Scan(&hostedMessageTotalNum).Error; err == nil {
 		statistic.HostedMessageTotalNum = hostedMessageTotalNum
 	}
 
 	// 发送渠道统计数据
 	var waysTotalNum int
 	wayst := GetSchema(SendWays{})
-	if err := db.Table(wayst).Select(`COUNT(*)`).Scan(&waysTotalNum).Error; err == nil {
+	waysQuery := db.Table(wayst).Select(`COUNT(*)`)
+	if userFilter != "" {
+		waysQuery = waysQuery.Where("created_by = ?", userFilter)
+	}
+	if err := waysQuery.Scan(&waysTotalNum).Error; err == nil {
 		statistic.WaysTotalNum = waysTotalNum
 	}
 
@@ -365,7 +431,7 @@ func GetBasicStatisticData() (BasicStatisticData, error) {
 }
 
 // GetTrendStatisticData 获取趋势统计数据（使用 send_stats 表）
-func GetTrendStatisticData(days int) (TrendStatisticData, error) {
+func GetTrendStatisticData(days int, createdBy ...string) (TrendStatisticData, error) {
 	var statistic TrendStatisticData
 	var latestData []LatestSendData
 	statsTable := GetSchema(SendStats{})
@@ -374,7 +440,12 @@ func GetTrendStatisticData(days int) (TrendStatisticData, error) {
 	if days <= 0 {
 		days = 30
 	}
-	
+
+	userFilter := ""
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		userFilter = createdBy[0]
+	}
+
 	now := util.GetNowTime()
 	past := now.AddDate(0, 0, -days)
 	pastDate := past.Format("2006-01-02")
@@ -387,9 +458,11 @@ func GetTrendStatisticData(days int) (TrendStatisticData, error) {
 			SUM(CASE WHEN status = 'failed' THEN num ELSE 0 END) AS day_failed_num,
 			SUM(num) AS num
 		`).
-		Where("day >= ?", pastDate).
-		Group("day").
-		Order("day")
+		Where("day >= ?", pastDate)
+	if userFilter != "" {
+		queryData = queryData.Where("created_by = ?", userFilter)
+	}
+	queryData = queryData.Group("day").Order("day")
 
 	queryData.Scan(&latestData)
 	statistic.LatestSendData = latestData
@@ -397,11 +470,16 @@ func GetTrendStatisticData(days int) (TrendStatisticData, error) {
 }
 
 // GetChannelStatisticData 获取渠道统计数据（基于 send_stats 表统计任务，再查询渠道）
-func GetChannelStatisticData() (ChannelStatisticData, error) {
+func GetChannelStatisticData(createdBy ...string) (ChannelStatisticData, error) {
 	var statistic ChannelStatisticData
 	var wayCateData []WayCateData
 	insTable := GetSchema(SendTasksIns{})
 	waysTable := GetSchema(SendWays{})
+
+	userFilter := ""
+	if len(createdBy) > 0 && createdBy[0] != "" {
+		userFilter = createdBy[0]
+	}
 
 	// 统计所有任务和模板中关联的实例的渠道数据
 	var wayStats []struct {
@@ -409,11 +487,14 @@ func GetChannelStatisticData() (ChannelStatisticData, error) {
 		CountNum int
 	}
 
-	err := db.
+	query := db.
 		Table(insTable).
 		Select(fmt.Sprintf("%s.name as way_name, COUNT(*) as count_num", waysTable)).
-		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
-		Group(fmt.Sprintf("%s.name", waysTable)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable))
+	if userFilter != "" {
+		query = query.Where(fmt.Sprintf("%s.created_by = ?", insTable), userFilter)
+	}
+	err := query.Group(fmt.Sprintf("%s.name", waysTable)).
 		Scan(&wayStats).Error
 
 	if err != nil {

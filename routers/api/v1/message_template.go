@@ -17,27 +17,30 @@ func GetMessageTemplateList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	text := c.Query("text")
 	status := c.Query("status")
-	
+
 	offset, limit := util.GetPageSize(c)
+	currentUserID := app.GetCurrentUserId(c)
 	templateService := message_template_service.TemplateService{
-		Text:     text,
-		Status:   status,
-		PageNum:  offset,
-		PageSize: limit,
+		Text:      text,
+		Status:    status,
+		CreatedBy: currentUserID,
+		IsAdmin:   app.IsAdmin(c),
+		PageNum:   offset,
+		PageSize:  limit,
 	}
-	
+
 	templates, err := templateService.GetAll()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "获取消息模板失败！", nil)
 		return
 	}
-	
+
 	count, err := templateService.Count()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "获取消息模板总数失败！", nil)
 		return
 	}
-	
+
 	appG.CResponse(http.StatusOK, "获取消息模板成功", map[string]interface{}{
 		"lists": templates,
 		"total": count,
@@ -48,35 +51,35 @@ func GetMessageTemplateList(c *gin.Context) {
 func GetMessageTemplate(c *gin.Context) {
 	appG := app.Gin{C: c}
 	id := c.Query("id")
-	
+
 	templateService := message_template_service.TemplateService{
 		ID: id,
 	}
-	
+
 	exists, err := templateService.ExistByID()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "查询模板失败！", nil)
 		return
 	}
-	
+
 	if !exists {
 		appG.CResponse(http.StatusNotFound, "模板不存在！", nil)
 		return
 	}
-	
+
 	template, err := templateService.Get()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "获取模板详情失败！", nil)
 		return
 	}
-	
+
 	appG.CResponse(http.StatusOK, "获取模板详情成功", template)
 }
 
 // AddMessageTemplate 添加消息模板
 func AddMessageTemplate(c *gin.Context) {
 	appG := app.Gin{C: c}
-	
+
 	var req struct {
 		Name             string `json:"name" binding:"required"`
 		Description      string `json:"description"`
@@ -91,21 +94,22 @@ func AddMessageTemplate(c *gin.Context) {
 		SourceTemplateID string `json:"source_template_id"`
 		CopyInstances    bool   `json:"copy_instances"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		appG.CResponse(http.StatusBadRequest, "参数错误："+err.Error(), nil)
 		return
 	}
-	
+
 	if req.TextTemplate == "" && req.HTMLTemplate == "" && req.MarkdownTemplate == "" {
 		appG.CResponse(http.StatusBadRequest, "至少需要填写一种格式的模板内容", nil)
 		return
 	}
-	
+
 	if req.Status == "" {
 		req.Status = "enabled"
 	}
-	
+
+	currentUserID := app.GetCurrentUserId(c)
 	templateService := message_template_service.TemplateService{
 		Name:             req.Name,
 		Description:      req.Description,
@@ -119,13 +123,15 @@ func AddMessageTemplate(c *gin.Context) {
 		Status:           req.Status,
 		SourceTemplateID: req.SourceTemplateID,
 		CopyInstances:    req.CopyInstances,
+		CreatedBy:        currentUserID,
+		ModifiedBy:       currentUserID,
 	}
-	
+
 	if err := templateService.Add(); err != nil {
 		appG.CResponse(http.StatusInternalServerError, "添加模板失败："+err.Error(), nil)
 		return
 	}
-	
+
 	appG.CResponse(http.StatusOK, "添加模板成功", nil)
 }
 
@@ -157,21 +163,24 @@ func EditMessageTemplate(c *gin.Context) {
 		return
 	}
 	
+	currentUserID := app.GetCurrentUserId(c)
 	templateService := message_template_service.TemplateService{
-		ID: req.ID,
+		ID:         req.ID,
+		ModifiedBy: currentUserID,
+		IsAdmin:    app.IsAdmin(c),
 	}
-	
+
 	exists, err := templateService.ExistByID()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "查询模板失败！", nil)
 		return
 	}
-	
+
 	if !exists {
 		appG.CResponse(http.StatusNotFound, "模板不存在！", nil)
 		return
 	}
-	
+
 	templateService.Name = req.Name
 	templateService.Description = req.Description
 	templateService.TextTemplate = req.TextTemplate
@@ -182,43 +191,46 @@ func EditMessageTemplate(c *gin.Context) {
 	templateService.AtUserIds = req.AtUserIds
 	templateService.IsAtAll = req.IsAtAll
 	templateService.Status = req.Status
-	
+
 	if err := templateService.Update(); err != nil {
 		appG.CResponse(http.StatusInternalServerError, "更新模板失败："+err.Error(), nil)
 		return
 	}
-	
+
 	appG.CResponse(http.StatusOK, "更新模板成功", nil)
 }
 
 // DeleteMessageTemplate 删除消息模板
 func DeleteMessageTemplate(c *gin.Context) {
 	appG := app.Gin{C: c}
-	
+
 	var req struct {
 		ID string `json:"id" binding:"required"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		appG.CResponse(http.StatusBadRequest, "参数错误："+err.Error(), nil)
 		return
 	}
-	
+
+	currentUserID := app.GetCurrentUserId(c)
 	templateService := message_template_service.TemplateService{
-		ID: req.ID,
+		ID:         req.ID,
+		ModifiedBy: currentUserID,
+		IsAdmin:    app.IsAdmin(c),
 	}
-	
+
 	exists, err := templateService.ExistByID()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "查询模板失败！", nil)
 		return
 	}
-	
+
 	if !exists {
 		appG.CResponse(http.StatusNotFound, "模板不存在！", nil)
 		return
 	}
-	
+
 	if err := templateService.Delete(); err != nil {
 		appG.CResponse(http.StatusInternalServerError, "删除模板失败："+err.Error(), nil)
 		return
