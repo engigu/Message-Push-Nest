@@ -7,6 +7,7 @@ import (
 	"message-nest/pkg/constant"
 	"message-nest/pkg/e"
 	"message-nest/pkg/setting"
+	"message-nest/service/cron_service"
 	"message-nest/service/settings_service"
 	"net/http"
 )
@@ -164,3 +165,19 @@ func RestDefaultSettings(c *gin.Context) {
 	appG.CResponse(http.StatusOK, "重设站点设置成功！", nil)
 
 }
+
+// ExecuteCleanNow 管理员手动触发一次系统统一数据维护清理
+func ExecuteCleanNow(c *gin.Context) {
+	appG := app.Gin{C: c}
+	if setting.IsDemoMode() {
+		appG.CResponse(http.StatusForbidden, "演示模式下禁止执行数据清理！", nil)
+		return
+	}
+	ok, msg := cron_service.TryExecuteSystemDataClean()
+	if !ok {
+		appG.CResponse(http.StatusBadRequest, msg, nil)
+		return
+	}
+	appG.CResponse(http.StatusOK, msg, nil)
+}
+

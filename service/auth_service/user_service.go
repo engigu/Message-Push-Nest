@@ -99,6 +99,7 @@ func (s *UserService) AddUser() (*models.Auth, error) {
 		_ = models.EditUserByID(user.ID, map[string]interface{}{"email": s.Email})
 		user.Email = s.Email
 	}
+
 	return user, nil
 }
 

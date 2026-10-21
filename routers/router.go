@@ -134,6 +134,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 
 				// settings (管理员重置系统设置)
 				adminGroup.POST("/settings/reset", v1.RestDefaultSettings)
+				adminGroup.POST("/settings/execute_clean", v1.ExecuteCleanNow)
 
 				// login logs
 				adminGroup.GET("/loginlogs/recent", v1.GetRecentLoginLogs)

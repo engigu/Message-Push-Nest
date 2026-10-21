@@ -57,16 +57,10 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 		result[setting.Key] = setting.Value
 	}
 
-	// 针对多用户数据清理：如果普通用户未显式设置过自定义 cron，分配专属打散随机时间
-	if us.UserID != "" {
-		if section == constant.LogsCleanSectionName {
-			if result["cron"] == "" || result["cron"] == "1 0 * * *" {
-				result["cron"] = util.GetDefaultCronForUser(us.UserID, 0)
-			}
-		} else if section == constant.HostedMsgCleanSectionName {
-			if result["cron"] == "" || result["cron"] == "30 0 * * *" {
-				result["cron"] = util.GetDefaultCronForUser(us.UserID, 27)
-			}
+	// 如果是数据清理配置，返回系统当前统一维护清理周期
+	if section == constant.LogsCleanSectionName || section == constant.HostedMsgCleanSectionName {
+		if result["cron"] == "" {
+			result["cron"] = cron_service.GetSystemCleanCron()
 		}
 	}
 
@@ -89,15 +83,6 @@ func (us *UserSettings) GetUserSetting(section string) (map[string]string, error
 
 // EditSettings 便捷自定义设置
 func (us *UserSettings) EditSettings(section string, key string, value string, currentUserID string) error {
-	// 如果用户提交的清理 cron 为空，自动分配该用户的分散随机 cron
-	if key == constant.LogsCleanCronKeyName && value == "" {
-		if section == constant.LogsCleanSectionName {
-			value = util.GetDefaultCronForUser(currentUserID, 0)
-		} else if section == constant.HostedMsgCleanSectionName {
-			value = util.GetDefaultCronForUser(currentUserID, 27)
-		}
-	}
-
 	var setting models.Settings
 	if currentUserID != "" {
 		setting, _ = models.GetSettingByUser(section, key, currentUserID)
@@ -130,32 +115,13 @@ func (us *UserSettings) EditSettings(section string, key string, value string, c
 		return err
 	}
 
-	// 更新日志清理配置（支持按当前用户独立调度）
-	if section == constant.LogsCleanSectionName {
-		if key == constant.LogsCleanCronKeyName || key == constant.LogsCleanEnabledKeyName {
-			cronService := cron_service.CronService{}
-			cronSetting, _ := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanCronKeyName, currentUserID)
-			enabledSetting, _ := models.GetSettingByKey(constant.LogsCleanSectionName, constant.LogsCleanEnabledKeyName, currentUserID)
-			cronExpr := cronSetting.Value
-			if cronExpr == "" {
-				cronExpr = util.GetDefaultCronForUser(currentUserID, 0)
-			}
-			cronService.UpdateUserLogsCronRun(currentUserID, cronExpr, enabledSetting.Value == "true")
+	// 更新系统统一维护清理配置（管理员配置系统执行周期）
+	if section == constant.LogsCleanSectionName && key == constant.LogsCleanCronKeyName {
+		if value != "" && us.IsAdmin {
+			cron_service.UpdateSystemCleanCron(value)
 		}
 	}
-	// 更新托管消息清理配置（支持按当前用户独立调度）
-	if section == constant.HostedMsgCleanSectionName {
-		if key == constant.HostedMsgCleanCronKeyName || key == constant.HostedMsgCleanEnabledKeyName {
-			cronService := cron_service.CronService{}
-			cronSetting, _ := models.GetSettingByKey(constant.HostedMsgCleanSectionName, constant.HostedMsgCleanCronKeyName, currentUserID)
-			enabledSetting, _ := models.GetSettingByKey(constant.HostedMsgCleanSectionName, constant.HostedMsgCleanEnabledKeyName, currentUserID)
-			cronExpr := cronSetting.Value
-			if cronExpr == "" {
-				cronExpr = util.GetDefaultCronForUser(currentUserID, 27)
-			}
-			cronService.UpdateUserHostedMsgCronRun(currentUserID, cronExpr, enabledSetting.Value == "true")
-		}
-	}
+
 	// 如果是site_config，清除缓存
 	if section == constant.SiteSettingSectionName {
 		ClearSiteConfigCache()
@@ -173,6 +139,7 @@ type SiteConfig struct {
 	ThemeColor          string `json:"theme_color" validate:"omitempty,max=20" label:"主题颜色"`
 	EnablePublicPreview string `json:"enable_public_preview" validate:"omitempty,oneof=true false" label:"是否启用公开消息预览"`
 	AllowRegistration   string `json:"allow_registration" validate:"omitempty,oneof=true false" label:"是否允许公开注册"`
+	EnableCaptcha       string `json:"enable_captcha" validate:"omitempty,oneof=true false" label:"是否启用人机验证码"`
 }
 
 type LogConfig struct {
@@ -227,6 +194,21 @@ func IsRegistrationAllowed() bool {
 	return s.Value == "true"
 }
 
+// IsCaptchaEnabled 检查系统是否开启人机验证码（默认开启）
+func IsCaptchaEnabled() bool {
+	if IsSiteConfigCacheValid() {
+		cache := GetSiteConfigCache()
+		if val, ok := cache[constant.SiteSettingEnableCaptcha]; ok {
+			return val != "false"
+		}
+	}
+	s, _ := models.GetSettingByKey(constant.SiteSettingSectionName, constant.SiteSettingEnableCaptcha)
+	if s.ID == 0 {
+		return true // 未配置过默认启用
+	}
+	return s.Value != "false"
+}
+
 // ValidateDiffSetting 校验不同的设置
 func (us *UserSettings) ValidateDiffSetting(section string, data map[string]string) string {
 	if section == constant.SiteSettingSectionName {
@@ -238,6 +220,7 @@ func (us *UserSettings) ValidateDiffSetting(section string, data map[string]stri
 		config.ThemeColor = data["theme_color"]
 		config.EnablePublicPreview = data["enable_public_preview"]
 		config.AllowRegistration = data["allow_registration"]
+		config.EnableCaptcha = data["enable_captcha"]
 		_, errStr := app.CommonPlaygroundValid(config)
 		return errStr
 	}

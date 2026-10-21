@@ -31,6 +31,7 @@ const state = reactive({
   theme_color: getStoredTheme(),
   enable_public_preview: 'true',
   allow_registration: 'false',
+  enable_captcha: 'true',
   section: 'site_config',
 })
 
@@ -52,6 +53,7 @@ const handleSubmit = async () => {
         theme_color: state.theme_color,
         enable_public_preview: state.enable_public_preview,
         allow_registration: state.allow_registration,
+        enable_captcha: state.enable_captcha,
       },
     }
     const response = await request.post('/settings/set', postData)
@@ -98,6 +100,7 @@ const getSiteConfig = async () => {
       state.theme_color = data.theme_color || 'blue'
       state.enable_public_preview = data.enable_public_preview !== undefined ? data.enable_public_preview : 'true'
       state.allow_registration = data.allow_registration !== undefined ? data.allow_registration : 'false'
+      state.enable_captcha = data.enable_captcha !== undefined ? data.enable_captcha : 'true'
 
       // 同步当前选中的主题状态
       currentThemeColor.value = state.theme_color
@@ -225,6 +228,18 @@ export default {
               :disabled="isDemo"
               :modelValue="!isDemo && state.allow_registration === 'true'" 
               @update:modelValue="(val: boolean) => state.allow_registration = val ? 'true' : 'false'" 
+            />
+          </div>
+
+          <!-- 人机验证码控制 -->
+          <div class="flex items-center justify-between p-3 border border-dashed border-border rounded-lg bg-muted/20">
+            <div class="space-y-0.5">
+              <label class="text-sm font-semibold text-foreground">登录与注册人机验证码</label>
+              <p class="text-xs text-muted-foreground">登录和注册时要求输入算术验证码，防御自动化机器人撞库与暴力破解攻击</p>
+            </div>
+            <Switch 
+              :modelValue="state.enable_captcha === 'true'" 
+              @update:modelValue="(val: boolean) => state.enable_captcha = val ? 'true' : 'false'" 
             />
           </div>
 

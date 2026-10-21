@@ -36,6 +36,7 @@ const (
 	KeyOauth2AutoCreate   = "oauth2_auto_create"
 
 	SiteSettingAllowRegistration = "allow_registration"
+	SiteSettingEnableCaptcha     = "enable_captcha"
 )
 
 //const SiteSettingTitleKeyName = "title"
@@ -52,7 +53,11 @@ var SiteSiteDefaultValueMap = map[string]string{
 	"theme_color":           "blue",
 	"enable_public_preview": "true",
 	"allow_registration":    "false",
+	"enable_captcha":        "true",
 }
+
+// 系统统一数据清理维护任务默认执行时间（每日凌晨 03:00）
+const DefaultSystemCleanCron = "0 3 * * *"
 
 // 日志清理自定义
 const LogsCleanSectionName = "log_config"
@@ -62,7 +67,7 @@ const LogsCleanEnabledKeyName = "enabled"
 
 // 日志清理默认值
 var LogsCleanDefaultValueMap = map[string]string{
-	"cron":     "1 0 * * *",
+	"cron":     DefaultSystemCleanCron,
 	"keep_num": "1000",
 	"enabled":  "true",
 }

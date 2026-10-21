@@ -3,11 +3,13 @@ package v1
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
 	"message-nest/models"
 	"message-nest/pkg/app"
+	"message-nest/pkg/captcha"
 	"message-nest/pkg/constant"
 	"message-nest/pkg/e"
 	"message-nest/pkg/setting"
@@ -194,9 +196,12 @@ func ResetUserPassword(c *gin.Context) {
 }
 
 type RegisterReq struct {
-	Username string `json:"username" validate:"required,min=2,max=30" label:"用户名"`
-	Password string `json:"password" validate:"required,min=4,max=50" label:"密码"`
-	Email    string `json:"email" validate:"omitempty,email,max=100" label:"邮箱"`
+	Username     string `json:"username" validate:"required,min=2,max=30" label:"用户名"`
+	Password     string `json:"password" validate:"required,min=4,max=50" label:"密码"`
+	Email        string `json:"email" validate:"omitempty,email,max=100" label:"邮箱"`
+	CaptchaID    string `json:"captcha_id" label:"验证码ID"`
+	CaptchaCode  string `json:"captcha_code" label:"验证码"`
+	CaptchaToken string `json:"captcha_token" label:"人机验证Token"`
 }
 
 // Register 访客自主注册接口（公开免鉴权）
@@ -212,6 +217,24 @@ func Register(c *gin.Context) {
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errMsg, nil)
 		return
+	}
+
+	// 人机安全验证校验 (若管理员启用了验证码且非演示模式)
+	if settings_service.IsCaptchaEnabled() && !setting.IsDemoMode() {
+		if req.CaptchaToken != "" {
+			if ok, reason := captcha.VerifyToken(req.CaptchaToken, c.ClientIP()); !ok {
+				appG.CResponse(http.StatusBadRequest, "人机安全验证失败: "+reason, nil)
+				return
+			}
+		} else if req.CaptchaID != "" || req.CaptchaCode != "" {
+			if !captcha.VerifyDirect(req.CaptchaID, req.CaptchaCode) {
+				appG.CResponse(http.StatusBadRequest, "验证码错误或已失效，请重新输入！", nil)
+				return
+			}
+		} else {
+			appG.CResponse(http.StatusBadRequest, "请完成人机验证码校验！", nil)
+			return
+		}
 	}
 
 	userService := auth_service.UserService{
@@ -267,6 +290,7 @@ func GetPublicSiteConfig(c *gin.Context) {
 		"theme_color":           configs["theme_color"],
 		"allow_registration":    settings_service.IsRegistrationAllowed(),
 		"enable_public_preview": configs["enable_public_preview"] == "true",
+		"enable_captcha":        settings_service.IsCaptchaEnabled(),
 		"is_demo":               setting.IsDemoMode(),
 	}
 
@@ -351,7 +375,32 @@ func CheckUsernameAvailability(c *gin.Context) {
 	username := c.Query("username")
 	excludeID := c.Query("exclude_id")
 
-	available, reason := models.CheckUsernameAvailable(username, excludeID)
+	// 1. 安全加固：未登录访客禁止任意传递 exclude_id 刺探系统用户内部主键
+	if excludeID != "" {
+		claims, exists := c.Get("claims")
+		if !exists {
+			// 未登录时清空，防止利用此参数反向探测内部真实 ID
+			excludeID = ""
+		} else if customClaims, ok := claims.(*util.UserClaims); ok {
+			// 非管理员只能排除其自身 ID
+			if customClaims.Role != "admin" {
+				excludeID = customClaims.ID
+			}
+		}
+	}
+
+	// 2. 格式前置校验
+	cleanName := strings.TrimSpace(username)
+	if cleanName == "" {
+		appG.CResponse(http.StatusOK, "查询成功", gin.H{
+			"available": false,
+			"reason":    "用户名不能为空",
+			"username":  username,
+		})
+		return
+	}
+
+	available, reason := models.CheckUsernameAvailable(cleanName, excludeID)
 	appG.CResponse(http.StatusOK, "查询成功", gin.H{
 		"available": available,
 		"reason":    reason,

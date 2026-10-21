@@ -177,12 +177,25 @@ func DeleteOutDateLogs(keepNum int, createdBy ...string) (int, error) {
 		return 0, nil
 	}
 
+	userID := ""
+	if len(createdBy) > 0 {
+		userID = createdBy[0]
+	}
+
 	// 优化方案：使用GORM的Offset和Limit找到临界ID，兼容多种数据库
 	// 1. 获取第 keepNum 条记录的ID作为临界值
 	var threshold SendTasksLogs
 	query := db.Model(&SendTasksLogs{}).Select("id")
-	if len(createdBy) > 0 && createdBy[0] != "" {
-		query = query.Where("created_by = ?", createdBy[0])
+	if userID != "" {
+		isAdmin := false
+		if u, err := GetUserByID(userID); err == nil && u != nil && u.Role == "admin" {
+			isAdmin = true
+		}
+		if isAdmin {
+			query = query.Where("created_by = ? OR created_by = '' OR created_by IS NULL", userID)
+		} else {
+			query = query.Where("created_by = ?", userID)
+		}
 	} else if len(createdBy) > 0 && createdBy[0] == "" {
 		query = query.Where("created_by = '' OR created_by IS NULL")
 	}
@@ -199,8 +212,16 @@ func DeleteOutDateLogs(keepNum int, createdBy ...string) (int, error) {
 
 	// 2. 删除ID小于临界值的记录（限定用户范围）
 	deleteQuery := db.Where("id < ?", threshold.ID)
-	if len(createdBy) > 0 && createdBy[0] != "" {
-		deleteQuery = deleteQuery.Where("created_by = ?", createdBy[0])
+	if userID != "" {
+		isAdmin := false
+		if u, err := GetUserByID(userID); err == nil && u != nil && u.Role == "admin" {
+			isAdmin = true
+		}
+		if isAdmin {
+			deleteQuery = deleteQuery.Where("created_by = ? OR created_by = '' OR created_by IS NULL", userID)
+		} else {
+			deleteQuery = deleteQuery.Where("created_by = ?", userID)
+		}
 	} else if len(createdBy) > 0 && createdBy[0] == "" {
 		deleteQuery = deleteQuery.Where("created_by = '' OR created_by IS NULL")
 	}

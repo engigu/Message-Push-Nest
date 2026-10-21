@@ -60,3 +60,11 @@ func RemoveTask(taskID cron.EntryID) {
 		delete(TaskList, taskID)
 	}
 }
+
+// Stop 停止定时任务调度器（供服务优雅退出时调用）
+func Stop() {
+	if CronInstance != nil {
+		CronInstance.Stop()
+	}
+}
+

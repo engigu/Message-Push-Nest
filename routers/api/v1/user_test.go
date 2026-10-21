@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"message-nest/middleware"
 	"message-nest/models"
+	"message-nest/pkg/captcha"
 	"message-nest/pkg/setting"
 	"message-nest/pkg/util"
 	"net/http"
@@ -533,5 +534,104 @@ func TestUserCleanSettingsAndIsolation(t *testing.T) {
 		t.Fatalf("admin hosted messages should remain 3, but got %d", adminMsgCount)
 	}
 }
+
+func TestCaptchaAndRegistrationFlow(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	models.InitTestDB("captcha_flow_test_" + util.GenerateUniqueID())
+
+	// 开放自主注册
+	_ = models.AddOneSetting(models.Settings{
+		Section: "site_config",
+		Key:     "allow_registration",
+		Value:   "true",
+	})
+
+	r := gin.New()
+	r.GET("/api/v1/auth/captcha", GetCaptcha)
+	r.POST("/api/v1/auth/captcha/verify", VerifyCaptchaAndGetToken)
+	r.POST("/api/v1/auth/register", Register)
+	r.GET("/api/v1/auth/check-username", CheckUsernameAvailability)
+
+	// 1. 获取验证码
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/auth/captcha?type=math", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK for GetCaptcha, got %d", w.Code)
+	}
+	var capResp map[string]interface{}
+	_ = json.Unmarshal(w.Body.Bytes(), &capResp)
+	capData := capResp["data"].(map[string]interface{})
+	captchaID := capData["captcha_id"].(string)
+	if captchaID == "" || capData["captcha_image"].(string) == "" {
+		t.Fatalf("captcha_id or captcha_image is empty")
+	}
+
+	// 2. 无验证码尝试注册 -> 应该被拦截 (400)
+	noCapBody, _ := json.Marshal(map[string]string{
+		"username": "bot_attacker",
+		"password": "password123",
+	})
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(noCapBody))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	var noCapResp map[string]interface{}
+	_ = json.Unmarshal(w.Body.Bytes(), &noCapResp)
+	if code, ok := noCapResp["code"].(float64); !ok || int(code) != 400 {
+		t.Fatalf("expected 400 for register without captcha, got %v", noCapResp["code"])
+	}
+
+	// 3. 错误验证码尝试注册 -> 应该被拦截 (400)
+	wrongCapBody, _ := json.Marshal(map[string]string{
+		"username":     "bot_attacker",
+		"password":     "password123",
+		"captcha_id":   captchaID,
+		"captcha_code": "999999",
+	})
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(wrongCapBody))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	var wrongCapResp map[string]interface{}
+	_ = json.Unmarshal(w.Body.Bytes(), &wrongCapResp)
+	if code, ok := wrongCapResp["code"].(float64); !ok || int(code) != 400 {
+		t.Fatalf("expected 400 for register with wrong captcha, got %v", wrongCapResp["code"])
+	}
+
+	// 4. 使用合法人机验证 Token 注册 -> 200 OK
+	validToken := util.GenerateUniqueID() // mock or token
+	// 采用真实签发的 Token
+	token := captcha.GenerateVerificationToken("")
+	validRegBody, _ := json.Marshal(map[string]string{
+		"username":      "legit_user",
+		"password":      "password123",
+		"email":         "legit@example.com",
+		"captcha_token": token,
+	})
+	_ = validToken
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", "/api/v1/auth/register", bytes.NewBuffer(validRegBody))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	var validResp map[string]interface{}
+	_ = json.Unmarshal(w.Body.Bytes(), &validResp)
+	if code, ok := validResp["code"].(float64); !ok || int(code) != 200 {
+		t.Fatalf("expected 200 for register with valid captcha token, got %v, body: %s", validResp["code"], w.Body.String())
+	}
+
+	// 5. 校验 CheckUsernameAvailability 的 exclude_id 访客保护
+	// 5.1 未登录时传入 exclude_id 不应该生效探测内部 ID
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/api/v1/auth/check-username?username=legit_user&exclude_id=ANY_ID", nil)
+	r.ServeHTTP(w, req)
+	var chkResp map[string]interface{}
+	_ = json.Unmarshal(w.Body.Bytes(), &chkResp)
+	chkData := chkResp["data"].(map[string]interface{})
+	if chkData["available"].(bool) {
+		t.Fatalf("expected legit_user to be unavailable even with exclude_id when not logged in")
+	}
+}
+
 
 

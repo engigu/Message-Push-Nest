@@ -23,6 +23,8 @@ func RegisterPublicRoutes(r *gin.RouterGroup) {
 		authGroup.POST("/login", api.GetAuth)
 		authGroup.POST("/register", v1.Register)
 		authGroup.GET("/check-username", v1.CheckUsernameAvailability)
+		authGroup.GET("/captcha", v1.GetCaptcha)
+		authGroup.POST("/captcha/verify", v1.VerifyCaptchaAndGetToken)
 
 		// 单点登录子组 (/api/v1/auth/sso)
 		ssoGroup := authGroup.Group("/sso")

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "vue-sonner"
 import { ref, onMounted } from "vue"
 import { Card, CardContent } from '@/components/ui/card'
-import { Fingerprint, Zap, AlertCircle, UserPlus, LogIn } from 'lucide-vue-next'
+import { Fingerprint, Zap, AlertCircle, UserPlus, LogIn, RotateCw } from 'lucide-vue-next'
 // @ts-ignore
 import config from '../../config.js'
 
@@ -64,6 +64,55 @@ let regPassword = ref('');
 let regConfirmPassword = ref('');
 let regAccountError = ref('');
 let bindAccountError = ref('');
+
+// 站点验证码总开关
+let enableCaptcha = ref(true);
+
+// 登录人机验证码
+let loginCaptchaId = ref('');
+let loginCaptchaImage = ref('');
+let loginCaptchaCode = ref('');
+let loginCaptchaLoading = ref(false);
+
+const refreshLoginCaptcha = async () => {
+  if (isDemo.value || !enableCaptcha.value) return;
+  loginCaptchaLoading.value = true;
+  try {
+    const res = await request.get('/api/v1/auth/captcha?type=math');
+    if (res.data && res.data.code === 200 && res.data.data) {
+      loginCaptchaId.value = res.data.data.captcha_id;
+      loginCaptchaImage.value = res.data.data.captcha_image;
+      loginCaptchaCode.value = '';
+    }
+  } catch (e) {
+    console.error('获取登录验证码失败:', e);
+  } finally {
+    loginCaptchaLoading.value = false;
+  }
+};
+
+// 注册人机验证码
+let regCaptchaId = ref('');
+let regCaptchaImage = ref('');
+let regCaptchaCode = ref('');
+let regCaptchaLoading = ref(false);
+
+const refreshRegCaptcha = async () => {
+  if (!enableCaptcha.value) return;
+  regCaptchaLoading.value = true;
+  try {
+    const res = await request.get('/api/v1/auth/captcha?type=math');
+    if (res.data && res.data.code === 200 && res.data.data) {
+      regCaptchaId.value = res.data.data.captcha_id;
+      regCaptchaImage.value = res.data.data.captcha_image;
+      regCaptchaCode.value = '';
+    }
+  } catch (e) {
+    console.error('获取注册验证码失败:', e);
+  } finally {
+    regCaptchaLoading.value = false;
+  }
+};
 
 // 实时校验注册用户名唯一性
 const checkRegAccount = async () => {
@@ -159,12 +208,31 @@ const switchToRegister = () => {
     toast.error('当前系统未开放自主注册，请联系管理员分配账号');
     return;
   }
+  // 切换前清空所有注册相关字段，防止浏览器或上一次交互残留
+  regAccount.value = '';
+  regEmail.value = '';
+  regPassword.value = '';
+  regConfirmPassword.value = '';
+  regCaptchaCode.value = '';
+  regAccountError.value = '';
   activeMode.value = 'register';
+  if (enableCaptcha.value) {
+    refreshRegCaptcha();
+  }
 };
 
 // 切换至登录模式
 const switchToLogin = () => {
   activeMode.value = 'login';
+  regAccount.value = '';
+  regEmail.value = '';
+  regPassword.value = '';
+  regConfirmPassword.value = '';
+  regCaptchaCode.value = '';
+  regAccountError.value = '';
+  if (!isDemo.value && enableCaptcha.value && !loginCaptchaImage.value) {
+    refreshLoginCaptcha();
+  }
 };
 
 // 更新favicon
@@ -257,7 +325,7 @@ onMounted(async () => {
     console.warn('获取 SSO 配置失败:', e);
   }
 
-  // 获取公开站点配置 (含 allow_registration 开关)
+  // 获取公开站点配置 (含 allow_registration 与 enable_captcha 开关)
   try {
     const siteRes = await request.get('/public/site/config');
     if (siteRes.data && siteRes.data.code === 200 && siteRes.data.data) {
@@ -272,6 +340,12 @@ onMounted(async () => {
         ssoProviders.value = [];
       } else {
         allowRegistration.value = pData.allow_registration === 'true' || pData.allow_registration === true;
+      }
+      if (pData.enable_captcha !== undefined) {
+        enableCaptcha.value = pData.enable_captcha === 'true' || pData.enable_captcha === true;
+      }
+      if (!isDemo.value && enableCaptcha.value) {
+        refreshLoginCaptcha();
       }
       if (pData.title) document.title = pData.title;
       if (pData.slogan) slogan.value = pData.slogan;
@@ -292,6 +366,12 @@ onMounted(async () => {
       if (!isDemo.value && localConfig && localConfig.allow_registration !== undefined) {
         allowRegistration.value = localConfig.allow_registration === 'true' || localConfig.allow_registration === true;
       }
+      if (localConfig && localConfig.enable_captcha !== undefined) {
+        enableCaptcha.value = localConfig.enable_captcha === 'true' || localConfig.enable_captcha === true;
+      }
+      if (!isDemo.value && enableCaptcha.value && !loginCaptchaImage.value) {
+        refreshLoginCaptcha();
+      }
     } catch (err) {}
   }
 });
@@ -303,13 +383,25 @@ let clickLogin = async () => {
     toast.error('请输入账号和密码');
     return;
   }
+  if (!isDemo.value && enableCaptcha.value && !loginCaptchaCode.value.trim()) {
+    toast.error('请输入安全验证码');
+    return;
+  }
   
   loading.value = true;
   try {
-    const rspe = await request.post('/api/v1/auth/login', { username: account.value, passwd: password.value });
+    const payload: any = { username: account.value, passwd: password.value };
+    if (!isDemo.value && enableCaptcha.value) {
+      payload.captcha_id = loginCaptchaId.value;
+      payload.captcha_code = loginCaptchaCode.value.trim();
+    }
+    const rspe = await request.post('/api/v1/auth/login', payload);
     const rsp = rspe.data;
     if (rsp.code != 200) {
       toast.error(rsp.msg || '登录失败');
+      if (!isDemo.value && enableCaptcha.value) {
+        refreshLoginCaptcha();
+      }
     } else {
       pageState.setToken(rsp.data.token);
       toast.success('登录成功');
@@ -319,6 +411,9 @@ let clickLogin = async () => {
     }
   } catch (error: any) {
     toast.error('登录失败，请检查网络连接');
+    if (!isDemo.value && enableCaptcha.value) {
+      refreshLoginCaptcha();
+    }
   } finally {
     loading.value = false;
   }
@@ -360,14 +455,23 @@ let clickRegister = async () => {
     toast.error('两次输入的密码不一致');
     return;
   }
+  if (enableCaptcha.value && !regCaptchaCode.value.trim()) {
+    toast.error('请输入安全验证码');
+    return;
+  }
 
   loading.value = true;
   try {
-    const rsp = await request.post('/api/v1/auth/register', {
+    const payload: any = {
       username: u,
       password: p,
-      email: em
-    });
+      email: em,
+    };
+    if (enableCaptcha.value) {
+      payload.captcha_id = regCaptchaId.value;
+      payload.captcha_code = regCaptchaCode.value.trim();
+    }
+    const rsp = await request.post('/api/v1/auth/register', payload);
     if (rsp.data && rsp.data.code === 200) {
       const data = rsp.data.data;
       toast.success('注册成功！欢迎加入 Message Nest');
@@ -383,9 +487,15 @@ let clickRegister = async () => {
       }
     } else {
       toast.error(rsp.data?.msg || '注册失败，请稍后重试');
+      if (enableCaptcha.value) {
+        refreshRegCaptcha();
+      }
     }
   } catch (e: any) {
     toast.error('注册请求失败: ' + (e?.message || '网络异常'));
+    if (enableCaptcha.value) {
+      refreshRegCaptcha();
+    }
   } finally {
     loading.value = false;
   }
@@ -500,7 +610,7 @@ let clickSSOCreateAccount = async () => {
       <div class="flex flex-col gap-6">
         <Card class="overflow-hidden shadow-lg border-border">
           <CardContent class="grid p-0 md:grid-cols-2">
-            <form class="p-6 md:p-8">
+            <form class="p-6 md:p-8" autocomplete="off" @submit.prevent>
               <div class="flex flex-col gap-5">
                 <!-- 小屏标题与LOGO -->
                 <div class="flex flex-col items-center text-center md:hidden">
@@ -651,9 +761,11 @@ let clickSSOCreateAccount = async () => {
                         <Label for="bind-new-account" class="text-xs font-medium">内部账号用户名</Label>
                         <Input
                           id="bind-new-account"
+                          name="bind_new_username"
                           type="text"
                           placeholder="2-30位字母/数字"
                           v-model="bindNewAccount"
+                          autocomplete="off"
                           :class="{ 'border-destructive focus-visible:ring-destructive': !!bindAccountError }"
                           @blur="checkBindAccount"
                           @input="bindAccountError = ''"
@@ -663,15 +775,15 @@ let clickSSOCreateAccount = async () => {
                       </div>
                       <div class="grid gap-2">
                         <Label for="bind-new-email" class="text-xs font-medium">邮箱地址 (选填)</Label>
-                        <Input id="bind-new-email" type="email" placeholder="第三方提供或留空" v-model="bindNewEmail" />
+                        <Input id="bind-new-email" name="bind_new_email" type="email" placeholder="第三方提供或留空" v-model="bindNewEmail" autocomplete="off" />
                       </div>
                       <div class="grid gap-2">
                         <Label for="bind-new-pwd" class="text-xs font-medium">设置登录密码</Label>
-                        <Input id="bind-new-pwd" type="password" placeholder="至少 4 位字符" v-model="bindNewPassword" required />
+                        <Input id="bind-new-pwd" name="bind_new_password" type="password" placeholder="至少 4 位字符" v-model="bindNewPassword" autocomplete="new-password" required />
                       </div>
                       <div class="grid gap-2">
                         <Label for="bind-new-cpwd" class="text-xs font-medium">确认密码</Label>
-                        <Input id="bind-new-cpwd" type="password" placeholder="再次输入密码" v-model="bindNewConfirmPassword" required />
+                        <Input id="bind-new-cpwd" name="bind_new_confirm_password" type="password" placeholder="再次输入密码" v-model="bindNewConfirmPassword" autocomplete="new-password" required />
                       </div>
                       <Button
                         type="button"
@@ -705,6 +817,49 @@ let clickSSOCreateAccount = async () => {
                     <Label for="password" class="text-xs font-medium">密码</Label>
                     <Input id="password" type="password" placeholder="请输入密码" v-model="password" required />
                   </div>
+
+                  <!-- 登录人机安全验证码 (受站点设置控制，非演示环境时展示) -->
+                  <div v-if="!isDemo && enableCaptcha" class="grid gap-2">
+                    <div class="flex items-center justify-between">
+                      <Label for="login-captcha" class="text-xs font-medium">安全验证码</Label>
+                      <button
+                        type="button"
+                        @click="refreshLoginCaptcha"
+                        class="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors select-none"
+                        :disabled="loginCaptchaLoading"
+                        title="点击换一张"
+                      >
+                        <RotateCw class="w-3 h-3" :class="{ 'animate-spin': loginCaptchaLoading }" />
+                        <span>看不清？换一张</span>
+                      </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Input
+                        id="login-captcha"
+                        name="login_captcha"
+                        type="text"
+                        placeholder="请输入计算结果"
+                        v-model="loginCaptchaCode"
+                        class="flex-1"
+                        autocomplete="off"
+                        required
+                      />
+                      <div
+                        class="h-9 w-28 shrink-0 rounded-md border border-input bg-card flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 select-none shadow-sm transition-opacity"
+                        @click="refreshLoginCaptcha"
+                        title="点击刷新验证码"
+                      >
+                        <img
+                          v-if="loginCaptchaImage"
+                          :src="loginCaptchaImage"
+                          alt="验证码"
+                          class="h-full w-full object-contain"
+                        />
+                        <span v-else class="text-[10px] text-muted-foreground">加载中...</span>
+                      </div>
+                    </div>
+                  </div>
+
                   <Button
                     type="submit"
                     class="w-full active:scale-95 transition duration-150"
@@ -760,9 +915,11 @@ let clickSSOCreateAccount = async () => {
                     <Label for="reg-account" class="text-xs font-medium">账号名称</Label>
                     <Input
                       id="reg-account"
+                      name="reg_username"
                       type="text"
                       placeholder="2-30位字母/数字"
                       v-model="regAccount"
+                      autocomplete="off"
                       :class="{ 'border-destructive focus-visible:ring-destructive': !!regAccountError }"
                       @blur="checkRegAccount"
                       @input="regAccountError = ''"
@@ -772,15 +929,80 @@ let clickSSOCreateAccount = async () => {
                   </div>
                   <div class="grid gap-2">
                     <Label for="reg-email" class="text-xs font-medium">邮箱地址 (选填)</Label>
-                    <Input id="reg-email" type="email" placeholder="用于接收通知与密码找回" v-model="regEmail" />
+                    <Input
+                      id="reg-email"
+                      name="reg_email"
+                      type="email"
+                      placeholder="用于接收通知与密码找回"
+                      v-model="regEmail"
+                      autocomplete="off"
+                    />
                   </div>
                   <div class="grid gap-2">
                     <Label for="reg-pwd" class="text-xs font-medium">设置密码</Label>
-                    <Input id="reg-pwd" type="password" placeholder="至少 4 位字符" v-model="regPassword" required />
+                    <Input
+                      id="reg-pwd"
+                      name="reg_new_password"
+                      type="password"
+                      placeholder="至少 4 位字符"
+                      v-model="regPassword"
+                      autocomplete="new-password"
+                      required
+                    />
                   </div>
                   <div class="grid gap-2">
                     <Label for="reg-confirm-pwd" class="text-xs font-medium">确认密码</Label>
-                    <Input id="reg-confirm-pwd" type="password" placeholder="再次输入密码" v-model="regConfirmPassword" required />
+                    <Input
+                      id="reg-confirm-pwd"
+                      name="reg_confirm_password"
+                      type="password"
+                      placeholder="再次输入密码"
+                      v-model="regConfirmPassword"
+                      autocomplete="new-password"
+                      required
+                    />
+                  </div>
+
+                  <!-- 本地自建人机安全验证码 (受站点设置控制) -->
+                  <div v-if="enableCaptcha" class="grid gap-2">
+                    <div class="flex items-center justify-between">
+                      <Label for="reg-captcha" class="text-xs font-medium">安全验证码</Label>
+                      <button
+                        type="button"
+                        @click="refreshRegCaptcha"
+                        class="text-[11px] text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors select-none"
+                        :disabled="regCaptchaLoading"
+                        title="点击换一张"
+                      >
+                        <RotateCw class="w-3 h-3" :class="{ 'animate-spin': regCaptchaLoading }" />
+                        <span>看不清？换一张</span>
+                      </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Input
+                        id="reg-captcha"
+                        name="reg_captcha"
+                        type="text"
+                        placeholder="请输入计算结果"
+                        v-model="regCaptchaCode"
+                        class="flex-1"
+                        autocomplete="off"
+                        required
+                      />
+                      <div
+                        class="h-9 w-28 shrink-0 rounded-md border border-input bg-card flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 select-none shadow-sm transition-opacity"
+                        @click="refreshRegCaptcha"
+                        title="点击刷新验证码"
+                      >
+                        <img
+                          v-if="regCaptchaImage"
+                          :src="regCaptchaImage"
+                          alt="验证码"
+                          class="h-full w-full object-contain"
+                        />
+                        <span v-else class="text-[10px] text-muted-foreground">加载中...</span>
+                      </div>
+                    </div>
                   </div>
 
                   <Button

@@ -10,7 +10,9 @@ import (
 
 	"message-nest/models"
 	"message-nest/pkg/app"
+	"message-nest/pkg/captcha"
 	"message-nest/pkg/e"
+	"message-nest/pkg/setting"
 	"message-nest/pkg/util"
 	"message-nest/service/auth_service"
 	"message-nest/service/settings_service"
@@ -49,8 +51,10 @@ type auth struct {
 }
 
 type ReqAuth struct {
-	Username string `json:"username" validate:"required,max=50" label:"用户名"`
-	Password string `json:"passwd" validate:"required,max=50" label:"密码"`
+	Username    string `json:"username" validate:"required,max=50" label:"用户名"`
+	Password    string `json:"passwd" validate:"required,max=50" label:"密码"`
+	CaptchaID   string `json:"captcha_id" label:"验证码ID"`
+	CaptchaCode string `json:"captcha_code" label:"验证码"`
 }
 
 func GetAuth(c *gin.Context) {
@@ -85,6 +89,14 @@ func GetAuth(c *gin.Context) {
 		if now < info.LockUntil {
 			remainMin := int((info.LockUntil-now)/60) + 1
 			appG.CResponse(http.StatusTooManyRequests, fmt.Sprintf("该账号尝试登录失败过多已被临时锁定，请于 %d 分钟后再试！", remainMin), nil)
+			return
+		}
+	}
+
+	// 3. 人机安全验证码校验 (若站点设置开启了验证码且非演示模式)
+	if settings_service.IsCaptchaEnabled() && !setting.IsDemoMode() {
+		if req.CaptchaID == "" || req.CaptchaCode == "" || !captcha.VerifyDirect(req.CaptchaID, req.CaptchaCode) {
+			appG.CResponse(http.StatusBadRequest, "验证码错误或已失效，请重新输入！", nil)
 			return
 		}
 	}

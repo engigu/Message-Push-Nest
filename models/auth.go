@@ -295,3 +295,11 @@ func GetUsersTotal(search string, maps interface{}) (int64, error) {
 func DeleteUser(id string) error {
 	return db.Where("id = ?", id).Delete(&Auth{}).Error
 }
+
+// GetAllActiveUsers 获取所有处于启用状态的系统用户
+func GetAllActiveUsers() ([]Auth, error) {
+	var users []Auth
+	err := db.Select("id, username, role, status").Where("status = 1").Find(&users).Error
+	return users, err
+}
+
