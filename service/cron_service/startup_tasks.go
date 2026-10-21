@@ -116,7 +116,10 @@ func ExecuteSystemDataClean() {
 		}
 	}
 
-	duration := time.Since(startTime)
+	duration := time.Since(startTime).Round(time.Millisecond)
+	if duration == 0 {
+		duration = time.Millisecond
+	}
 	summary := fmt.Sprintf("系统数据定时清理完成: 耗时 %v，共清理日志 %d 条，托管消息 %d 条", duration, totalCleanedLogs, totalCleanedHostedMsg)
 	if len(details) > 0 {
 		summary += "；明细: " + strings.Join(details, "，")
