@@ -12,6 +12,8 @@ import { checkIsDemoMode } from '@/util/demo'
 // @ts-ignore
 import config from '../../../../config.js'
 
+import { CONSTANT } from '@/constant'
+
 // 重置密码相关
 const passwordForm = ref({
   newPassword: '',
@@ -87,7 +89,8 @@ const getBindingForProvider = (providerType: string): SSOBinding | undefined => 
 // 发起指定 Provider 的绑定
 const handleBindSSO = (provider: any) => {
   const prefix = config.pathPrefix || ''
-  const bindUrl = `${prefix}/api/v1/auth/sso/bind?type=${provider.type}`
+  const token = localStorage.getItem(CONSTANT.STORE_TOKEN_NAME) || ''
+  const bindUrl = `${prefix}/api/v1/auth/sso/bind?type=${provider.type}&token=${encodeURIComponent(token)}`
   window.location.href = bindUrl
 }
 

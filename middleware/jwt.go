@@ -42,6 +42,15 @@ func JWT() gin.HandlerFunc {
 				token = authHeader
 			}
 		}
+		// 浏览器直接跳转 (如 SSO 绑定/导出下载) 从 Query 参数或 Cookie 提取 token
+		if token == "" {
+			token = c.Query("token")
+		}
+		if token == "" {
+			if cookieToken, err := c.Cookie("token"); err == nil && cookieToken != "" {
+				token = cookieToken
+			}
+		}
 
 		if token == "" {
 			code = e.ERROR_AUTH_NO_TOKEN
