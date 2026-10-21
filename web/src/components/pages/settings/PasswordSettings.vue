@@ -3,9 +3,8 @@ import { ref, onMounted } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Fingerprint, Zap, KeyRound, ShieldCheck, Unlink, RefreshCw, CheckCircle2, Plus } from 'lucide-vue-next'
+import { Fingerprint, Zap, KeyRound, ShieldCheck, Unlink, RefreshCw, Plus } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 import { checkIsDemoMode } from '@/util/demo'
@@ -194,111 +193,163 @@ export default {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- 修改密码卡片 -->
-    <Card>
-      <CardHeader>
-        <CardTitle class="flex items-center gap-2">
-          <KeyRound class="w-5 h-5 text-primary" />
-          <span>修改密码</span>
-        </CardTitle>
-        <CardDescription>定期更新您的本地账号登录密码，增强账户安全</CardDescription>
+    <Card class="overflow-hidden shadow-xs">
+      <CardHeader class="px-3.5 py-3.5 sm:px-6 sm:py-5 border-b border-border/40 bg-muted/[0.06]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <KeyRound class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          </div>
+          <div class="min-w-0">
+            <CardTitle class="text-sm sm:text-base font-semibold tracking-tight">修改本地密码</CardTitle>
+            <CardDescription class="text-xs text-muted-foreground mt-0.5 text-pretty">
+              定期更新系统本地登录密码，保障账户安全
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent class="space-y-4">
-        <div class="space-y-2">
-          <Label for="current-password">旧密码</Label>
+      <CardContent class="p-3.5 sm:p-6 space-y-3.5 sm:space-y-4">
+        <div class="space-y-1.5 sm:space-y-2">
+          <Label for="current-password" class="text-xs font-medium">旧密码</Label>
           <Input
             id="current-password"
             type="password"
             v-model="passwordForm.currentPassword"
             placeholder="请输入当前账号的旧密码"
+            autocomplete="current-password"
+            class="h-9 text-xs"
           />
         </div>
-        <div class="space-y-2">
-          <Label for="new-password">新密码</Label>
+        <div class="space-y-1.5 sm:space-y-2">
+          <Label for="new-password" class="text-xs font-medium">新密码</Label>
           <Input
             id="new-password"
             type="password"
             v-model="passwordForm.newPassword"
             placeholder="请输入新密码（至少 4 位）"
+            autocomplete="new-password"
+            class="h-9 text-xs"
           />
         </div>
 
-        <Button @click="resetPassword" :disabled="pwdLoading" class="w-full sm:w-auto">
+        <Button @click="resetPassword" :disabled="pwdLoading" class="w-full sm:w-auto h-8 sm:h-9 text-xs font-medium active:scale-95 transition-all">
           {{ pwdLoading ? '提交中...' : '确认修改密码' }}
         </Button>
       </CardContent>
     </Card>
 
     <!-- 单点登录 (SSO) 多身份源绑定卡片 -->
-    <Card>
-      <CardHeader>
-        <div class="flex items-center justify-between">
-          <CardTitle class="flex items-center gap-2">
-            <ShieldCheck class="w-5 h-5 text-emerald-500" />
-            <span>第三方单点登录 (SSO) 绑定</span>
-          </CardTitle>
-          <Button variant="ghost" size="sm" @click="fetchSSOProfile" :disabled="ssoLoading" class="h-8 px-2 text-xs">
+    <Card class="overflow-hidden shadow-xs">
+      <CardHeader class="px-3.5 py-3.5 sm:px-6 sm:py-5 border-b border-border/40 bg-muted/[0.06]">
+        <div class="flex items-center justify-between gap-2.5">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <ShieldCheck class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+            <div class="min-w-0">
+              <CardTitle class="text-sm sm:text-base font-semibold tracking-tight truncate">第三方单点登录 (SSO) 绑定</CardTitle>
+              <CardDescription class="text-xs text-muted-foreground mt-0.5 text-pretty line-clamp-1 sm:line-clamp-none">
+                绑定外部单点登录身份源，可通过第三方账号一键快捷登录
+              </CardDescription>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            @click="fetchSSOProfile"
+            :disabled="ssoLoading"
+            class="h-7 sm:h-8 px-2 sm:px-2.5 text-xs text-muted-foreground hover:text-foreground border-border/70 gap-1.5 shrink-0 transition-all cursor-pointer"
+            title="刷新绑定状态"
+          >
             <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': ssoLoading }" />
+            <span class="hidden sm:inline">刷新状态</span>
           </Button>
         </div>
-        <CardDescription>
-          支持同时绑定多个单点登录身份源（例如内网企业 OIDC 与个人 GitHub OAuth 2.0）。绑定后无论通过哪一渠道单点登录，均可一键直接进入当前账号。
-        </CardDescription>
       </CardHeader>
-      <CardContent class="space-y-4">
-        <div v-if="availableProviders && availableProviders.length > 0" class="grid gap-3">
+
+      <CardContent class="p-3.5 sm:p-6 space-y-3 sm:space-y-4">
+        <!-- 身份源卡片列表 -->
+        <div v-if="availableProviders && availableProviders.length > 0" class="grid gap-2.5 sm:gap-3.5">
           <div
             v-for="p in availableProviders"
             :key="p.id"
-            class="p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-            :class="getBindingForProvider(p.type) ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-border bg-muted/20'"
+            class="group relative p-3 sm:p-4 rounded-xl border transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
+            :class="[
+              getBindingForProvider(p.type)
+                ? 'border-emerald-500/35 bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05] hover:border-emerald-500/50'
+                : 'border-border/80 bg-card/60 hover:border-primary/40 hover:bg-muted/[0.12] hover:shadow-xs'
+            ]"
           >
-            <div class="flex items-start sm:items-center gap-3">
+            <div class="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0">
+              <!-- 身份源图标/徽标容器 -->
               <div
-                class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm"
-                :class="getBindingForProvider(p.type) ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted text-muted-foreground'"
+                class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 shadow-xs transition-transform group-hover:scale-105"
+                :class="[
+                  getBindingForProvider(p.type)
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                    : p.type === 'oauth2'
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25'
+                      : 'bg-primary/10 text-primary border border-primary/20'
+                ]"
               >
-                <Zap v-if="p.type === 'oauth2'" class="w-5 h-5 text-amber-500" />
-                <Fingerprint v-else class="w-5 h-5 text-primary" />
+                <Zap v-if="p.type === 'oauth2'" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+                <Fingerprint v-else class="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
 
-              <div class="space-y-0.5">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-semibold text-foreground">{{ p.name }}</span>
-                  <Badge
+              <!-- 身份源详情 -->
+              <div class="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span class="text-xs sm:text-sm font-semibold text-foreground tracking-tight">{{ p.name }}</span>
+                  <span class="text-[9px] sm:text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">
+                    {{ p.type }}
+                  </span>
+
+                  <!-- 绑定状态胶囊 -->
+                  <span
                     v-if="getBindingForProvider(p.type)"
-                    variant="secondary"
-                    class="bg-emerald-600/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[11px] py-0 px-1.5 flex items-center gap-1"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30"
                   >
-                    <CheckCircle2 class="w-3 h-3 text-emerald-600" />
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     <span>已绑定</span>
-                  </Badge>
-                  <Badge
+                  </span>
+                  <span
                     v-else
-                    variant="outline"
-                    class="text-[11px] py-0 px-1.5 text-muted-foreground"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-muted text-muted-foreground border border-border/80"
                   >
-                    未绑定
-                  </Badge>
+                    <span class="w-1.5 h-1.5 rounded-full bg-muted-foreground/50"></span>
+                    <span>未绑定</span>
+                  </span>
                 </div>
 
-                <p v-if="getBindingForProvider(p.type)" class="text-xs text-muted-foreground font-mono">
-                  身份标识 (Sub): {{ getBindingForProvider(p.type)?.subject }}
-                </p>
-                <p v-else class="text-xs text-muted-foreground/80">
-                  尚未绑定该身份源，绑定后可在登录页通过 {{ p.name }} 快速登录本账号
+                <!-- 已绑定模式：显示 sub / email 信息 -->
+                <div v-if="getBindingForProvider(p.type)" class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] sm:text-xs text-muted-foreground pt-0.5">
+                  <span class="inline-flex items-center gap-1 font-mono text-[10px] sm:text-[11px] text-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/60">
+                    <span class="text-muted-foreground/70">Sub:</span>
+                    <span class="truncate max-w-[160px] sm:max-w-[220px] select-all">{{ getBindingForProvider(p.type)?.subject }}</span>
+                  </span>
+                  <span v-if="getBindingForProvider(p.type)?.email" class="text-[10px] sm:text-[11px] text-muted-foreground/80 truncate max-w-[150px] sm:max-w-[200px]">
+                    ✉️ {{ getBindingForProvider(p.type)?.email }}
+                  </span>
+                  <span v-if="getBindingForProvider(p.type)?.created_on" class="text-[10px] sm:text-[11px] text-muted-foreground/60 hidden sm:inline">
+                    绑定于 {{ getBindingForProvider(p.type)?.created_on }}
+                  </span>
+                </div>
+
+                <!-- 未绑定模式：简洁提示语 -->
+                <p v-else class="text-[11px] sm:text-xs text-muted-foreground leading-relaxed pt-0.5 text-pretty">
+                  尚未绑定该身份源，绑定后可在登录页通过 {{ p.name }} 授权一键进入本系统
                 </p>
               </div>
             </div>
 
             <!-- 操作按钮 -->
-            <div class="flex items-center gap-2 self-end sm:self-center">
+            <div class="flex items-center gap-2 sm:shrink-0 self-stretch sm:self-center w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-border/40">
               <Button
                 v-if="getBindingForProvider(p.type)"
                 variant="outline"
                 size="sm"
-                class="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 border-rose-200 dark:border-rose-900/50 gap-1.5 h-8 text-xs"
+                class="w-full sm:w-auto h-8 px-3 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border-rose-200/80 dark:border-rose-900/60 gap-1.5 transition-all cursor-pointer"
                 @click="handleUnbindSSO(p)"
                 :disabled="ssoLoading"
               >
@@ -308,9 +359,9 @@ export default {
 
               <Button
                 v-else
-                variant="default"
+                variant="outline"
                 size="sm"
-                class="gap-1.5 h-8 text-xs font-medium"
+                class="w-full sm:w-auto h-8 px-3.5 text-xs font-medium border-primary/30 text-primary bg-primary/5 hover:bg-primary/15 hover:border-primary/50 gap-1.5 transition-all active:scale-95 cursor-pointer shadow-2xs"
                 @click="handleBindSSO(p)"
                 :disabled="ssoLoading"
               >
@@ -321,8 +372,18 @@ export default {
           </div>
         </div>
 
-        <div v-else class="text-xs text-muted-foreground/70 italic p-3 text-center rounded-lg border border-dashed border-border bg-muted/10">
-          系统暂未开启任何第三方单点登录通道（管理员可在左侧「单点登录」设置中开启 OIDC 或 OAuth 2.0 提供商）
+        <!-- 暂无通道提示 -->
+        <div
+          v-else-if="!ssoLoading"
+          class="text-xs text-muted-foreground p-5 sm:p-6 text-center rounded-xl border border-dashed border-border bg-muted/[0.06] space-y-2"
+        >
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+            <Fingerprint class="w-4 h-4 sm:w-5 sm:h-5 opacity-60" />
+          </div>
+          <p class="font-medium text-foreground text-xs sm:text-sm">暂未开放第三方单点登录通道</p>
+          <p class="text-[11px] sm:text-xs text-muted-foreground/80 max-w-md mx-auto leading-relaxed text-pretty">
+            管理员可在左侧「单点登录」设置中配置并启用 OIDC 或 OAuth 2.0 身份提供商。
+          </p>
         </div>
       </CardContent>
     </Card>
