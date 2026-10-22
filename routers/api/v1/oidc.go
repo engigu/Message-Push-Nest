@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	oidcStateCookie    = "MNOIDCState"
-	oidcVerifierCookie = "MNOIDCVerifier"
-	oidcStateTTL       = 10 * time.Minute
+	oidcStateCookie       = "MNOIDCState"
+	oidcVerifierCookie    = "MNOIDCVerifier"
+	oidcRedirectURICookie = "MNOIDCRedirectURI"
+	oidcStateTTL          = 10 * time.Minute
 )
 
 // GetSSOStatus 获取单点登录公共状态与可用身份源
@@ -83,6 +84,7 @@ func startSSOLogin(c *gin.Context, cfg *oidc_service.Config) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(oidcStateCookie, state+"."+cfg.Type+"."+postLogin, int(oidcStateTTL.Seconds()), "/", "", false, true)
 	c.SetCookie(oidcVerifierCookie, verifier, int(oidcStateTTL.Seconds()), "/", "", false, true)
+	c.SetCookie(oidcRedirectURICookie, cfg.RedirectURL, int(oidcStateTTL.Seconds()), "/", "", false, true)
 
 	authURL, err := oidc_service.BuildAuthURL(c.Request.Context(), cfg, state, verifier)
 	if err != nil {
@@ -96,10 +98,12 @@ func startSSOLogin(c *gin.Context, cfg *oidc_service.Config) {
 func handleSSOCallback(c *gin.Context, defaultCfg *oidc_service.Config) {
 	stateCookie, err := c.Cookie(oidcStateCookie)
 	verifier, _ := c.Cookie(oidcVerifierCookie)
+	savedRedirectURI, _ := c.Cookie(oidcRedirectURICookie)
 
 	// 清除 Cookie
 	c.SetCookie(oidcStateCookie, "", -1, "/", "", false, true)
 	c.SetCookie(oidcVerifierCookie, "", -1, "/", "", false, true)
+	c.SetCookie(oidcRedirectURICookie, "", -1, "/", "", false, true)
 
 	if err != nil || stateCookie == "" {
 		redirectWithError(c, "/", "登录会话超时失效，请重新发起登录")
@@ -147,12 +151,15 @@ func handleSSOCallback(c *gin.Context, defaultCfg *oidc_service.Config) {
 
 	cfg := defaultCfg
 	if channelType != "" {
-		if matched := oidc_service.ResolveActiveConfig(channelType, c); matched != nil {
+		if matched := oidc_service.ResolveActiveConfigWithRedirect(channelType, savedRedirectURI, c); matched != nil {
 			cfg = matched
 		}
 	}
 	if cfg == nil {
-		cfg = oidc_service.ResolveActiveConfig("", c)
+		cfg = oidc_service.ResolveActiveConfigWithRedirect("", savedRedirectURI, c)
+	}
+	if cfg != nil && savedRedirectURI != "" {
+		cfg.RedirectURL = savedRedirectURI
 	}
 	if cfg == nil {
 		if isBindMode {
@@ -425,6 +432,7 @@ func StartSSOBind(c *gin.Context) {
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie(oidcStateCookie, state+"."+cfg.Type+"."+postLogin, int(oidcStateTTL.Seconds()), "/", "", false, true)
 	c.SetCookie(oidcVerifierCookie, verifier, int(oidcStateTTL.Seconds()), "/", "", false, true)
+	c.SetCookie(oidcRedirectURICookie, cfg.RedirectURL, int(oidcStateTTL.Seconds()), "/", "", false, true)
 
 	authURL, err := oidc_service.BuildAuthURL(c.Request.Context(), cfg, state, verifier)
 	if err != nil {
@@ -449,7 +457,8 @@ func SSOLogin(c *gin.Context) {
 // SSOCallback 通用单点登录授权回调端点 (/api/v1/auth/sso/:provider/callback)
 func SSOCallback(c *gin.Context) {
 	provider := c.Param("provider")
-	cfg := oidc_service.ResolveActiveConfig(provider, c)
+	savedRedirectURI, _ := c.Cookie(oidcRedirectURICookie)
+	cfg := oidc_service.ResolveActiveConfigWithRedirect(provider, savedRedirectURI, c)
 	handleSSOCallback(c, cfg)
 }
 

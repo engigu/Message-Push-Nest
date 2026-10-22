@@ -1,7 +1,11 @@
 package oidc_service
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestNormalizeIssuer(t *testing.T) {
@@ -89,9 +93,39 @@ func TestResolveRedirectURL(t *testing.T) {
 		t.Errorf("expected %q, got %q", custom, got)
 	}
 
-	// 默认路径
+	// 默认路径（无 context）
 	gotDefault := ResolveRedirectURL("", "/api/v1/auth/oidc/callback", nil)
 	if gotDefault != "/api/v1/auth/oidc/callback" {
 		t.Errorf("expected default /api/v1/auth/oidc/callback, got %q", gotDefault)
+	}
+
+	// 模拟带反向代理头及请求头的请求
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	req, _ := http.NewRequest(http.MethodGet, "/api/v1/auth/sso/oidc/callback", nil)
+	req.Host = "nest.corp.internal:8000"
+	req.Header.Set("X-Forwarded-Proto", "https")
+	req.Header.Set("X-Forwarded-Host", "push.example.com")
+	// 关键场景：第三方 IdP 登录完成跳回时的 Referer 头
+	req.Header.Set("Referer", "https://sso.idp-provider.com/auth/realms/master/login-actions/authenticate")
+	c.Request = req
+
+	gotProxied := ResolveRedirectURL("", "/api/v1/auth/sso/oidc/callback", c)
+	expectedProxied := "https://push.example.com/api/v1/auth/sso/oidc/callback"
+	if gotProxied != expectedProxied {
+		t.Errorf("expected %q, got %q", expectedProxied, gotProxied)
+	}
+
+	// 仅有 Host 没有 X-Forwarded-Host，且 Referer 来自外部 IdP 时，必须取本机 Host，严禁被 Referer 污染
+	req2, _ := http.NewRequest(http.MethodGet, "/api/v1/auth/sso/oidc/callback", nil)
+	req2.Host = "my-nest.local:8080"
+	req2.Header.Set("Referer", "https://keycloak.company.com/auth/login")
+	c.Request = req2
+
+	gotDirect := ResolveRedirectURL("", "/api/v1/auth/sso/oidc/callback", c)
+	expectedDirect := "http://my-nest.local:8080/api/v1/auth/sso/oidc/callback"
+	if gotDirect != expectedDirect {
+		t.Errorf("expected %q, got %q", expectedDirect, gotDirect)
 	}
 }

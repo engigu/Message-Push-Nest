@@ -2,7 +2,6 @@ package oidc_service
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 
 	coreos_oidc "github.com/coreos/go-oidc/v3/oidc"
@@ -113,20 +112,12 @@ func ResolveRedirectURL(custom string, defaultPath string, c *gin.Context) strin
 
 	if c != nil && c.Request != nil {
 		scheme := "http"
-		if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+		proto := strings.ToLower(c.GetHeader("X-Forwarded-Proto"))
+		if proto == "https" || strings.ToLower(c.GetHeader("X-Forwarded-Scheme")) == "https" || c.GetHeader("X-Forwarded-Ssl") == "on" || c.Request.TLS != nil {
 			scheme = "https"
 		}
+		// 优先取反向代理注入的真实主机头，其次直接取 HTTP Host 请求头，禁止将外部不可信 Referer 误当做本地服务 Host
 		host := c.GetHeader("X-Forwarded-Host")
-		if host == "" {
-			if ref := c.GetHeader("Referer"); ref != "" {
-				if u, err := url.Parse(ref); err == nil && u.Host != "" {
-					host = u.Host
-					if u.Scheme != "" {
-						scheme = u.Scheme
-					}
-				}
-			}
-		}
 		if host == "" {
 			host = c.Request.Host
 		}
@@ -256,11 +247,19 @@ func LoadOAuth2Config(redirectURL string) *Config {
 	}
 }
 
-// ResolveActiveConfig 根据偏好（"oidc" 或 "oauth2"，缺省时自动探测）动态获取当前有效的登录配置
-func ResolveActiveConfig(preferredType string, c *gin.Context) *Config {
+// ResolveActiveConfigWithRedirect 支持指定确定性回调地址的配置解析（防止跨重定向网络头漂移）
+func ResolveActiveConfigWithRedirect(preferredType string, customRedirect string, c *gin.Context) *Config {
 	r := NewSecurityReader()
-	oidcRedirectURL := ResolveRedirectURL(r.Get(constant.KeyOidcRedirectURL), constant.PathAuthOidcCallback, c)
-	oauth2RedirectURL := ResolveRedirectURL("", constant.PathAuthOAuth2Callback, c)
+	customRedirect = strings.TrimSpace(customRedirect)
+
+	oidcRedirectURL := customRedirect
+	if oidcRedirectURL == "" {
+		oidcRedirectURL = ResolveRedirectURL(r.Get(constant.KeyOidcRedirectURL), constant.PathAuthOidcCallback, c)
+	}
+	oauth2RedirectURL := customRedirect
+	if oauth2RedirectURL == "" {
+		oauth2RedirectURL = ResolveRedirectURL("", constant.PathAuthOAuth2Callback, c)
+	}
 
 	if preferredType == constant.SSOTypeOAuth2 {
 		if cfg := LoadOAuth2Config(oauth2RedirectURL); cfg != nil {
@@ -274,4 +273,9 @@ func ResolveActiveConfig(preferredType string, c *gin.Context) *Config {
 		return cfg
 	}
 	return LoadOAuth2Config(oauth2RedirectURL)
+}
+
+// ResolveActiveConfig 根据偏好（"oidc" 或 "oauth2"，缺省时自动探测）动态获取当前有效的登录配置
+func ResolveActiveConfig(preferredType string, c *gin.Context) *Config {
+	return ResolveActiveConfigWithRedirect(preferredType, "", c)
 }
