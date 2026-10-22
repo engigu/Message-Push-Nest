@@ -15,34 +15,31 @@
         :show-edges="true"
         :default-page="currentPage"
         :page="currentPage"
-        @update:page="handlePageChange"
       >
       <PaginationContent class="gap-0.5 sm:gap-1">
-        <PaginationItem :value="currentPage - 1">
-          <PaginationPrevious 
-            :disabled="currentPage <= 1" 
-            class="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-xs sm:text-sm p-0 sm:p-2" 
-            @click.prevent.stop="handlePageChange(currentPage - 1)"
-          >
-            <span class="hidden sm:inline">上一页</span>
-            <span class="sm:hidden">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </span>
-          </PaginationPrevious>
-        </PaginationItem>
+        <PaginationPrevious 
+          :disabled="currentPage <= 1" 
+          class="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-xs sm:text-sm p-0 sm:p-2" 
+          @click.prevent.stop="handlePageChange(currentPage - 1)"
+        >
+          <span class="hidden sm:inline">上一页</span>
+          <span class="sm:hidden">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </span>
+        </PaginationPrevious>
 
-        <template v-for="(page, index) in displayItems" :key="index">
-          <PaginationItem v-if="page.type === 'page'" :value="page.value" :is-active="page.value === currentPage">
+        <template v-for="(page, index) in displayItems" :key="page.type === 'page' ? `page-${page.value}` : `ellipsis-${index}`">
+          <PaginationItem v-if="page.type === 'page'" :value="page.value" :is-active="page.value === currentPage" as-child>
             <button
               :class="[
-                'h-8 w-8 sm:h-9 sm:w-9 rounded-md border transition-colors text-xs sm:text-sm',
+                'h-8 w-8 sm:h-9 sm:w-9 rounded-md border transition-colors text-xs sm:text-sm flex items-center justify-center font-medium',
                 page.value === currentPage
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
               ]"
-              @click="handlePageChange(page.value)"
+              @click.prevent.stop="handlePageChange(page.value)"
             >
               {{ page.value }}
             </button>
@@ -50,20 +47,18 @@
           <PaginationEllipsis v-else-if="page.type === 'ellipsis'" :index="index" class="h-8 w-5 sm:h-9 sm:w-9" />
         </template>
 
-        <PaginationItem :value="currentPage + 1">
-          <PaginationNext 
-            :disabled="currentPage >= totalPages" 
-            class="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-xs sm:text-sm p-0 sm:p-2" 
-            @click.prevent.stop="handlePageChange(currentPage + 1)"
-          >
-            <span class="hidden sm:inline">下一页</span>
-            <span class="sm:hidden">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </span>
-          </PaginationNext>
-        </PaginationItem>
+        <PaginationNext 
+          :disabled="currentPage >= totalPages" 
+          class="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 text-xs sm:text-sm p-0 sm:p-2" 
+          @click.prevent.stop="handlePageChange(currentPage + 1)"
+        >
+          <span class="hidden sm:inline">下一页</span>
+          <span class="sm:hidden">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </PaginationNext>
       </PaginationContent>
       </Pagination>
     </div>
