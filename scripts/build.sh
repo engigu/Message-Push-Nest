@@ -122,7 +122,7 @@ build_server() {
     echo "${VERSION}" > .release_version
 
     CGO_ENABLED=0 GOOS="${os}" GOARCH="${arch}" \
-        go build -ldflags="${LDFLAGS}" -o "${output}" .
+        go build -trimpath -ldflags="${LDFLAGS}" -o "${output}" .
 
     local duration
     duration=$(format_duration "${start_time}")
@@ -207,7 +207,7 @@ build_release_artifacts() {
             env_args+=(GOARM="${goarm}")
         fi
 
-        env "${env_args[@]}" go build -ldflags="${LDFLAGS}" -o "${bin_name}" .
+        env "${env_args[@]}" go build -trimpath -ldflags="${LDFLAGS}" -o "${bin_name}" .
 
         if [ "${is_zip}" = "true" ]; then
             zip -q -r "${pkg_dir}/${archive_name}.zip" "${bin_name}" LICENSE README.md conf

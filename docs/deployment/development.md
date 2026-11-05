@@ -124,7 +124,7 @@ npm run build
 ### 构建后端
 
 ```bash
-CGO_ENABLED=0 go build -o Message-Nest
+CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o Message-Nest
 ```
 
 ## 常见问题
