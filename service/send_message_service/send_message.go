@@ -49,9 +49,10 @@ type SendMessageService struct {
 	CreatedBy    string // 任务/模板所属用户ID
 
 	// @提及相关字段
-	AtMobiles []string
-	AtUserIds []string
-	AtAll     bool
+	AtMobiles      []string
+	AtUserIds      []string
+	AtAll          bool
+	TemplateParams map[string]interface{} // V2 business placeholders; consumed only by structured template channels
 
 	// 动态接收者（用于邮箱、微信公众号等支持群发的渠道）
 	Recipients []string
@@ -431,11 +432,12 @@ func (sm *SendMessageService) BuildTemplateContent(ins models.SendTasksIns) *uni
 
 	// 构建消息内容，只填充实例要求的类型
 	content := &unified.UnifiedMessageContent{
-		Title:     sm.Title,
-		URL:       sm.URL,
-		AtMobiles: sm.AtMobiles,
-		AtUserIds: sm.AtUserIds,
-		AtAll:     sm.AtAll,
+		Title:          sm.Title,
+		URL:            sm.URL,
+		AtMobiles:      sm.AtMobiles,
+		AtUserIds:      sm.AtUserIds,
+		AtAll:          sm.AtAll,
+		TemplateParams: sm.TemplateParams,
 	}
 
 	// 根据类型填充对应字段

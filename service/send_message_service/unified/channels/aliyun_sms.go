@@ -10,10 +10,24 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
 )
 
-type AliyunSMSChannel struct{ *BaseChannel }
+type aliyunSMSClient interface {
+	SendSms(*dysmsapi.SendSmsRequest) (*dysmsapi.SendSmsResponse, error)
+}
+
+type aliyunSMSClientFactory func(accessKeyID, accessKeySecret, regionID string) (aliyunSMSClient, error)
+
+type AliyunSMSChannel struct {
+	*BaseChannel
+	clientFactory aliyunSMSClientFactory
+}
 
 func NewAliyunSMSChannel() *AliyunSMSChannel {
-	return &AliyunSMSChannel{BaseChannel: NewBaseChannel(MessageTypeAliyunSMS, []string{FormatTypeText})}
+	return &AliyunSMSChannel{
+		BaseChannel: NewBaseChannel(MessageTypeAliyunSMS, []string{FormatTypeText}),
+		clientFactory: func(accessKeyID, accessKeySecret, regionID string) (aliyunSMSClient, error) {
+			return dysmsapi.NewClientWithAccessKey(regionID, accessKeyID, accessKeySecret)
+		},
+	}
 }
 
 func (c *AliyunSMSChannel) SendUnified(msgObj interface{}, ins models.SendTasksIns, content *UnifiedMessageContent) (string, string) {
@@ -39,23 +53,22 @@ func (c *AliyunSMSChannel) SendUnified(msgObj interface{}, ins models.SendTasksI
 		return "", err.Error()
 	}
 
-	// 创建阿里云短信客户端
+	// 准备模板参数。legacy content 和结构化模板共用这一构造入口。
+	templateParam, err := BuildAliyunTemplateParams(config, formattedContent, content.TemplateParams, content.Extra)
+	if err != nil {
+		return "", err.Error()
+	}
+
+	templateParamJSON, err := json.Marshal(templateParam)
+	if err != nil {
+		return "", fmt.Sprintf("序列化阿里云短信模板参数失败: %s", err.Error())
+	}
+
+	// 客户端在参数构造和校验成功后才创建，异常配置不会触达 SDK。
 	client, err := c.createClient(auth.AccessKeyId, auth.AccessKeySecret, auth.RegionId)
 	if err != nil {
 		return "", fmt.Sprintf("创建阿里云短信客户端失败: %s", err.Error())
 	}
-
-	// 准备模板参数
-	templateParam := map[string]interface{}{
-		"content": formattedContent,
-	}
-	if content.Extra != nil {
-		for k, v := range content.Extra {
-			templateParam[k] = v
-		}
-	}
-
-	templateParamJSON, _ := json.Marshal(templateParam)
 
 	// 创建请求对象
 	request := dysmsapi.CreateSendSmsRequest()
@@ -82,9 +95,12 @@ func (c *AliyunSMSChannel) SendUnified(msgObj interface{}, ins models.SendTasksI
 }
 
 // createClient 创建阿里云短信客户端
-func (c *AliyunSMSChannel) createClient(accessKeyId, accessKeySecret, regionId string) (*dysmsapi.Client, error) {
+func (c *AliyunSMSChannel) createClient(accessKeyId, accessKeySecret, regionId string) (aliyunSMSClient, error) {
 	if regionId == "" {
 		regionId = "cn-hangzhou"
 	}
-	return dysmsapi.NewClientWithAccessKey(regionId, accessKeyId, accessKeySecret)
+	if c.clientFactory == nil {
+		return nil, fmt.Errorf("阿里云短信客户端未配置")
+	}
+	return c.clientFactory(accessKeyId, accessKeySecret, regionId)
 }

@@ -27,6 +27,19 @@ type TemplatePlaceholder struct {
 	Default string `json:"default"`
 }
 
+func selectDeclaredTemplateParams(definitions []TemplatePlaceholder, values map[string]interface{}) map[string]interface{} {
+	selected := make(map[string]interface{}, len(definitions))
+	for _, definition := range definitions {
+		if definition.Key == "" {
+			continue
+		}
+		if value, exists := values[definition.Key]; exists {
+			selected[definition.Key] = value
+		}
+	}
+	return selected
+}
+
 // DoSendMessageByTemplate 使用模板发送消息
 func DoSendMessageByTemplate(c *gin.Context) {
 	var (
@@ -61,8 +74,8 @@ func DoSendMessageByTemplate(c *gin.Context) {
 	}
 
 	// 填充默认占位符
+	var placeholderDefs []TemplatePlaceholder
 	if template.Placeholders != "" {
-		var placeholderDefs []TemplatePlaceholder
 		if err := json.Unmarshal([]byte(template.Placeholders), &placeholderDefs); err == nil {
 			if req.Placeholders == nil {
 				req.Placeholders = make(map[string]interface{})
@@ -77,6 +90,10 @@ func DoSendMessageByTemplate(c *gin.Context) {
 			logging.TemplateSend.Errorf("解析模板占位符配置失败: %v", err)
 		}
 	}
+
+	// 仅把模板定义过的业务变量传给短信结构化参数路径；额外请求字段仍
+	// 可用于既有文本替换，但不会因此成为阿里云审核模板的可发送参数。
+	templateParams := selectDeclaredTemplateParams(placeholderDefs, req.Placeholders)
 
 	// 替换占位符
 	textContent := replacePlaceholders(template.TextTemplate, req.Placeholders)
@@ -124,20 +141,21 @@ func DoSendMessageByTemplate(c *gin.Context) {
 	// 使用发送服务进行发送
 	// 将模板ID作为TaskID传入，用于日志记录
 	msgService := send_message_service.SendMessageService{
-		SendMode:   send_message_service.SendModeTemplate, // 明确标记为模板模式
-		TaskID:     templateID,                            // 使用模板ID作为TaskID（用于日志记录）
-		TemplateID: templateID,                            // 模板ID
-		Name:       template.Name,                         // 模板名称
-		Title:      req.Title,
-		Text:       textContent,
-		HTML:       htmlContent,
-		MarkDown:   markdownContent,
-		CallerIp:   c.ClientIP(),
-		AtMobiles:  atMobiles,
-		AtUserIds:  atUserIds,
-		AtAll:      template.IsAtAll,
-		Recipients:    req.Recipients, // 动态接收者列表
-		DefaultLogger: logging.TemplateSend,
+		SendMode:       send_message_service.SendModeTemplate, // 明确标记为模板模式
+		TaskID:         templateID,                            // 使用模板ID作为TaskID（用于日志记录）
+		TemplateID:     templateID,                            // 模板ID
+		Name:           template.Name,                         // 模板名称
+		Title:          req.Title,
+		Text:           textContent,
+		HTML:           htmlContent,
+		MarkDown:       markdownContent,
+		CallerIp:       c.ClientIP(),
+		AtMobiles:      atMobiles,
+		AtUserIds:      atUserIds,
+		AtAll:          template.IsAtAll,
+		Recipients:     req.Recipients, // 动态接收者列表
+		TemplateParams: templateParams,
+		DefaultLogger:  logging.TemplateSend,
 	}
 
 	// 发送前检查

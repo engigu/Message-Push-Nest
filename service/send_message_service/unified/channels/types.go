@@ -39,6 +39,9 @@ type UnifiedMessageContent struct {
 	Summary   string
 	ImageURL  string
 	Extra     map[string]interface{}
+	// TemplateParams carries V2 template placeholder values for channels that
+	// support structured provider templates. Other channels ignore it.
+	TemplateParams map[string]interface{}
 }
 
 func (m *UnifiedMessageContent) HasText() bool     { return m.Text != "" }
