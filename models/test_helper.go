@@ -1,10 +1,15 @@
 package models
 
 import (
+	"fmt"
+	"sync/atomic"
+
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
+
+var testDBSequence atomic.Uint64
 
 // InitTestDB 初始化内存 SQLite 数据库用于自动化单元测试
 func InitTestDB(name ...string) *gorm.DB {
@@ -12,6 +17,10 @@ func InitTestDB(name ...string) *gorm.DB {
 	if len(name) > 0 && name[0] != "" {
 		dbName = name[0]
 	}
+	// Shared-cache in-memory SQLite databases live as long as any connection
+	// pool holds them. Add a per-initialization suffix so -count reruns and
+	// repeated test setup calls never reuse rows from an earlier fixture.
+	dbName = fmt.Sprintf("%s_%d", dbName, testDBSequence.Add(1))
 	config := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "message_",

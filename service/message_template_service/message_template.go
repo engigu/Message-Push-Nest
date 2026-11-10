@@ -26,6 +26,7 @@ type TemplateService struct {
 	Text             string
 	CreatedBy        string
 	ModifiedBy       string
+	OwnerID          string
 	IsAdmin          bool
 
 	PageNum  int
@@ -91,8 +92,11 @@ func (s *TemplateService) Add() error {
 // Update 更新消息模板
 func (s *TemplateService) Update() error {
 	tenantID := ""
-	if !s.IsAdmin && s.ModifiedBy != "" {
-		tenantID = s.ModifiedBy
+	if !s.IsAdmin {
+		tenantID = s.OwnerID
+		if tenantID == "" {
+			tenantID = s.ModifiedBy
+		}
 	}
 
 	if err := s.validatePlaceholders(); err != nil {
@@ -122,8 +126,11 @@ func (s *TemplateService) Update() error {
 // Delete 删除消息模板
 func (s *TemplateService) Delete() error {
 	tenantID := ""
-	if !s.IsAdmin && s.ModifiedBy != "" {
-		tenantID = s.ModifiedBy
+	if !s.IsAdmin {
+		tenantID = s.OwnerID
+		if tenantID == "" {
+			tenantID = s.ModifiedBy
+		}
 	}
 
 	model := models.Template{

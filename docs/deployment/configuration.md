@@ -18,7 +18,7 @@ WriteTimeout = 60
 ; UrlPrefix = /message
 
 [database]
-; 配置使用什么数据库，支持：mysql、sqlite、tidb
+; 项目数据库类型：mysql、sqlite、postgres、tidb
 Type = mysql
 User = root
 Password = password
@@ -57,7 +57,7 @@ Ssl = true
 
 | 配置项 | 说明 | 默认值 |
 |--------|------|--------|
-| Type | 数据库类型：mysql/sqlite/tidb | mysql |
+| Type | 数据库类型：mysql/sqlite/postgres/tidb | mysql |
 | User | 数据库用户名 | - |
 | Password | 数据库密码 | - |
 | Host | 数据库主机地址 | - |
@@ -104,9 +104,26 @@ Ssl = true
 再同时更新密钥并重启所有副本，确认全部使用新密钥后再开放测试 API。不要在请求仍可进入时逐台滚动换钥，
 否则新旧指纹会被视为不同用户/请求并暂时分裂额度。
 
-限流专用表由应用启动时独立、同步地创建/校验，只会触及 `aliyun_sms_test_scope_lock` 和
+数据库连接成功后、启动调度器和 HTTP 路由前，应用会独立、同步地创建/校验限流专用表；操作仅触及 `aliyun_sms_test_scope_lock` 和
 `aliyun_sms_test_event`（加上配置的 `TablePrefix`）；迁移错误会阻止服务启动。回滚应用时保留这两张表，
 应用不会自动删除它们。SQLite 多进程场景必须共享同一台机器上的同一个本地数据库文件。
+
+发送测试会同步调用阿里云短信接口，可能产生短信费用；接口返回受理成功只表示供应商已受理，不表示最终送达。
+请先确认测试手机号、签名、模板和变量内容，再发起测试。
+
+### 共享限流数据库验证状态
+
+项目的通用数据库支持说明不等于本功能已经通过每种数据库的真实集成验收。当前共享限流验证状态：
+
+| 数据库 | 验证状态 | 验证版本/范围 |
+|--------|----------|---------------|
+| SQLite | PASS | 本地文件数据库回归及跨进程测试 |
+| MySQL | PASS | MySQL Community Server 8.4.13，真实驱动、InnoDB、并发和完整路由 Mock 集成 |
+| MariaDB | PASS | MariaDB 11.4.13，真实驱动、InnoDB、并发和完整路由 Mock 集成 |
+| PostgreSQL | NOT VERIFIED | 尚未完成该功能的真实数据库集成验收 |
+| TiDB | NOT VERIFIED | 尚未完成该功能的真实数据库集成验收 |
+
+不要将 PostgreSQL/TiDB 的通用项目支持表述为共享限流功能的已验证兼容性，也不要据此推断生产级验收已完成。
 
 ### 生产标准配置
 

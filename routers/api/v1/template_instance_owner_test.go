@@ -57,6 +57,101 @@ func TestGetMessageTemplateEnforcesOwnerScopeAndAdminImpersonation(t *testing.T)
 	}
 }
 
+func TestTemplateEditDeleteAndPreviewRespectImpersonatedOwner(t *testing.T) {
+	f := newAliyunAPITestFixture(t)
+	foreign := models.Template{
+		UUIDModel:    models.UUIDModel{ID: "TP_TEST_B", CreatedBy: f.otherID, ModifiedBy: f.otherID},
+		Name:         "foreign template",
+		Status:       "enabled",
+		TextTemplate: "private body {{secret_value}}",
+		Placeholders: `[{"key":"secret_value"}]`,
+	}
+	if err := models.GetDB().Create(&foreign).Error; err != nil {
+		t.Fatal(err)
+	}
+	adminID := "UR_ADMIN"
+	adminToken, err := util.GenerateToken(adminID, "admin", "hash", "admin", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.router.POST("/api/v1/templates/edit", middleware.JWT(), EditMessageTemplate)
+	f.router.POST("/api/v1/templates/delete", middleware.JWT(), DeleteMessageTemplate)
+	f.router.POST("/api/v1/templates/preview", middleware.JWT(), PreviewMessageTemplate)
+	f.router.GET("/api/v1/templates/list", middleware.JWT(), GetMessageTemplateList)
+	f.router.POST("/api/v1/templates/add", middleware.JWT(), AddMessageTemplate)
+
+	request := func(path, token, tenantID, body string) (*httptest.ResponseRecorder, modelsResponse) {
+		req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+		if tenantID != "" {
+			req.Header.Set("X-Tenant-User-Id", tenantID)
+		}
+		w := httptest.NewRecorder()
+		f.router.ServeHTTP(w, req)
+		var response modelsResponse
+		_ = json.Unmarshal(w.Body.Bytes(), &response)
+		return w, response
+	}
+
+	foreignEdit := `{"id":"TP_TEST_B","name":"changed","text_template":"changed"}`
+	if recorder, response := request("/api/v1/templates/edit", f.token, "", foreignEdit); response.Code != http.StatusNotFound {
+		t.Fatalf("ordinary user must not edit a foreign template: envelope=%+v body=%s", response, recorder.Body.String())
+	}
+	if recorder, response := request("/api/v1/templates/edit", adminToken, f.ownerID, foreignEdit); response.Code != http.StatusNotFound {
+		t.Fatalf("impersonating admin must not edit outside the selected owner: envelope=%+v body=%s", response, recorder.Body.String())
+	}
+	if recorder, response := request("/api/v1/templates/delete", adminToken, f.ownerID, `{"id":"TP_TEST_B"}`); response.Code != http.StatusNotFound {
+		t.Fatalf("impersonating admin must not delete outside the selected owner: envelope=%+v body=%s", response, recorder.Body.String())
+	}
+	previewBody := `{"id":"TP_TEST_B","params":{"secret_value":"do-not-disclose"}}`
+	if recorder, response := request("/api/v1/templates/preview", f.token, "", previewBody); response.Code != http.StatusNotFound {
+		t.Fatalf("ordinary user must not preview a foreign template: envelope=%+v body=%s", response, recorder.Body.String())
+	}
+	if recorder, response := request("/api/v1/templates/preview", adminToken, f.ownerID, previewBody); response.Code != http.StatusNotFound {
+		t.Fatalf("impersonating admin must not preview outside the selected owner: envelope=%+v body=%s", response, recorder.Body.String())
+	}
+	listReq := httptest.NewRequest(http.MethodGet, "/api/v1/templates/list", nil)
+	listReq.Header.Set("Authorization", "Bearer "+adminToken)
+	listReq.Header.Set("X-Tenant-User-Id", f.ownerID)
+	listRecorder := httptest.NewRecorder()
+	f.router.ServeHTTP(listRecorder, listReq)
+	if strings.Contains(listRecorder.Body.String(), "foreign template") || !strings.Contains(listRecorder.Body.String(), f.template.Name) {
+		t.Fatalf("impersonating admin template list must remain in tenant scope: %s", listRecorder.Body.String())
+	}
+	addRecorder, addResponse := request("/api/v1/templates/add", adminToken, f.ownerID,
+		`{"name":"created in tenant scope","text_template":"Hello"}`)
+	if addResponse.Code != http.StatusOK {
+		t.Fatalf("admin should add a template inside the impersonated owner scope: envelope=%+v body=%s", addResponse, addRecorder.Body.String())
+	}
+	var created models.Template
+	if err := models.GetDB().Where("name = ?", "created in tenant scope").First(&created).Error; err != nil {
+		t.Fatal(err)
+	}
+	if created.CreatedBy != f.ownerID || created.ModifiedBy != adminID {
+		t.Fatalf("impersonated create should assign tenant owner and preserve real audit actor: created_by=%q modified_by=%q", created.CreatedBy, created.ModifiedBy)
+	}
+
+	var unchanged models.Template
+	if err := models.GetDB().Where("id = ?", foreign.ID).First(&unchanged).Error; err != nil {
+		t.Fatal(err)
+	}
+	if unchanged.Name != foreign.Name || unchanged.TextTemplate != foreign.TextTemplate {
+		t.Fatalf("denied owner operations changed foreign template: %+v", unchanged)
+	}
+	if recorder, response := request("/api/v1/templates/edit", adminToken, f.ownerID,
+		`{"id":"TP_TEST_A","name":"edited as impersonated owner","text_template":"Hello {{name}}"}`); response.Code != http.StatusOK {
+		t.Fatalf("admin should be able to edit within the impersonated owner scope: envelope=%+v body=%s", response, recorder.Body.String())
+	}
+	var edited models.Template
+	if err := models.GetDB().Where("id = ?", f.template.ID).First(&edited).Error; err != nil {
+		t.Fatal(err)
+	}
+	if edited.CreatedBy != f.ownerID || edited.ModifiedBy != adminID {
+		t.Fatalf("impersonated edit should preserve owner and audit real operator: created_by=%q modified_by=%q", edited.CreatedBy, edited.ModifiedBy)
+	}
+}
+
 func TestTemplateInstanceAPIsEnforceOwnerScopeAndPersistCreator(t *testing.T) {
 	f := newAliyunAPITestFixture(t)
 	for _, way := range []models.SendWays{

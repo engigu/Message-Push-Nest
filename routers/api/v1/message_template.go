@@ -17,14 +17,23 @@ func GetMessageTemplateList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	text := c.Query("text")
 	status := c.Query("status")
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+	ownerID := user.GetEffectiveUserID()
+	globalAdmin := user.IsAdmin() && !user.IsImpersonating()
+	if globalAdmin {
+		ownerID = ""
+	}
 
 	offset, limit := util.GetPageSize(c)
-	currentUserID := app.GetCurrentUserId(c)
 	templateService := message_template_service.TemplateService{
 		Text:      text,
 		Status:    status,
-		CreatedBy: currentUserID,
-		IsAdmin:   app.IsAdmin(c),
+		CreatedBy: ownerID,
+		IsAdmin:   globalAdmin,
 		PageNum:   offset,
 		PageSize:  limit,
 	}
@@ -103,7 +112,12 @@ func AddMessageTemplate(c *gin.Context) {
 		req.Status = "enabled"
 	}
 
-	currentUserID := app.GetCurrentUserId(c)
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+	currentUserID := user.GetEffectiveUserID()
 	templateService := message_template_service.TemplateService{
 		Name:             req.Name,
 		Description:      req.Description,
@@ -118,7 +132,7 @@ func AddMessageTemplate(c *gin.Context) {
 		SourceTemplateID: req.SourceTemplateID,
 		CopyInstances:    req.CopyInstances,
 		CreatedBy:        currentUserID,
-		ModifiedBy:       currentUserID,
+		ModifiedBy:       user.GetAuditUserID(),
 	}
 
 	if err := templateService.Add(); err != nil {
@@ -157,21 +171,25 @@ func EditMessageTemplate(c *gin.Context) {
 		return
 	}
 
-	currentUserID := app.GetCurrentUserId(c)
-	templateService := message_template_service.TemplateService{
-		ID:         req.ID,
-		ModifiedBy: currentUserID,
-		IsAdmin:    app.IsAdmin(c),
-	}
-
-	exists, err := templateService.ExistByID()
-	if err != nil {
-		appG.CResponse(http.StatusInternalServerError, "查询模板失败！", nil)
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
 		return
 	}
+	ownerID := user.GetEffectiveUserID()
+	globalAdmin := user.IsAdmin() && !user.IsImpersonating()
+	if globalAdmin {
+		ownerID = ""
+	}
+	templateService := message_template_service.TemplateService{
+		ID:         req.ID,
+		ModifiedBy: user.GetAuditUserID(),
+		OwnerID:    ownerID,
+		IsAdmin:    globalAdmin,
+	}
 
-	if !exists {
-		appG.CResponse(http.StatusNotFound, "模板不存在！", nil)
+	if _, err := models.GetTemplateByIDForOwner(req.ID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "模板不存在或无权访问", nil)
 		return
 	}
 
@@ -207,21 +225,25 @@ func DeleteMessageTemplate(c *gin.Context) {
 		return
 	}
 
-	currentUserID := app.GetCurrentUserId(c)
-	templateService := message_template_service.TemplateService{
-		ID:         req.ID,
-		ModifiedBy: currentUserID,
-		IsAdmin:    app.IsAdmin(c),
-	}
-
-	exists, err := templateService.ExistByID()
-	if err != nil {
-		appG.CResponse(http.StatusInternalServerError, "查询模板失败！", nil)
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
 		return
 	}
+	ownerID := user.GetEffectiveUserID()
+	globalAdmin := user.IsAdmin() && !user.IsImpersonating()
+	if globalAdmin {
+		ownerID = ""
+	}
+	templateService := message_template_service.TemplateService{
+		ID:         req.ID,
+		ModifiedBy: user.GetAuditUserID(),
+		OwnerID:    ownerID,
+		IsAdmin:    globalAdmin,
+	}
 
-	if !exists {
-		appG.CResponse(http.StatusNotFound, "模板不存在！", nil)
+	if _, err := models.GetTemplateByIDForOwner(req.ID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "模板不存在或无权访问", nil)
 		return
 	}
 
@@ -247,25 +269,31 @@ func PreviewMessageTemplate(c *gin.Context) {
 		return
 	}
 
-	templateService := message_template_service.TemplateService{
-		ID: req.ID,
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
 	}
-
-	exists, err := templateService.ExistByID()
+	ownerID := user.GetEffectiveUserID()
+	if user.IsAdmin() && !user.IsImpersonating() {
+		ownerID = ""
+	}
+	template, err := models.GetTemplateByIDForOwner(req.ID, ownerID)
 	if err != nil {
-		appG.CResponse(http.StatusInternalServerError, "查询模板失败！", nil)
+		appG.CResponse(http.StatusNotFound, "模板不存在或无权访问", nil)
 		return
 	}
 
-	if !exists {
-		appG.CResponse(http.StatusNotFound, "模板不存在！", nil)
-		return
+	templateService := message_template_service.TemplateService{ID: req.ID}
+	preview := make(map[string]string)
+	if template.TextTemplate != "" {
+		preview["text"] = templateService.RenderTemplate(template.TextTemplate, req.Params)
 	}
-
-	preview, err := templateService.PreviewTemplate(req.Params)
-	if err != nil {
-		appG.CResponse(http.StatusInternalServerError, "预览模板失败："+err.Error(), nil)
-		return
+	if template.HTMLTemplate != "" {
+		preview["html"] = templateService.RenderTemplate(template.HTMLTemplate, req.Params)
+	}
+	if template.MarkdownTemplate != "" {
+		preview["markdown"] = templateService.RenderTemplate(template.MarkdownTemplate, req.Params)
 	}
 
 	appG.CResponse(http.StatusOK, "预览模板成功", preview)
