@@ -9,7 +9,53 @@ import (
 
 	"message-nest/middleware"
 	"message-nest/models"
+	"message-nest/pkg/util"
 )
+
+func TestGetMessageTemplateEnforcesOwnerScopeAndAdminImpersonation(t *testing.T) {
+	f := newAliyunAPITestFixture(t)
+	foreign := models.Template{
+		UUIDModel:    models.UUIDModel{ID: "TP_TEST_B", CreatedBy: f.otherID, ModifiedBy: f.otherID},
+		Name:         "foreign template",
+		Status:       "enabled",
+		TextTemplate: "private body {{secret_value}}",
+		Placeholders: `[{"key":"secret_value"}]`,
+	}
+	if err := models.GetDB().Create(&foreign).Error; err != nil {
+		t.Fatal(err)
+	}
+	adminToken, err := util.GenerateToken("UR_ADMIN", "admin", "hash", "admin", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.router.GET("/api/v1/templates/get", middleware.JWT(), GetMessageTemplate)
+
+	request := func(id, token, impersonate string) modelsResponse {
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/templates/get?id="+id, nil)
+		req.Header.Set("Authorization", "Bearer "+token)
+		if impersonate != "" {
+			req.Header.Set("X-Tenant-User-Id", impersonate)
+		}
+		w := httptest.NewRecorder()
+		f.router.ServeHTTP(w, req)
+		var response modelsResponse
+		_ = json.Unmarshal(w.Body.Bytes(), &response)
+		return response
+	}
+
+	if response := request(f.template.ID, f.token, ""); response.Code != http.StatusOK {
+		t.Fatalf("ordinary user should read their own template: %+v", response)
+	}
+	if response := request(foreign.ID, f.token, ""); response.Code == http.StatusOK {
+		t.Fatal("ordinary user must not read another owner's template by ID")
+	}
+	if response := request(foreign.ID, adminToken, ""); response.Code != http.StatusOK {
+		t.Fatalf("global admin should retain global template access: %+v", response)
+	}
+	if response := request(foreign.ID, adminToken, f.ownerID); response.Code == http.StatusOK {
+		t.Fatal("impersonating admin must not read a template outside the impersonated owner")
+	}
+}
 
 func TestTemplateInstanceAPIsEnforceOwnerScopeAndPersistCreator(t *testing.T) {
 	f := newAliyunAPITestFixture(t)
@@ -30,6 +76,7 @@ func TestTemplateInstanceAPIsEnforceOwnerScopeAndPersistCreator(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.router.GET("/api/v1/templates/ins/get", middleware.JWT(), GetTemplateWithIns)
+	f.router.GET("/api/v1/templates/get", middleware.JWT(), GetMessageTemplate)
 	f.router.POST("/api/v1/templates/ins/addone", middleware.JWT(), AddTemplateIns)
 
 	_, own := requestTemplateGet(f, "/api/v1/templates/ins/get?id="+f.template.ID)

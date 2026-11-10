@@ -51,25 +51,19 @@ func GetMessageTemplateList(c *gin.Context) {
 func GetMessageTemplate(c *gin.Context) {
 	appG := app.Gin{C: c}
 	id := c.Query("id")
-
-	templateService := message_template_service.TemplateService{
-		ID: id,
-	}
-
-	exists, err := templateService.ExistByID()
-	if err != nil {
-		appG.CResponse(http.StatusInternalServerError, "查询模板失败！", nil)
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
 		return
 	}
-
-	if !exists {
-		appG.CResponse(http.StatusNotFound, "模板不存在！", nil)
-		return
+	ownerID := user.GetEffectiveUserID()
+	if user.IsAdmin() && !user.IsImpersonating() {
+		ownerID = ""
 	}
 
-	template, err := templateService.Get()
+	template, err := models.GetTemplateByIDForOwner(id, ownerID)
 	if err != nil {
-		appG.CResponse(http.StatusInternalServerError, "获取模板详情失败！", nil)
+		appG.CResponse(http.StatusNotFound, "模板不存在或无权访问", nil)
 		return
 	}
 
