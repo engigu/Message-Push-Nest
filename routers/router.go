@@ -47,12 +47,12 @@ func AppendServerStaticHtmlWithPrefix(router gin.IRouter, f embed.FS, pathPrefix
 				}
 
 				htmlContent := string(content)
-				
+
 				// 注入 base 标签和配置脚本
 				// base 标签必须在 head 的最前面，确保所有相对路径都基于这个 base
 				baseTag := fmt.Sprintf(`<base href="%s/">`, pathPrefix)
 				configScript := fmt.Sprintf(`<script>window.__URL_PATH_PREFIX__ = '%s';</script>`, pathPrefix)
-				
+
 				// 在 <head> 标签后立即插入 base 标签
 				htmlContent = strings.Replace(htmlContent, "<head>", "<head>"+baseTag, 1)
 				// 在 </head> 标签前注入配置
@@ -81,19 +81,25 @@ func AppendServerStaticHtml(app *gin.Engine, f embed.FS) {
 
 // InitRouter 初始化路由
 func InitRouter(f embed.FS) *gin.Engine {
+	return initRouter(f, nil)
+}
+
+// initRouter optionally accepts an Aliyun SMS handler so isolated integration
+// tests can exercise the full JWT/router stack with a Mock provider adapter.
+func initRouter(f embed.FS, aliyunSMSAPI *v1.AliyunSMSInstanceAPI) *gin.Engine {
 	app := gin.New()
 	app.Use(middleware.LogMiddleware())
 	app.Use(gin.Recovery())
 	app.Use(middleware.SecurityHeaders()) // 注入企业级安全响应头 (防 MIME 嗅探/点击劫持/XSS)
 
 	AppendCors(app)
-	
+
 	// 获取 URL 前缀
 	pathPrefix := setting.ServerSetting.UrlPrefix
 	if pathPrefix != "" && pathPrefix[0] != '/' {
 		pathPrefix = "/" + pathPrefix
 	}
-	
+
 	// 如果有路径前缀，创建路由组
 	var router gin.IRouter
 	if pathPrefix != "" {
@@ -101,7 +107,7 @@ func InitRouter(f embed.FS) *gin.Engine {
 	} else {
 		router = app
 	}
-	
+
 	AppendServerStaticHtmlWithPrefix(router, f, pathPrefix)
 
 	// API v1
@@ -201,12 +207,17 @@ func InitRouter(f embed.FS) *gin.Engine {
 			authGroup.POST("/templates/edit", v1.EditMessageTemplate)
 			authGroup.POST("/templates/delete", v1.DeleteMessageTemplate)
 			authGroup.POST("/templates/preview", v1.PreviewMessageTemplate)
-			
+
 			// messageTemplate instances
 			authGroup.GET("/templates/ins/get", v1.GetTemplateWithIns)
 			authGroup.POST("/templates/ins/addone", v1.AddTemplateIns)
-			authGroup.POST("/templates/ins/aliyun/edit", v1.EditAliyunSMSInstanceConfig)
-			authGroup.POST("/templates/ins/aliyun/test", v1.TestAliyunSMSInstance)
+			if aliyunSMSAPI == nil {
+				authGroup.POST("/templates/ins/aliyun/edit", v1.EditAliyunSMSInstanceConfig)
+				authGroup.POST("/templates/ins/aliyun/test", v1.TestAliyunSMSInstance)
+			} else {
+				authGroup.POST("/templates/ins/aliyun/edit", aliyunSMSAPI.EditConfig)
+				authGroup.POST("/templates/ins/aliyun/test", aliyunSMSAPI.TestSend)
+			}
 		}
 	}
 

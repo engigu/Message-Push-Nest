@@ -82,7 +82,7 @@ func newAliyunAPITestFixture(t *testing.T) *aliyunAPITestFixture {
 
 	client := &apiMockAliyunClient{response: &dysmsapi.SendSmsResponse{Code: "OK", Message: "accepted", RequestId: "mock-request-id", BizId: "mock-biz-id"}}
 	handler := NewAliyunSMSInstanceAPI()
-	handler.channelSender = func() aliyunSMSChannelSender {
+	handler.channelSender = func() AliyunSMSChannelSender {
 		return channels.NewAliyunSMSChannelWithClientFactory(func(accessKeyID, accessKeySecret, regionID string) (channels.AliyunSMSClient, error) {
 			if accessKeyID != "test-access-id" || accessKeySecret != "DO_NOT_LEAK_TEST_SECRET" || regionID != "cn-test" {
 				t.Fatalf("unexpected stored credentials passed to mock: %q %q %q", accessKeyID, accessKeySecret, regionID)

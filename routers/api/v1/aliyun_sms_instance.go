@@ -33,22 +33,36 @@ const (
 
 var testPhonePattern = regexp.MustCompile(`^\+?[0-9]{5,20}$`)
 
-type aliyunSMSChannelSender interface {
+// AliyunSMSChannelSender is the synchronous provider boundary used by the test API.
+// The default instance uses the production channel adapter; callers may inject a
+// controlled adapter when composing an isolated router.
+type AliyunSMSChannelSender interface {
 	SendTemplate(*send_way_service.WayDetailAliyunSMS, models.InsAliyunSMSConfig, string, map[string]interface{}, map[string]interface{}) (channels.AliyunSMSSendResult, error)
 }
 
 type AliyunSMSInstanceAPI struct {
 	limiter       func(context.Context, string, string, string) (models.AliyunSMSTestLimitDecision, error)
-	channelSender func() aliyunSMSChannelSender
+	channelSender func() AliyunSMSChannelSender
 }
 
 func NewAliyunSMSInstanceAPI() *AliyunSMSInstanceAPI {
 	return &AliyunSMSInstanceAPI{
 		limiter: models.ReserveAliyunSMSTestRate,
-		channelSender: func() aliyunSMSChannelSender {
+		channelSender: func() AliyunSMSChannelSender {
 			return channels.NewAliyunSMSChannel()
 		},
 	}
+}
+
+// NewAliyunSMSInstanceAPIWithSender composes an instance API with a supplied
+// synchronous sender. It is useful for isolated router integrations that must
+// prove request flow without contacting the live provider.
+func NewAliyunSMSInstanceAPIWithSender(sender AliyunSMSChannelSender) *AliyunSMSInstanceAPI {
+	api := NewAliyunSMSInstanceAPI()
+	if sender != nil {
+		api.channelSender = func() AliyunSMSChannelSender { return sender }
+	}
+	return api
 }
 
 var defaultAliyunSMSInstanceAPI = NewAliyunSMSInstanceAPI()
