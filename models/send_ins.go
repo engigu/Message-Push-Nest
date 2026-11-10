@@ -233,3 +233,45 @@ func GetRawTemplateInsList(templateID string) ([]SendTasksIns, error) {
 	}
 	return insList, nil
 }
+
+// GetTemplateInstanceByIDForOwner loads only a template-bound instance in the
+// caller's effective owner scope. An empty owner is reserved for global admins.
+func GetTemplateInstanceByIDForOwner(id, ownerID string) (SendTasksIns, error) {
+	var ins SendTasksIns
+	query := db.Where("id = ? AND template_id <> ? AND task_id = ?", id, "", "")
+	if ownerID != "" {
+		query = query.Where("created_by = ?", ownerID)
+	}
+	err := query.First(&ins).Error
+	return ins, err
+}
+
+// UpdateTemplateInstanceConfig updates only Config and its audit actor while
+// applying the owner predicate in the same write query.
+func UpdateTemplateInstanceConfig(id, ownerID, actorID, config string) error {
+	query := db.Model(&SendTasksIns{}).Where("id = ? AND template_id <> ? AND task_id = ?", id, "", "")
+	if ownerID != "" {
+		query = query.Where("created_by = ?", ownerID)
+	}
+	result := query.Updates(map[string]interface{}{
+		"config":      config,
+		"modified_by": actorID,
+	})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		var count int64
+		check := db.Model(&SendTasksIns{}).Where("id = ? AND template_id <> ? AND task_id = ?", id, "", "")
+		if ownerID != "" {
+			check = check.Where("created_by = ?", ownerID)
+		}
+		if err := check.Count(&count).Error; err != nil {
+			return err
+		}
+		if count == 0 {
+			return ErrNoPermissionOrNotFound
+		}
+	}
+	return nil
+}

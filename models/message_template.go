@@ -156,6 +156,23 @@ func GetTemplateByID(id string) (*TemplateResult, error) {
 	return &data, nil
 }
 
+// GetTemplateByIDForOwner applies the repository's created_by ownership model;
+// an empty owner is reserved for global admins.
+func GetTemplateByIDForOwner(id, ownerID string) (*TemplateResult, error) {
+	var data TemplateResult
+	query := db.Table(GetSchema(Template{})).Where("id = ?", id)
+	if ownerID != "" {
+		query = query.Where("created_by = ?", ownerID)
+	}
+	if err := query.Limit(1).Find(&data).Error; err != nil {
+		return nil, err
+	}
+	if data.ID == "" {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &data, nil
+}
+
 // ExistTemplateByID 检查模板是否存在
 func ExistTemplateByID(id string) (bool, error) {
 	var template Template

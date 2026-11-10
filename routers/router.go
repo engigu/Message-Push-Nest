@@ -205,6 +205,8 @@ func InitRouter(f embed.FS) *gin.Engine {
 			// messageTemplate instances
 			authGroup.GET("/templates/ins/get", v1.GetTemplateWithIns)
 			authGroup.POST("/templates/ins/addone", v1.AddTemplateIns)
+			authGroup.POST("/templates/ins/aliyun/edit", v1.EditAliyunSMSInstanceConfig)
+			authGroup.POST("/templates/ins/aliyun/test", v1.TestAliyunSMSInstance)
 		}
 	}
 

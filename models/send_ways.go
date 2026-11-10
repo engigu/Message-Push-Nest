@@ -95,6 +95,18 @@ func GetWayByID(id string) (SendWays, error) {
 	return way, nil
 }
 
+// GetWayByIDForOwner applies the repository's created_by ownership model;
+// an empty owner is reserved for global admins.
+func GetWayByIDForOwner(id, ownerID string) (SendWays, error) {
+	var way SendWays
+	query := db.Where("id = ?", id)
+	if ownerID != "" {
+		query = query.Where("created_by = ?", ownerID)
+	}
+	err := query.First(&way).Error
+	return way, err
+}
+
 func GetWayByName(name string, createdBy ...string) (SendWays, error) {
 	var way SendWays
 	query := db.Where("name = ?", name)

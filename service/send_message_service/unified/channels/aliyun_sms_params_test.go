@@ -26,13 +26,12 @@ func (m *mockAliyunSMSClient) SendSms(request *dysmsapi.SendSmsRequest) (*dysmsa
 
 func TestAliyunSMSChannelStructuredParamsUseSelectedMappings(t *testing.T) {
 	client := &mockAliyunSMSClient{}
-	channel := NewAliyunSMSChannel()
-	channel.clientFactory = func(accessKeyID, accessKeySecret, regionID string) (aliyunSMSClient, error) {
+	channel := NewAliyunSMSChannelWithClientFactory(func(accessKeyID, accessKeySecret, regionID string) (AliyunSMSClient, error) {
 		if accessKeyID != "test-key" || accessKeySecret != "test-secret" || regionID != "cn-test" {
 			t.Fatalf("unexpected credentials/region passed to factory: %q %q %q", accessKeyID, accessKeySecret, regionID)
 		}
 		return client, nil
-	}
+	})
 
 	ins := models.SendTasksIns{
 		WayType: "AliyunSMS",
@@ -72,8 +71,7 @@ func TestAliyunSMSChannelStructuredParamsUseSelectedMappings(t *testing.T) {
 
 func TestAliyunSMSChannelLegacyModePreservesContentAndExtra(t *testing.T) {
 	client := &mockAliyunSMSClient{}
-	channel := NewAliyunSMSChannel()
-	channel.clientFactory = func(string, string, string) (aliyunSMSClient, error) { return client, nil }
+	channel := NewAliyunSMSChannelWithClientFactory(func(string, string, string) (AliyunSMSClient, error) { return client, nil })
 	ins := models.SendTasksIns{
 		WayType: "AliyunSMS",
 		Config:  `{"phone_number":"15500000000","template_code":"SMS_LEGACY"}`,
@@ -122,11 +120,10 @@ func TestBuildAliyunTemplateParamsRejectsInvalidStructuredInputs(t *testing.T) {
 
 func TestAliyunSMSChannelDoesNotCallProviderForInvalidConfig(t *testing.T) {
 	called := false
-	channel := NewAliyunSMSChannel()
-	channel.clientFactory = func(string, string, string) (aliyunSMSClient, error) {
+	channel := NewAliyunSMSChannelWithClientFactory(func(string, string, string) (AliyunSMSClient, error) {
 		called = true
 		return nil, errors.New("should not be called")
-	}
+	})
 	ins := models.SendTasksIns{
 		WayType: "AliyunSMS",
 		Config:  `{"phone_number":"15500000000","template_code":"SMS_TEST","template_param_mode":"structured"}`,
