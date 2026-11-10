@@ -75,6 +75,8 @@ services:
       - MYSQL_PASSWORD=Aa123456
       - MYSQL_DB=test_11
       - MYSQL_TABLE_PREFIX=message_
+      # Replace with a stable random secret (at least 32 bytes), shared by every replica.
+      - ALIYUN_SMS_TEST_FINGERPRINT_SECRET=${ALIYUN_SMS_TEST_FINGERPRINT_SECRET:?set a stable fingerprint secret}
 ```
 
 ### 使用 SQLite

@@ -2,8 +2,8 @@ package v1
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,17 +19,16 @@ import (
 	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/logging"
+	"message-nest/pkg/setting"
 	"message-nest/service/send_ins_service"
 	"message-nest/service/send_message_service/unified/channels"
 	"message-nest/service/send_way_service"
 )
 
 const (
-	aliyunSMSUserTestLimit = 10
-	aliyunSMSWayTestLimit  = 30
-	aliyunSMSRateWindow    = time.Minute
-	aliyunSMSRepeatWindow  = 20 * time.Second
-	aliyunSMSRequestLimit  = 64 << 10
+	aliyunSMSRequestLimit       = 64 << 10
+	aliyunSMSLimiterTimeout     = 3 * time.Second
+	aliyunSMSFingerprintMinSize = 32
 )
 
 var testPhonePattern = regexp.MustCompile(`^\+?[0-9]{5,20}$`)
@@ -40,13 +38,13 @@ type aliyunSMSChannelSender interface {
 }
 
 type AliyunSMSInstanceAPI struct {
-	guard         *aliyunSMSTestGuard
+	limiter       func(context.Context, string, string, string) (models.AliyunSMSTestLimitDecision, error)
 	channelSender func() aliyunSMSChannelSender
 }
 
 func NewAliyunSMSInstanceAPI() *AliyunSMSInstanceAPI {
 	return &AliyunSMSInstanceAPI{
-		guard: newAliyunSMSTestGuard(aliyunSMSUserTestLimit, aliyunSMSWayTestLimit, aliyunSMSRateWindow, aliyunSMSRepeatWindow),
+		limiter: models.ReserveAliyunSMSTestRate,
 		channelSender: func() aliyunSMSChannelSender {
 			return channels.NewAliyunSMSChannel()
 		},
@@ -212,8 +210,22 @@ func (h *AliyunSMSInstanceAPI) TestSend(c *gin.Context) {
 		return
 	}
 	config.PhoneNumber = req.TestPhone // temporary effective recipient for validation and the SDK request
+	auth, err := validateAliyunWay(way)
+	if err != nil {
+		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "invalid_way_auth", maskAliyunPhone(req.TestPhone), "")
+		appG.CResponse(http.StatusBadRequest, "阿里云渠道配置无效", nil)
+		return
+	}
+
+	fingerprintSecret := setting.AppSetting.AliyunSMSTestFingerprintSecret
+	if len([]byte(fingerprintSecret)) < aliyunSMSFingerprintMinSize {
+		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "fingerprint_secret_missing", maskAliyunPhone(req.TestPhone), "")
+		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: "发送测试服务暂不可用，请联系管理员"})
+		return
+	}
 
 	fingerprintInput, err := json.Marshal(struct {
+		UserID     string                    `json:"user_id"`
 		InstanceID string                    `json:"instance_id"`
 		TemplateID string                    `json:"template_id"`
 		WayID      string                    `json:"way_id"`
@@ -221,24 +233,34 @@ func (h *AliyunSMSInstanceAPI) TestSend(c *gin.Context) {
 		Config     models.InsAliyunSMSConfig `json:"config"`
 		Values     map[string]interface{}    `json:"placeholders"`
 		Content    string                    `json:"content"`
-	}{instance.ID, template.ID, way.ID, req.TestPhone, config, structuredValues, content})
+	}{user.GetEffectiveUserID(), instance.ID, template.ID, way.ID, req.TestPhone, config, structuredValues, content})
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, "测试请求无效", nil)
 		return
 	}
-	if retryAfter, reason := h.guard.Allow(user.GetEffectiveUserID(), way.ID, fingerprintInput); reason != "" {
-		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, reason, maskAliyunPhone(req.TestPhone), "")
-		c.Header("Retry-After", fmt.Sprintf("%d", retryAfter))
+	if h.limiter == nil {
+		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "limiter_unavailable", maskAliyunPhone(req.TestPhone), "")
+		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: "发送测试服务暂不可用，请联系管理员"})
+		return
+	}
+	userHash := aliyunSMSFingerprint(fingerprintSecret, "scope:user", user.GetEffectiveUserID())
+	wayHash := aliyunSMSFingerprint(fingerprintSecret, "scope:way", way.ID)
+	requestHash := aliyunSMSFingerprint(fingerprintSecret, "request", string(fingerprintInput))
+	limitCtx, cancel := context.WithTimeout(c.Request.Context(), aliyunSMSLimiterTimeout)
+	decision, limitErr := h.limiter(limitCtx, userHash, wayHash, requestHash)
+	cancel()
+	if limitErr != nil {
+		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "limiter_database_error", maskAliyunPhone(req.TestPhone), "")
+		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: "发送测试服务暂不可用，请稍后重试"})
+		return
+	}
+	if !decision.Allowed {
+		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, decision.Reason, maskAliyunPhone(req.TestPhone), "")
+		c.Header("Retry-After", fmt.Sprintf("%d", decision.RetryAfterSeconds))
 		c.JSON(http.StatusTooManyRequests, app.Response{Code: http.StatusTooManyRequests, Msg: "测试发送过于频繁或重复，请稍后重试"})
 		return
 	}
 
-	auth, err := validateAliyunWay(way)
-	if err != nil {
-		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "invalid_way_auth", maskAliyunPhone(req.TestPhone), "")
-		appG.CResponse(http.StatusBadRequest, "阿里云渠道配置无效", nil)
-		return
-	}
 	result, err := h.channelSender().SendTemplate(auth, config, content, structuredValues, nil)
 	if err != nil {
 		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "transport_error", maskAliyunPhone(req.TestPhone), "")
@@ -609,110 +631,11 @@ func maskAliyunPhone(phone string) string {
 	return "***" + digits[len(digits)-4:]
 }
 
-type aliyunRateWindow struct {
-	count   int
-	resetAt time.Time
-}
-
-type aliyunSMSRepeatEntry struct {
-	expires time.Time
-}
-
-type aliyunSMSTestGuard struct {
-	mu             sync.Mutex
-	userLimit      int
-	wayLimit       int
-	window         time.Duration
-	repeatWindow   time.Duration
-	key            [32]byte
-	userWindows    map[string]aliyunRateWindow
-	wayWindows     map[string]aliyunRateWindow
-	recentRequests map[string]aliyunSMSRepeatEntry
-}
-
-func newAliyunSMSTestGuard(userLimit, wayLimit int, window, repeatWindow time.Duration) *aliyunSMSTestGuard {
-	guard := &aliyunSMSTestGuard{
-		userLimit: userLimit, wayLimit: wayLimit, window: window, repeatWindow: repeatWindow,
-		userWindows: make(map[string]aliyunRateWindow), wayWindows: make(map[string]aliyunRateWindow),
-		recentRequests: make(map[string]aliyunSMSRepeatEntry),
-	}
-	if _, err := rand.Read(guard.key[:]); err != nil {
-		panic("cannot initialize Aliyun SMS repeat guard")
-	}
-	return guard
-}
-
-func (g *aliyunSMSTestGuard) Allow(userID, wayID string, payload []byte) (int, string) {
-	now := time.Now()
-	mac := hmac.New(sha256.New, g.key[:])
-	_, _ = mac.Write(payload)
-	repeatKey := userID + ":" + wayID + ":" + hex.EncodeToString(mac.Sum(nil))
-
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	g.cleanup(now)
-	if entry, exists := g.recentRequests[repeatKey]; exists && now.Before(entry.expires) {
-		return int(g.repeatWindow.Seconds()), "duplicate"
-	}
-	if len(g.recentRequests) >= 4096 {
-		return int(g.window.Seconds()), "guard_capacity"
-	}
-	if retry := g.windowRetry(g.userWindows, userID, g.userLimit, now); retry > 0 {
-		return retry, "user_rate_limited"
-	}
-	if retry := g.windowRetry(g.wayWindows, wayID, g.wayLimit, now); retry > 0 {
-		return retry, "way_rate_limited"
-	}
-	g.incrementWindow(g.userWindows, userID, now)
-	g.incrementWindow(g.wayWindows, wayID, now)
-	g.recentRequests[repeatKey] = aliyunSMSRepeatEntry{expires: now.Add(g.repeatWindow)}
-	return 0, ""
-}
-
-func (g *aliyunSMSTestGuard) windowRetry(windows map[string]aliyunRateWindow, key string, limit int, now time.Time) int {
-	window, exists := windows[key]
-	if !exists || !now.Before(window.resetAt) {
-		if len(windows) >= 4096 {
-			return int(g.window.Seconds())
-		}
-		return 0
-	}
-	if window.count >= limit {
-		seconds := int(window.resetAt.Sub(now).Seconds())
-		if seconds < 1 {
-			seconds = 1
-		}
-		return seconds
-	}
-	return 0
-}
-
-func (g *aliyunSMSTestGuard) incrementWindow(windows map[string]aliyunRateWindow, key string, now time.Time) {
-	window, exists := windows[key]
-	if !exists || !now.Before(window.resetAt) {
-		windows[key] = aliyunRateWindow{count: 1, resetAt: now.Add(g.window)}
-		return
-	}
-	window.count++
-	windows[key] = window
-}
-
-func (g *aliyunSMSTestGuard) cleanup(now time.Time) {
-	for key, window := range g.userWindows {
-		if !now.Before(window.resetAt) {
-			delete(g.userWindows, key)
-		}
-	}
-	for key, window := range g.wayWindows {
-		if !now.Before(window.resetAt) {
-			delete(g.wayWindows, key)
-		}
-	}
-	for key, entry := range g.recentRequests {
-		if !now.Before(entry.expires) {
-			delete(g.recentRequests, key)
-		}
-	}
+func aliyunSMSFingerprint(secret, domain, value string) string {
+	mac := hmac.New(sha256.New, []byte(secret))
+	_, _ = mac.Write([]byte("message-nest:aliyun-sms-test:v1:" + domain + ":"))
+	_, _ = mac.Write([]byte(value))
+	return hex.EncodeToString(mac.Sum(nil))
 }
 
 func editConfigResponseID(instanceID string) gin.H {

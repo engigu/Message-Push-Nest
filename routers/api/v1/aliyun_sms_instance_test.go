@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"message-nest/middleware"
 	"message-nest/models"
 	"message-nest/pkg/setting"
@@ -13,7 +14,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
 	"github.com/gin-gonic/gin"
@@ -50,6 +50,7 @@ func newAliyunAPITestFixture(t *testing.T) *aliyunAPITestFixture {
 	gin.SetMode(gin.TestMode)
 	models.InitTestDB("aliyun_instance_api_" + util.GenerateUniqueID())
 	setting.AppSetting.JwtSecret = "AliyunAPITestSecretKey123"
+	setting.AppSetting.AliyunSMSTestFingerprintSecret = "test-aliyun-sms-fingerprint-secret-32-bytes"
 
 	ownerID := "UR_OWNER_A"
 	otherID := "UR_OWNER_B"
@@ -81,7 +82,6 @@ func newAliyunAPITestFixture(t *testing.T) *aliyunAPITestFixture {
 
 	client := &apiMockAliyunClient{response: &dysmsapi.SendSmsResponse{Code: "OK", Message: "accepted", RequestId: "mock-request-id", BizId: "mock-biz-id"}}
 	handler := NewAliyunSMSInstanceAPI()
-	handler.guard = newAliyunSMSTestGuard(100, 100, aliyunSMSRateWindow, aliyunSMSRepeatWindow)
 	handler.channelSender = func() aliyunSMSChannelSender {
 		return channels.NewAliyunSMSChannelWithClientFactory(func(accessKeyID, accessKeySecret, regionID string) (channels.AliyunSMSClient, error) {
 			if accessKeyID != "test-access-id" || accessKeySecret != "DO_NOT_LEAK_TEST_SECRET" || regionID != "cn-test" {
@@ -342,6 +342,28 @@ func TestAliyunTestSendRejectsUnauthorizedResourcesAndClientCredentials(t *testi
 }
 
 func TestAliyunTestSendRateLimitRepeatAndProviderFailures(t *testing.T) {
+	t.Run("fingerprint key is required", func(t *testing.T) {
+		f := newAliyunAPITestFixture(t)
+		setting.AppSetting.AliyunSMSTestFingerprintSecret = ""
+		body := `{"template_id":"TP_TEST_A","way_id":"WY_TEST_A","config":{"template_code":"SMS","template_param_mode":"structured","selected_params":[]},"test_phone":"15555550110"}`
+		w, response := f.request("/api/v1/templates/ins/aliyun/test", f.token, body)
+		if w.Code != http.StatusServiceUnavailable || response.Code != http.StatusServiceUnavailable || f.client.calls != 0 {
+			t.Fatalf("missing stable key must fail closed: http=%d response=%+v calls=%d", w.Code, response, f.client.calls)
+		}
+	})
+
+	t.Run("missing rate-limit table fails closed", func(t *testing.T) {
+		f := newAliyunAPITestFixture(t)
+		if err := models.GetDB().Migrator().DropTable(&models.AliyunSMSTestEvent{}); err != nil {
+			t.Fatal(err)
+		}
+		body := `{"template_id":"TP_TEST_A","way_id":"WY_TEST_A","config":{"template_code":"SMS","template_param_mode":"structured","selected_params":[]},"test_phone":"15555550111"}`
+		w, response := f.request("/api/v1/templates/ins/aliyun/test", f.token, body)
+		if w.Code != http.StatusServiceUnavailable || response.Code != http.StatusServiceUnavailable || f.client.calls != 0 {
+			t.Fatalf("missing event table must fail closed: http=%d response=%+v calls=%d", w.Code, response, f.client.calls)
+		}
+	})
+
 	t.Run("duplicate request protection", func(t *testing.T) {
 		f := newAliyunAPITestFixture(t)
 		body := `{"template_id":"TP_TEST_A","way_id":"WY_TEST_A","config":{"template_code":"SMS","template_param_mode":"structured","selected_params":[]},"test_phone":"15555550121"}`
@@ -358,20 +380,22 @@ func TestAliyunTestSendRateLimitRepeatAndProviderFailures(t *testing.T) {
 
 	t.Run("user and way rate limits", func(t *testing.T) {
 		f := newAliyunAPITestFixture(t)
-		f.handler.guard = newAliyunSMSTestGuard(2, 1, aliyunSMSRateWindow, aliyunSMSRepeatWindow)
-		bodyA := `{"template_id":"TP_TEST_A","way_id":"WY_TEST_A","config":{"template_code":"SMS","template_param_mode":"structured","selected_params":[]},"test_phone":"15555550121","placeholders":{"code":"A"}}`
-		bodyB := `{"template_id":"TP_TEST_A","way_id":"WY_TEST_A","config":{"template_code":"SMS","template_param_mode":"structured","selected_params":[]},"test_phone":"15555550122","placeholders":{"code":"B"}}`
-		_, first := f.request("/api/v1/templates/ins/aliyun/test", f.token, bodyA)
-		adminToken, err := util.GenerateToken("UR_ADMIN", "admin", "hash", "admin", 1)
-		if err != nil {
-			t.Fatal(err)
+		for i := 0; i < models.AliyunSMSTestUserLimit+1; i++ {
+			body := fmt.Sprintf(`{"template_id":"TP_TEST_A","way_id":"WY_TEST_A","config":{"template_code":"SMS","template_param_mode":"structured","selected_params":[]},"test_phone":"1555555%04d"}`, 1200+i)
+			_, response := f.request("/api/v1/templates/ins/aliyun/test", f.token, body)
+			if i < models.AliyunSMSTestUserLimit && response.Code != http.StatusOK {
+				t.Fatalf("user request %d should be allowed, response=%+v", i+1, response)
+			}
+			if i == models.AliyunSMSTestUserLimit && response.Code != http.StatusTooManyRequests {
+				t.Fatalf("11th user request should be rate limited, response=%+v", response)
+			}
 		}
-		_, second := f.request("/api/v1/templates/ins/aliyun/test", adminToken, bodyB)
-		if first.Code != http.StatusOK || second.Code != http.StatusTooManyRequests {
-			t.Fatalf("way dimension limit incorrect: first=%d second=%d", first.Code, second.Code)
+		if f.client.calls != models.AliyunSMSTestUserLimit {
+			t.Fatalf("user limiter allowed %d SDK calls, want %d", f.client.calls, models.AliyunSMSTestUserLimit)
 		}
-		if f.client.calls != 1 {
-			t.Fatalf("way limit did not block provider call: calls=%d", f.client.calls)
+		var events int64
+		if err := models.GetDB().Model(&models.AliyunSMSTestEvent{}).Where("user_hash <> ''").Count(&events).Error; err != nil || events != models.AliyunSMSTestUserLimit {
+			t.Fatalf("provider calls and granted reservations should both equal the limit: calls=%d events=%d err=%v", f.client.calls, events, err)
 		}
 	})
 
@@ -398,6 +422,20 @@ func TestAliyunTestSendRateLimitRepeatAndProviderFailures(t *testing.T) {
 		if strings.Contains(w.Body.String(), "DO_NOT_LEAK_TEST_SECRET") {
 			t.Fatalf("transport error leaked credentials: %s", w.Body.String())
 		}
+		var eventCount int64
+		if err := models.GetDB().Model(&models.AliyunSMSTestEvent{}).Count(&eventCount).Error; err != nil || eventCount != 1 {
+			t.Fatalf("provider transport failure should still consume one reservation: events=%d err=%v", eventCount, err)
+		}
+		var events []models.AliyunSMSTestEvent
+		if err := models.GetDB().Find(&events).Error; err != nil {
+			t.Fatal(err)
+		}
+		serialized, _ := json.Marshal(events)
+		for _, secret := range []string{"15555550124", "DO_NOT_LEAK_TEST_SECRET", "SMS", "template_param_mode"} {
+			if strings.Contains(string(serialized), secret) {
+				t.Fatalf("rate-limit event leaked sensitive/config value %q", secret)
+			}
+		}
 	})
 }
 
@@ -417,25 +455,6 @@ func TestAliyunConfigMergeValidatesTypesAndPreservesUnknown(t *testing.T) {
 	}
 	if _, _, err := mergeSupportedAliyunConfig([]byte(`{}`), []byte(`{"selected_params":null}`)); err == nil {
 		t.Fatal("null selected_params should be rejected")
-	}
-}
-
-func TestAliyunTestGuardTracksUserWayAndDuplicatePayload(t *testing.T) {
-	guard := newAliyunSMSTestGuard(2, 1, time.Minute, time.Second*10)
-	if _, reason := guard.Allow("user-a", "way-a", []byte("one")); reason != "" {
-		t.Fatalf("first request denied: %s", reason)
-	}
-	if _, reason := guard.Allow("user-a", "way-a", []byte("one")); reason != "duplicate" {
-		t.Fatalf("expected duplicate rejection, got %q", reason)
-	}
-	if _, reason := guard.Allow("user-b", "way-a", []byte("two")); reason != "way_rate_limited" {
-		t.Fatalf("expected Way rate limit, got %q", reason)
-	}
-	if _, reason := guard.Allow("user-a", "way-b", []byte("three")); reason != "" {
-		t.Fatalf("second user request to another Way should pass: %s", reason)
-	}
-	if _, reason := guard.Allow("user-a", "way-c", []byte("four")); reason != "user_rate_limited" {
-		t.Fatalf("expected user rate limit, got %q", reason)
 	}
 }
 

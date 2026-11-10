@@ -5,6 +5,9 @@
 ```ini
 [app]
 JwtSecret = message-nest
+; Required for the Aliyun SMS test API; use a stable random value of at least 32 bytes.
+; Keep identical on every replica. Alternatively set ALIYUN_SMS_TEST_FINGERPRINT_SECRET.
+AliyunSMSTestFingerprintSecret =
 LogLevel = INFO
 
 [server]
@@ -38,6 +41,7 @@ Ssl = true
 | 配置项 | 说明 | 默认值 |
 |--------|------|--------|
 | JwtSecret | JWT密钥，用于token生成 | message-nest |
+| AliyunSMSTestFingerprintSecret | 阿里云短信测试限流指纹密钥；启用测试接口时必填，至少32字节，所有副本必须一致 | 空（测试接口返回503） |
 | LogLevel | 日志级别：DEBUG/INFO/ERROR | INFO |
 
 ### [server] 服务器配置
@@ -70,6 +74,7 @@ Ssl = true
 | 变量 | 说明 |
 |------|------|
 | JWT_SECRET | jwt秘钥，可选，默认为message-nest |
+| ALIYUN_SMS_TEST_FINGERPRINT_SECRET | 阿里云短信测试限流指纹密钥；显式配置、至少32字节、所有副本一致；缺失时测试接口返回503 |
 | LOG_LEVEL | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR |
 | URL_PREFIX | URL路径前缀，用于子路径部署，如：/message |
 | DB_TYPE | 数据库类型，sqlite/mysql/postgres。默认为sqlite,存储路径为conf/database.db |
@@ -88,6 +93,20 @@ Ssl = true
 | SQL_DEBUG | 是否打印SQL，可选，默认关，设置enable为开启 |
 
 ## 配置示例
+
+### 阿里云短信测试限流密钥
+
+阿里云短信测试接口只有在 `AliyunSMSTestFingerprintSecret` 或环境变量
+`ALIYUN_SMS_TEST_FINGERPRINT_SECRET` 提供至少 32 字节的稳定随机密钥时才会工作；
+缺失或过短时接口 fail closed 并返回 503。所有副本必须使用同一密钥。密钥不写入数据库或日志。
+
+轮换时先在所有副本关闭/阻止短信测试 API，等待至少 60 秒（覆盖 60 秒配额窗口和 20 秒重复窗口），
+再同时更新密钥并重启所有副本，确认全部使用新密钥后再开放测试 API。不要在请求仍可进入时逐台滚动换钥，
+否则新旧指纹会被视为不同用户/请求并暂时分裂额度。
+
+限流专用表由应用启动时独立、同步地创建/校验，只会触及 `aliyun_sms_test_scope_lock` 和
+`aliyun_sms_test_event`（加上配置的 `TablePrefix`）；迁移错误会阻止服务启动。回滚应用时保留这两张表，
+应用不会自动删除它们。SQLite 多进程场景必须共享同一台机器上的同一个本地数据库文件。
 
 ### 生产标准配置
 

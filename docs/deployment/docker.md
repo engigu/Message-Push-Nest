@@ -83,6 +83,7 @@ docker run -d \
 | 变量 | 说明 |
 |------|------|
 | JWT_SECRET | JWT签名密钥，建议生产环境指定高熵密钥。未指定或使用弱默认值时将在启动时动态生成随机密钥 |
+| ALIYUN_SMS_TEST_FINGERPRINT_SECRET | 阿里云短信测试限流指纹密钥，启用测试接口时必填，至少32字节且所有副本相同；缺失时接口返回503 |
 | LOG_LEVEL | 日志等级，可选，默认为INFO，DEBUG/INFO/ERROR |
 | URL_PREFIX | URL路径前缀，用于子路径部署，如：/message |
 | DB_TYPE | 数据库类型，sqlite/mysql/postgres。默认为sqlite,存储路径为conf/database.db |

@@ -57,7 +57,10 @@ func (a *App) initConfig() {
 
 // initDatabase 初始化数据库连接池
 func (a *App) initDatabase() {
-	models.Setup()
+	database := models.Setup()
+	if err := models.MigrateAliyunSMSTestRateLimitTables(database); err != nil {
+		logging.Database.Fatalf("阿里云短信测试限流表初始化失败: %v", err)
+	}
 }
 
 // initScheduler 初始化后台异步任务与定时调度器
@@ -90,6 +93,19 @@ func (a *App) initScheduler() {
 				middleware.CleanAllRateLimiters()
 				api.CleanExpiredLoginAttempts()
 				captcha.CleanExpiredCaptchas()
+			},
+		})
+
+		// Keep only a short, bounded history for the Aliyun SMS test limiter.
+		// Cleanup errors never disable the database-backed reservation path.
+		cron_service.AddTask(cron_service.ScheduledTask{
+			Schedule: "* * * * *",
+			Job: func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				defer cancel()
+				if _, err := models.CleanupAliyunSMSTestEvents(ctx, 2*time.Minute, 4); err != nil {
+					logging.Scheduler.Warnf("阿里云短信测试限流事件清理失败: %v", err)
+				}
 			},
 		})
 	}()
@@ -152,4 +168,3 @@ func (a *App) Run() {
 
 	logging.Server.Info("服务已完全退出")
 }
-
