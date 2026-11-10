@@ -422,7 +422,7 @@ defineExpose({
       <div class="flex items-end gap-2">
         <div class="flex-1 space-y-2">
           <Label class="text-sm font-medium">选择发送渠道</Label>
-          <Combobox v-model="selectedWayId" :ignore-filter="true" @update:model-value="handleSelectedWayChange">
+          <Combobox v-model="selectedWayId" :ignore-filter="true" :reset-search-term-on-select="false" @update:model-value="handleSelectedWayChange">
             <ComboboxAnchor class="w-full">
               <ComboboxInput 
                 v-model="inputDisplayValue" 
