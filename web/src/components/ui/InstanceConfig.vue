@@ -22,6 +22,21 @@ import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 import { generateBizUniqueID } from '@/util/uuid'
 import { createChannelSearchController, getSelectedWayPayload, isSelectedWayValid } from '@/lib/channelSearchController.mjs'
+import AliyunSMSTestDialog from '@/components/ui/AliyunSMSTestDialog.vue'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  areTemplatePlaceholdersValid,
+  buildInstanceFormForChannel,
+  getAliyunConfigSummary,
+  getAliyunPlaceholderDiff,
+  normalizeAliyunConfig,
+  parseTemplatePlaceholders,
+  setAliyunParamOverride,
+  toAliyunEditableConfig,
+  toggleAliyunParam,
+  validateAliyunConfig,
+} from '@/lib/aliyunSmsConfig.mjs'
 
 // 组件props
 interface Props {
@@ -88,6 +103,91 @@ const currentChannelConfig = computed(() => {
   return waysConfigMap.find(item => item.type === selectedChannel.value?.type) || null
 })
 
+const templatePlaceholders = computed(() => parseTemplatePlaceholders(props.data?.placeholders))
+const templatePlaceholdersValid = computed(() => areTemplatePlaceholdersValid(props.data?.placeholders))
+const showAliyunParamConfig = computed(() => props.type === 'template' && selectedChannel.value?.type === 'AliyunSMS')
+const selectedAliyunParams = computed(() => new Set(formData.value.selected_params || []))
+const addAliyunConfigError = ref('')
+const isAliyunTestOpen = ref(false)
+const aliyunTestScenario = ref<'new' | 'edit' | 'saved'>('new')
+const aliyunTestInstanceId = ref('')
+const aliyunTestConfig = ref<Record<string, any>>({})
+const aliyunEditOpen = ref(false)
+const editingInstance = ref<any>(null)
+const editingConfig = ref<Record<string, any>>({})
+const editConfigError = ref('')
+const isSavingEdit = ref(false)
+
+const openAliyunTest = (scenario: 'new' | 'edit' | 'saved', config: Record<string, any>, instanceId = '') => {
+  aliyunTestScenario.value = scenario
+  aliyunTestInstanceId.value = instanceId
+  aliyunTestConfig.value = { ...config }
+  isAliyunTestOpen.value = true
+}
+
+const updateAliyunSelection = (key: string, checked: boolean) => {
+  formData.value = toggleAliyunParam(formData.value, key, checked)
+  addAliyunConfigError.value = ''
+}
+
+const updateAliyunOverride = (key: string, value: string, target: 'new' | 'edit' = 'new') => {
+  if (target === 'edit') editingConfig.value = setAliyunParamOverride(editingConfig.value, key, value)
+  else formData.value = setAliyunParamOverride(formData.value, key, value)
+  if (target === 'edit') editConfigError.value = ''
+  else addAliyunConfigError.value = ''
+}
+
+const editSelectedParams = computed(() => new Set(editingConfig.value.selected_params || []))
+const editPlaceholderDiff = computed(() => getAliyunPlaceholderDiff(editingConfig.value, templatePlaceholders.value))
+
+const editParamSelected = (key: string) => editSelectedParams.value.has(key)
+const updateEditAliyunSelection = (key: string, checked: boolean) => {
+  editingConfig.value = toggleAliyunParam(editingConfig.value, key, checked)
+  editConfigError.value = ''
+}
+
+const openEditInstance = (instance: any) => {
+  if (props.type !== 'template' || instance.way_type !== 'AliyunSMS') return
+  let config: Record<string, any> = {}
+  try { config = JSON.parse(instance.config || '{}') } catch { config = {} }
+  editingInstance.value = instance
+  editingConfig.value = normalizeAliyunConfig(config)
+  editConfigError.value = ''
+  aliyunEditOpen.value = true
+}
+
+const saveAliyunEdit = async () => {
+  const validation = validateAliyunConfig(editingConfig.value, templatePlaceholders.value, templatePlaceholdersValid.value)
+  if (validation) {
+    editConfigError.value = validation
+    return
+  }
+  isSavingEdit.value = true
+  try {
+    const response = await request.post('/templates/ins/aliyun/edit', {
+      id: editingInstance.value.id,
+      config: toAliyunEditableConfig(editingConfig.value),
+    })
+    if (response.status === 200 && response.data.code === 200) {
+      toast.success(response.data.msg || '实例配置已更新')
+      aliyunEditOpen.value = false
+      await queryInsListData()
+    } else {
+      editConfigError.value = response.data.msg || '保存实例配置失败'
+    }
+  } catch (error: any) {
+    editConfigError.value = error.response?.data?.msg || '保存实例配置失败，请检查权限和配置'
+  } finally {
+    isSavingEdit.value = false
+  }
+}
+
+const openSavedAliyunTest = (instance: any) => {
+  let config: Record<string, any> = {}
+  try { config = JSON.parse(instance.config || '{}') } catch { config = {} }
+  openAliyunTest('saved', config, instance.id)
+}
+
 const channelSearch = createChannelSearchController({
   delay: 250,
   search: async (query) => {
@@ -131,11 +231,12 @@ const handleSelectedWayChange = (value: unknown) => {
   channelSearch.clear()
 
   if (channelChanged) {
-    formData.value = { allowMultiRecip: false }
     const channelConfig = currentChannelConfig.value
-    if (channelConfig && channelConfig.taskInsRadios?.length > 0) {
-      formData.value.templ_type = channelConfig.taskInsRadios[0].subLabel
-    }
+    const messageFormat = channelConfig?.taskInsRadios?.[0]?.subLabel || 'text'
+    formData.value = props.type === 'template'
+      ? buildInstanceFormForChannel(option.type, templatePlaceholders.value, messageFormat)
+      : { allowMultiRecip: false, templ_type: messageFormat }
+    addAliyunConfigError.value = ''
   }
 
   nextTick(() => { isHandlingChannelSelection = false })
@@ -222,6 +323,14 @@ const handleAddSubmit = async () => {
   if (!contentType) {
     toast.error('请选择消息格式')
     return
+  }
+
+  if (showAliyunParamConfig.value) {
+    const validation = validateAliyunConfig(formData.value, templatePlaceholders.value, templatePlaceholdersValid.value)
+    if (validation) {
+      addAliyunConfigError.value = validation
+      return
+    }
   }
 
   // 仅模板需要验证对应格式的内容是否为空
@@ -311,6 +420,8 @@ const formatInsConfigDisplay = (row: any) => {
   }
   return ""
 }
+
+const getInsAliyunSummary = (row: any) => row.way_type === 'AliyunSMS' ? getAliyunConfigSummary(row.config) : null
 
 // 查询实例列表数据
 const queryInsListData = async () => {
@@ -449,7 +560,10 @@ defineExpose({
             </ComboboxList>
           </Combobox>
         </div>
-        <Button size="sm" variant="outline" :disabled="!isSelectedWayValid(selectedChannel, selectedWayId)" @click="handleAddSubmit">添加实例</Button>
+        <div class="flex gap-2">
+          <Button v-if="showAliyunParamConfig" size="sm" variant="secondary" :disabled="!isSelectedWayValid(selectedChannel, selectedWayId)" @click="openAliyunTest('new', formData)">发送测试</Button>
+          <Button size="sm" variant="outline" :disabled="!isSelectedWayValid(selectedChannel, selectedWayId)" @click="handleAddSubmit">添加实例</Button>
+        </div>
       </div>
     </div>
 
@@ -513,6 +627,46 @@ defineExpose({
         </div>
       </div>
 
+      <section v-if="showAliyunParamConfig" class="space-y-3 rounded-lg border p-4">
+        <div>
+          <h3 class="text-sm font-semibold">阿里云短信模板参数</h3>
+          <p class="mt-1 text-xs text-muted-foreground">业务变量来自当前消息模板；默认同名映射。取消勾选后，该变量不会发送。</p>
+        </div>
+        <div v-if="templatePlaceholders.length === 0" class="text-sm text-amber-700">
+          当前模板没有可用的业务变量。请确认模板 Placeholders 已正确配置。
+        </div>
+        <div v-else class="space-y-3">
+          <div v-for="placeholder in templatePlaceholders" :key="placeholder.key" class="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] items-center gap-3 rounded-md bg-muted/40 p-3">
+            <Checkbox
+              :model-value="selectedAliyunParams.has(placeholder.key)"
+              :aria-label="`发送变量 ${placeholder.key}`"
+              @update:model-value="(checked: boolean | 'indeterminate') => updateAliyunSelection(placeholder.key, checked === true)"
+            />
+            <div class="min-w-0">
+              <div class="truncate text-sm font-medium">{{ placeholder.label }}</div>
+              <div class="text-xs text-muted-foreground">业务变量：{{ placeholder.key }}</div>
+            </div>
+            <div class="space-y-1">
+              <Label :for="`aliyun-map-${placeholder.key}`" class="text-xs">阿里云参数名</Label>
+              <Input
+                :id="`aliyun-map-${placeholder.key}`"
+                :model-value="formData.param_name_overrides?.[placeholder.key] || placeholder.key"
+                :disabled="!selectedAliyunParams.has(placeholder.key)"
+                :placeholder="placeholder.key"
+                @update:model-value="(value: string | number) => updateAliyunOverride(placeholder.key, String(value))"
+              />
+            </div>
+          </div>
+        </div>
+        <div v-if="selectedAliyunParams.size" class="rounded-md bg-muted p-3 text-xs">
+          <div class="font-medium">参数映射预览</div>
+          <div v-for="key in formData.selected_params" :key="key" class="mt-1">
+            {{ key }} → {{ formData.param_name_overrides?.[key] || key }}
+          </div>
+        </div>
+        <p v-if="addAliyunConfigError" role="alert" class="text-sm text-destructive">{{ addAliyunConfigError }}</p>
+      </section>
+
       <!-- 单选框 -->
       <div v-if="currentChannelConfig.taskInsRadios && currentChannelConfig.taskInsRadios.length > 0" class="space-y-2">
         <Label class="text-sm font-medium block mb-1">消息格式</Label>
@@ -547,8 +701,19 @@ defineExpose({
               <Badge variant="secondary">{{ ins.content_type }}</Badge>
             </TableCell>
             <TableCell>
-              <Badge v-if="formatInsConfigDisplay(ins)" variant="secondary">{{ formatInsConfigDisplay(ins) }}</Badge>
-              <span v-else class="text-sm text-muted-foreground">-</span>
+              <div v-if="props.type === 'template' && ins.way_type === 'AliyunSMS'" class="space-y-1 text-left">
+                <div><Badge variant="secondary">{{ getInsAliyunSummary(ins)?.templateCode || '未设置 TemplateCode' }}</Badge></div>
+                <div class="flex flex-wrap gap-1 text-xs">
+                  <Badge variant="outline">{{ getInsAliyunSummary(ins)?.mode === 'structured' ? 'structured' : 'legacy content' }}</Badge>
+                  <Badge v-if="getInsAliyunSummary(ins)?.selectedCount !== null" variant="outline">已选 {{ getInsAliyunSummary(ins)?.selectedCount }} 项</Badge>
+                  <Badge v-if="getInsAliyunSummary(ins)?.overrideCount !== null" variant="outline">覆盖映射 {{ getInsAliyunSummary(ins)?.overrideCount }} 项</Badge>
+                </div>
+                <div class="text-xs text-muted-foreground">{{ formatInsConfigDisplay(ins) || '-' }}</div>
+              </div>
+              <template v-else>
+                <Badge v-if="formatInsConfigDisplay(ins)" variant="secondary">{{ formatInsConfigDisplay(ins) }}</Badge>
+                <span v-else class="text-sm text-muted-foreground">-</span>
+              </template>
             </TableCell>
             <TableCell class="text-center">
               <div class="flex items-center justify-center gap-2">
@@ -556,6 +721,10 @@ defineExpose({
                   :model-value="ins.enable === 1" 
                   @update:model-value="() => handleToggleEnable(ins.id, ins.enable)" 
                 />
+                <template v-if="props.type === 'template' && ins.way_type === 'AliyunSMS'">
+                  <Button size="sm" variant="outline" @click="openEditInstance(ins)">编辑</Button>
+                  <Button size="sm" variant="secondary" @click="openSavedAliyunTest(ins)">发送测试</Button>
+                </template>
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -575,5 +744,86 @@ defineExpose({
         </TableBody>
       </Table>
     </div>
+
+    <Dialog :open="aliyunEditOpen" @update:open="(open) => aliyunEditOpen = open">
+      <DialogContent class="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>编辑阿里云短信实例</DialogTitle>
+          <DialogDescription>只更新实例 Config，实例 ID、模板和渠道关联保持不变。</DialogDescription>
+        </DialogHeader>
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <Label for="edit-aliyun-template-code">短信 TemplateCode</Label>
+            <Input id="edit-aliyun-template-code" v-model="editingConfig.template_code" placeholder="例如 SMS_123456789" />
+          </div>
+          <div class="space-y-2">
+            <Label for="edit-aliyun-phone">固定接收手机号</Label>
+            <Input id="edit-aliyun-phone" v-model="editingConfig.phone_number" placeholder="保留或填写实例接收手机号" />
+          </div>
+          <div v-if="editingConfig.template_param_mode !== 'structured'" class="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+            此历史实例使用兼容模式（legacy content）。本次编辑不会切换到 structured；如需多参数配置，请新建阿里云短信实例。
+          </div>
+          <template v-else>
+            <div v-if="editPlaceholderDiff.added.length" class="rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-900">
+              模板新增变量不会自动加入此实例。需要发送时请手动勾选。
+            </div>
+            <div v-if="editPlaceholderDiff.removed.length" class="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              以下已选变量已从模板删除或改名；请取消选择后再保存：{{ editPlaceholderDiff.removed.join('、') }}
+            </div>
+            <div class="space-y-3">
+              <div v-for="placeholder in templatePlaceholders" :key="placeholder.key" class="grid grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] items-center gap-3 rounded-md bg-muted/40 p-3">
+                <Checkbox
+                  :model-value="editParamSelected(placeholder.key)"
+                  :aria-label="`编辑发送变量 ${placeholder.key}`"
+                  @update:model-value="(checked: boolean | 'indeterminate') => updateEditAliyunSelection(placeholder.key, checked === true)"
+                />
+                <div class="min-w-0">
+                  <div class="truncate text-sm font-medium">{{ placeholder.label }}</div>
+                  <div class="text-xs text-muted-foreground">业务变量：{{ placeholder.key }}</div>
+                  <div v-if="!editParamSelected(placeholder.key)" class="text-xs text-blue-700">模板新增或当前未选择</div>
+                </div>
+                <div class="space-y-1">
+                  <Label :for="`edit-aliyun-map-${placeholder.key}`" class="text-xs">阿里云参数名</Label>
+                  <Input
+                    :id="`edit-aliyun-map-${placeholder.key}`"
+                    :model-value="editingConfig.param_name_overrides?.[placeholder.key] || placeholder.key"
+                    :disabled="!editParamSelected(placeholder.key)"
+                    @update:model-value="(value: string | number) => updateAliyunOverride(placeholder.key, String(value), 'edit')"
+                  />
+                </div>
+              </div>
+            </div>
+            <div v-if="editPlaceholderDiff.removed.length" class="space-y-2 rounded-md border p-3">
+              <div class="text-sm font-medium">移除失效变量</div>
+              <div v-for="key in editPlaceholderDiff.removed" :key="key" class="flex items-center gap-2 text-sm">
+                <Checkbox :model-value="true" :aria-label="`移除失效变量 ${key}`" @update:model-value="() => updateEditAliyunSelection(key, false)" />
+                <span>{{ key }}（取消勾选后保存将从此实例移除）</span>
+              </div>
+            </div>
+            <div v-if="editingConfig.selected_params?.length" class="rounded-md bg-muted p-3 text-xs">
+              <div class="font-medium">参数映射预览</div>
+              <div v-for="key in editingConfig.selected_params" :key="key" class="mt-1">{{ key }} → {{ editingConfig.param_name_overrides?.[key] || key }}</div>
+            </div>
+          </template>
+          <p v-if="editConfigError" role="alert" class="text-sm text-destructive">{{ editConfigError }}</p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" @click="openAliyunTest('edit', editingConfig, editingInstance?.id)">发送测试</Button>
+          <Button variant="outline" @click="aliyunEditOpen = false">取消</Button>
+          <Button :disabled="isSavingEdit" @click="saveAliyunEdit">{{ isSavingEdit ? '保存中...' : '保存配置' }}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <AliyunSMSTestDialog
+      :open="isAliyunTestOpen"
+      :scenario="aliyunTestScenario"
+      :instance-id="aliyunTestInstanceId"
+      :template-id="props.data?.id || ''"
+      :way-id="aliyunTestScenario === 'new' ? selectedWayId || '' : editingInstance?.way_id || ''"
+      :config="aliyunTestConfig"
+      :placeholders="templatePlaceholders"
+      @update:open="(open: boolean) => isAliyunTestOpen = open"
+    />
   </div>
 </template>
