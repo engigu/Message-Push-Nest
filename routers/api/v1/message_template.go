@@ -138,7 +138,7 @@ func AddMessageTemplate(c *gin.Context) {
 // EditMessageTemplate 编辑消息模板
 func EditMessageTemplate(c *gin.Context) {
 	appG := app.Gin{C: c}
-	
+
 	var req struct {
 		ID               string `json:"id" binding:"required"`
 		Name             string `json:"name" binding:"required"`
@@ -152,17 +152,17 @@ func EditMessageTemplate(c *gin.Context) {
 		IsAtAll          bool   `json:"is_at_all"`
 		Status           string `json:"status"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		appG.CResponse(http.StatusBadRequest, "参数错误："+err.Error(), nil)
 		return
 	}
-	
+
 	if req.TextTemplate == "" && req.HTMLTemplate == "" && req.MarkdownTemplate == "" {
 		appG.CResponse(http.StatusBadRequest, "至少需要填写一种格式的模板内容", nil)
 		return
 	}
-	
+
 	currentUserID := app.GetCurrentUserId(c)
 	templateService := message_template_service.TemplateService{
 		ID:         req.ID,
@@ -235,45 +235,45 @@ func DeleteMessageTemplate(c *gin.Context) {
 		appG.CResponse(http.StatusInternalServerError, "删除模板失败："+err.Error(), nil)
 		return
 	}
-	
+
 	appG.CResponse(http.StatusOK, "删除模板成功", nil)
 }
 
 // PreviewMessageTemplate 预览消息模板
 func PreviewMessageTemplate(c *gin.Context) {
 	appG := app.Gin{C: c}
-	
+
 	var req struct {
 		ID     string            `json:"id" binding:"required"`
 		Params map[string]string `json:"params"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		appG.CResponse(http.StatusBadRequest, "参数错误："+err.Error(), nil)
 		return
 	}
-	
+
 	templateService := message_template_service.TemplateService{
 		ID: req.ID,
 	}
-	
+
 	exists, err := templateService.ExistByID()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "查询模板失败！", nil)
 		return
 	}
-	
+
 	if !exists {
 		appG.CResponse(http.StatusNotFound, "模板不存在！", nil)
 		return
 	}
-	
+
 	preview, err := templateService.PreviewTemplate(req.Params)
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "预览模板失败："+err.Error(), nil)
 		return
 	}
-	
+
 	appG.CResponse(http.StatusOK, "预览模板成功", preview)
 }
 
@@ -287,15 +287,25 @@ func GetTemplateWithIns(c *gin.Context) {
 		return
 	}
 
-	// 获取模板信息
-	template, err := models.GetTemplateByID(id)
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+	ownerID := user.GetEffectiveUserID()
+	if user.IsAdmin() && !user.IsImpersonating() {
+		ownerID = ""
+	}
+
+	// 获取当前用户权限范围内的模板
+	template, err := models.GetTemplateByIDForOwner(id, ownerID)
 	if err != nil {
-		appG.CResponse(http.StatusBadRequest, "获取模板信息失败！", nil)
+		appG.CResponse(http.StatusNotFound, "模板不存在或无权访问", nil)
 		return
 	}
 
-	// 获取关联的实例列表
-	insList, err := models.GetTemplateInsList(id)
+	// 只返回当前用户权限范围内、且渠道也归属当前用户的实例
+	insList, err := models.GetTemplateInsListForOwner(id, ownerID)
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, "获取实例列表失败！", nil)
 		return
@@ -333,9 +343,28 @@ func AddTemplateIns(c *gin.Context) {
 		return
 	}
 
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+	ownerID := user.GetEffectiveUserID()
+	if user.IsAdmin() && !user.IsImpersonating() {
+		ownerID = ""
+	}
+	if _, err := models.GetTemplateByIDForOwner(req.TemplateID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "模板不存在或无权访问", nil)
+		return
+	}
+	way, err := models.GetWayByIDForOwner(req.WayID, ownerID)
+	if err != nil || way.Type != req.WayType {
+		appG.CResponse(http.StatusNotFound, "发送渠道不存在或无权访问", nil)
+		return
+	}
+
 	sendTaskInsService := send_ins_service.SendTaskInsService{}
-	err := sendTaskInsService.AddOne(models.SendTasksIns{
-		UUIDModel:   models.UUIDModel{ID: req.ID},
+	errStr = sendTaskInsService.AddOne(models.SendTasksIns{
+		UUIDModel:   models.UUIDModel{ID: req.ID, CreatedBy: user.GetEffectiveUserID(), ModifiedBy: user.GetAuditUserID()},
 		TemplateID:  req.TemplateID,
 		WayID:       req.WayID,
 		WayType:     req.WayType,
@@ -343,8 +372,8 @@ func AddTemplateIns(c *gin.Context) {
 		Config:      req.Config,
 		Extra:       req.Extra,
 	})
-	if err != "" {
-		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("添加实例失败！错误原因：%s", err), nil)
+	if errStr != "" {
+		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("添加实例失败！错误原因：%s", errStr), nil)
 		return
 	}
 

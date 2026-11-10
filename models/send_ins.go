@@ -224,6 +224,27 @@ func GetTemplateInsList(templateID string) ([]SendTasksInsRes, error) {
 	return insList, nil
 }
 
+// GetTemplateInsListForOwner limits template instance listings to the
+// effective owner scope used by the authenticated API caller.
+func GetTemplateInsListForOwner(templateID, ownerID string) ([]SendTasksInsRes, error) {
+	insTable := GetSchema(SendTasksIns{})
+	waysTable := GetSchema(SendWays{})
+	var insList []SendTasksInsRes
+	query := db.Table(insTable).
+		Select(fmt.Sprintf("%s.*, %s.name as way_name", insTable, waysTable)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
+		Where(fmt.Sprintf("%s.template_id = ?", insTable), templateID)
+	if ownerID != "" {
+		query = query.Where(fmt.Sprintf("(%s.created_by = ? OR %s.created_by = '')", insTable, insTable), ownerID).
+			Where(fmt.Sprintf("%s.created_by = ?", waysTable), ownerID)
+	}
+	err := query.Order(fmt.Sprintf("%s.created_on DESC", insTable)).Scan(&insList).Error
+	if err != nil {
+		return nil, err
+	}
+	return insList, nil
+}
+
 // GetRawTemplateInsList 获取模板关联的原始实例列表
 func GetRawTemplateInsList(templateID string) ([]SendTasksIns, error) {
 	var insList []SendTasksIns
@@ -240,7 +261,7 @@ func GetTemplateInstanceByIDForOwner(id, ownerID string) (SendTasksIns, error) {
 	var ins SendTasksIns
 	query := db.Where("id = ? AND template_id <> ? AND task_id = ?", id, "", "")
 	if ownerID != "" {
-		query = query.Where("created_by = ?", ownerID)
+		query = query.Where("(created_by = ? OR created_by = '')", ownerID)
 	}
 	err := query.First(&ins).Error
 	return ins, err
@@ -251,7 +272,7 @@ func GetTemplateInstanceByIDForOwner(id, ownerID string) (SendTasksIns, error) {
 func UpdateTemplateInstanceConfig(id, ownerID, actorID, config string) error {
 	query := db.Model(&SendTasksIns{}).Where("id = ? AND template_id <> ? AND task_id = ?", id, "", "")
 	if ownerID != "" {
-		query = query.Where("created_by = ?", ownerID)
+		query = query.Where("(created_by = ? OR created_by = '')", ownerID)
 	}
 	result := query.Updates(map[string]interface{}{
 		"config":      config,
@@ -264,7 +285,7 @@ func UpdateTemplateInstanceConfig(id, ownerID, actorID, config string) error {
 		var count int64
 		check := db.Model(&SendTasksIns{}).Where("id = ? AND template_id <> ? AND task_id = ?", id, "", "")
 		if ownerID != "" {
-			check = check.Where("created_by = ?", ownerID)
+			check = check.Where("(created_by = ? OR created_by = '')", ownerID)
 		}
 		if err := check.Count(&count).Error; err != nil {
 			return err
