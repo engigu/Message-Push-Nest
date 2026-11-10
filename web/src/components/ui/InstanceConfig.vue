@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from "@/components/ui/badge"
 import EmptyTableState from '@/components/ui/EmptyTableState.vue'
@@ -21,6 +21,7 @@ import { CONSTANT } from '@/constant'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 import { generateBizUniqueID } from '@/util/uuid'
+import { createChannelSearchController, getSelectedWayPayload, isSelectedWayValid } from '@/lib/channelSearchController.mjs'
 
 // 组件props
 interface Props {
@@ -65,7 +66,11 @@ const waysConfigMap = CONSTANT.WAYS_DATA
 // 搜索相关状态
 const searchQuery = ref('')
 const isSearching = ref(false)
-const channelName = ref('')
+const selectedWayId = ref<string | null>(null)
+const selectedChannel = ref<{ id: string, name: string, type: string } | null>(null)
+const channelName = computed(() => selectedChannel.value?.name || '')
+const isComposing = ref(false)
+let isHandlingChannelSelection = false
 
 // 当前显示的选项（搜索结果或所有选项）
 const displayOptions = ref<Array<{ id: string, name: string, type: string }>>([])
@@ -80,13 +85,86 @@ const inputDisplayValue = computed({
 
 // 当前选中渠道的配置
 const currentChannelConfig = computed(() => {
-  // 先根据label找到type
-  let type = displayOptions.value.find(item => item.name === channelName.value)?.type
-  // 再根据type找到配置
-  let rs = waysConfigMap.find(item => item.type === type) || null
-  
-  return rs
+  return waysConfigMap.find(item => item.type === selectedChannel.value?.type) || null
 })
+
+const channelSearch = createChannelSearchController({
+  delay: 250,
+  search: async (query) => {
+    const response = await request.get('/sendways/list', { params: { name: query } })
+    if (response.status !== 200 || response.data.code !== 200) return []
+    return response.data.data.lists.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      type: item.type
+    }))
+  },
+  onOptions: (options) => { displayOptions.value = options },
+  onLoading: (loading) => { isSearching.value = loading }
+})
+
+const getChannelDisplayValue = (wayId: string | null) => {
+  if (!wayId) return ''
+  return selectedChannel.value?.id === wayId
+    ? selectedChannel.value.name
+    : displayOptions.value.find(option => option.id === wayId)?.name || ''
+}
+
+const handleSelectedWayChange = (value: unknown) => {
+  const wayId = typeof value === 'string' ? value : null
+  selectedWayId.value = wayId
+  if (!wayId) {
+    selectedChannel.value = null
+    return
+  }
+
+  const option = displayOptions.value.find(item => item.id === wayId)
+  if (!option) {
+    selectedChannel.value = null
+    return
+  }
+
+  const channelChanged = selectedChannel.value?.id !== option.id
+  isHandlingChannelSelection = true
+  selectedChannel.value = option
+  searchQuery.value = option.name
+  channelSearch.clear()
+
+  if (channelChanged) {
+    formData.value = { allowMultiRecip: false }
+    const channelConfig = currentChannelConfig.value
+    if (channelConfig && channelConfig.taskInsRadios?.length > 0) {
+      formData.value.templ_type = channelConfig.taskInsRadios[0].subLabel
+    }
+  }
+
+  nextTick(() => { isHandlingChannelSelection = false })
+}
+
+const handleCompositionStart = () => {
+  isComposing.value = true
+  selectedChannel.value = null
+  selectedWayId.value = null
+  channelSearch.startComposition()
+}
+
+const handleCompositionEnd = () => {
+  nextTick(() => {
+    isComposing.value = false
+    channelSearch.endComposition(searchQuery.value)
+  })
+}
+
+const handleSearchQueryChange = (query: string) => {
+  if (isHandlingChannelSelection) return
+
+  if (selectedChannel.value && selectedChannel.value.name !== query) {
+    selectedChannel.value = null
+    selectedWayId.value = null
+  }
+
+  channelSearch.search(query)
+}
 
 // 表单数据
 const formData = ref<Record<string, any>>({
@@ -99,20 +177,10 @@ const shouldShowRecipientInput = computed(() => {
   return currentChannelConfig.value?.dynamicRecipient?.support && !formData.value.allowMultiRecip
 })
 
-// 监听渠道变化
-const handlechannelNameChange = () => {
-  // 数据加载后，text/html单选设置默认选中（这里选第一个）
-  if (currentChannelConfig.value?.taskInsRadios.length > 0) {
-    formData.value.templ_type = currentChannelConfig.value?.taskInsRadios[0].subLabel
-  }
-  // 重置动态接收者设置
-  formData.value.allowMultiRecip = false
-}
-
 // 添加单条实例配置
 const handleAddSubmit = async () => {
-  // 验证是否选择了渠道
-  if (!channelName.value) {
+  const selectedWay = getSelectedWayPayload(selectedChannel.value)
+  if (!selectedWay || !isSelectedWayValid(selectedChannel.value, selectedWayId.value)) {
     toast.error('请选择发送渠道')
     return
   }
@@ -180,9 +248,7 @@ const handleAddSubmit = async () => {
     "id": generateBizUniqueID('IN'),
     "enable": 1,
     [apiConfig.value.idField]: props.data.id,
-    "way_id": displayOptions.value[0]?.id,
-    "way_type": displayOptions.value[0]?.type,
-    "way_name": displayOptions.value[0]?.name,
+    ...selectedWay,
     "content_type": formData.value.templ_type,
     "config": JSON.stringify(formData.value),
   }
@@ -194,7 +260,10 @@ const handleAddSubmit = async () => {
       // 重新加载实例列表
       await queryInsListData()
       // 清空表单
-      channelName.value = ''
+      selectedChannel.value = null
+      selectedWayId.value = null
+      searchQuery.value = ''
+      channelSearch.clear()
       formData.value = { allowMultiRecip: false }
     } else {
       toast.error(response.data.msg || '添加实例失败')
@@ -314,44 +383,6 @@ const handleToggleEnable = async (insId: string, currentStatus: number | string)
   }
 }
 
-// 防抖定时器
-let searchTimer: number | null = null
-
-// 搜索渠道（带防抖）
-const handleSearch = (query: string) => {
-  // 清除之前的定时器
-  if (searchTimer) {
-    clearTimeout(searchTimer)
-  }
-  
-  if (!query.trim()) {
-    displayOptions.value = []
-    return
-  }
-
-  // 设置防抖延迟（500ms）
-  searchTimer = window.setTimeout(async () => {
-    isSearching.value = true
-    try {
-      const response = await request.get('/sendways/list', {
-        params: { name: query }
-      })
-      if (response.status === 200 && response.data.code === 200) {
-        displayOptions.value = response.data.data.lists.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          type: item.type
-        }))
-      }
-    } catch (error) {
-      console.error('搜索渠道失败', error)
-      displayOptions.value = []
-    } finally {
-      isSearching.value = false
-    }
-  }, 500)
-}
-
 // 监听数据变化，自动加载实例列表
 watch(() => props.data?.id, (newVal) => {
   if (newVal) {
@@ -359,10 +390,13 @@ watch(() => props.data?.id, (newVal) => {
   }
 }, { immediate: true })
 
-// 监听搜索词变化，触发防抖搜索
+// 监听搜索词变化，组合输入期间不查询拼音中间态
 watch(searchQuery, (newVal) => {
-  handleSearch(newVal)
+  if (isComposing.value) return
+  handleSearchQueryChange(newVal)
 })
+
+onBeforeUnmount(() => channelSearch.clear())
 
 // 暴露方法供父组件调用
 defineExpose({
@@ -388,20 +422,23 @@ defineExpose({
       <div class="flex items-end gap-2">
         <div class="flex-1 space-y-2">
           <Label class="text-sm font-medium">选择发送渠道</Label>
-          <Combobox v-model="channelName" @update:model-value="handlechannelNameChange">
+          <Combobox v-model="selectedWayId" :ignore-filter="true" @update:model-value="handleSelectedWayChange">
             <ComboboxAnchor class="w-full">
               <ComboboxInput 
                 v-model="inputDisplayValue" 
+                :display-value="getChannelDisplayValue"
+                @compositionstart="handleCompositionStart"
+                @compositionend="handleCompositionEnd"
                 class="flex h-10 w-full" 
                 placeholder="搜索或选择渠道类型进行实例的添加..." 
               />
             </ComboboxAnchor>
             <ComboboxList class="w-[var(--reka-combobox-trigger-width)]">
               <ComboboxViewport>
-                <ComboboxItem v-for="option in displayOptions" :key="option.id" :value="option.name">
+                <ComboboxItem v-for="option in displayOptions" :key="option.id" :value="option.id" :text-value="option.name">
                   <div class="flex items-center justify-between w-full">
                     <span>{{ option.name }}</span>
-                    <CheckIcon v-if="channelName === option.name" class="h-4 w-4" />
+                    <CheckIcon v-if="selectedChannel?.id === option.id" class="h-4 w-4" />
                   </div>
                 </ComboboxItem>
                 <div v-if="isSearching" class="p-2 text-sm text-muted-foreground">搜索中...</div>
@@ -412,7 +449,7 @@ defineExpose({
             </ComboboxList>
           </Combobox>
         </div>
-        <Button size="sm" variant="outline" @click="handleAddSubmit">添加实例</Button>
+        <Button size="sm" variant="outline" :disabled="!isSelectedWayValid(selectedChannel, selectedWayId)" @click="handleAddSubmit">添加实例</Button>
       </div>
     </div>
 
