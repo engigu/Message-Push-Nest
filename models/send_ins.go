@@ -188,20 +188,56 @@ func AddTaskInsOne(ins SendTasksIns) error {
 	return nil
 }
 
+// DeleteMsgTaskInsForOwner 在指定所有者权限范围内删除实例
+func DeleteMsgTaskInsForOwner(id, ownerID string) error {
+	query := db.Where("id = ?", id)
+	if ownerID != "" {
+		query = query.Where("(created_by = ? OR created_by = '')", ownerID)
+	}
+	res := query.Delete(&SendTasksIns{})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return ErrNoPermissionOrNotFound
+	}
+	return nil
+}
+
 // DeleteMsgTaskIns 删除一条实例
 func DeleteMsgTaskIns(id string) error {
-	if err := db.Where("id = ?", id).Delete(&SendTasksIns{}).Error; err != nil {
-		return err
+	return DeleteMsgTaskInsForOwner(id, "")
+}
+
+// UpdateMsgTaskInsForOwner 在指定所有者权限范围内更新实例
+func UpdateMsgTaskInsForOwner(id, ownerID string, data map[string]interface{}) error {
+	query := db.Model(&SendTasksIns{}).Where("id = ?", id)
+	if ownerID != "" {
+		query = query.Where("(created_by = ? OR created_by = '')", ownerID)
+	}
+	res := query.Updates(data)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		var count int64
+		check := db.Model(&SendTasksIns{}).Where("id = ?", id)
+		if ownerID != "" {
+			check = check.Where("(created_by = ? OR created_by = '')", ownerID)
+		}
+		if err := check.Count(&count).Error; err != nil {
+			return err
+		}
+		if count == 0 {
+			return ErrNoPermissionOrNotFound
+		}
 	}
 	return nil
 }
 
 // UpdateMsgTaskIns 更新实例
 func UpdateMsgTaskIns(id string, data map[string]interface{}) error {
-	if err := db.Model(&SendTasksIns{}).Where("id = ?", id).Updates(data).Error; err != nil {
-		return err
-	}
-	return nil
+	return UpdateMsgTaskInsForOwner(id, "", data)
 }
 
 // GetTemplateInsList 获取模板关联的实例列表（包含渠道名称）

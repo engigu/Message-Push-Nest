@@ -45,8 +45,8 @@ func InitTestDB(name ...string) *gorm.DB {
 		&LoginLog{},
 		&Settings{},
 		&UserSSOIdentity{},
-		&AliyunSMSTestScopeLock{},
-		&AliyunSMSTestEvent{},
+		&RateLimitScopeLock{},
+		&RateLimitEvent{},
 	)
 	return db
 }

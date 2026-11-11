@@ -247,6 +247,39 @@ func TestTemplateInstanceAPIsEnforceOwnerScopeAndPersistCreator(t *testing.T) {
 		t.Fatalf("new instance audit ownership not persisted: created_by=%q modified_by=%q", created.CreatedBy, created.ModifiedBy)
 	}
 
+	otherInstance := models.SendTasksIns{
+		UUIDModel:   models.UUIDModel{ID: "INOTHER00001", CreatedBy: f.otherID, ModifiedBy: f.otherID},
+		TemplateID:  "TP_TEST_B",
+		WayID:       "WYPHASE4B001",
+		WayType:     f.instance.WayType,
+		ContentType: "text",
+		Config:      `{"phone_number":"15500000001","template_code":"SMS_OTHER"}`,
+	}
+	if err := models.GetDB().Create(&otherInstance).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	f.router.POST("/sendtasks/ins/delete", middleware.JWT(), DeleteMsgTaskIns)
+
+	_, foreignDelete := f.request("/sendtasks/ins/delete", f.token, `{"id":"INOTHER00001"}`)
+	if foreignDelete.Code == http.StatusOK {
+		t.Fatal("user must not delete another owner's instance")
+	}
+
+	var foreignStillExists models.SendTasksIns
+	if err := models.GetDB().Where("id = ?", "INOTHER00001").First(&foreignStillExists).Error; err != nil {
+		t.Fatal("foreign instance should still exist after unauthorized delete attempt")
+	}
+
+	_, ownDelete := f.request("/sendtasks/ins/delete", f.token, `{"id":"INOWNER00001"}`)
+	if ownDelete.Code != http.StatusOK {
+		t.Fatalf("owner should delete their own instance: %+v", ownDelete)
+	}
+
+	var deleted models.SendTasksIns
+	if err := models.GetDB().Where("id = ?", "INOWNER00001").First(&deleted).Error; err == nil {
+		t.Fatal("owned instance should be deleted from database")
+	}
 }
 
 func requestTemplateGet(f *aliyunAPITestFixture, path string) (*httptest.ResponseRecorder, modelsResponse) {

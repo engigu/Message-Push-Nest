@@ -77,7 +77,7 @@ func TestAliyunSMSFullRouterSharedLimiterWithMySQLCompatibleMock(t *testing.T) {
 	if err := database.AutoMigrate(&models.Template{}, &models.SendWays{}, &models.SendTasksIns{}, &models.SendTasksLogs{}, &models.SendStats{}); err != nil {
 		t.Fatalf("migrate isolated route fixture tables: %v", err)
 	}
-	if err := models.MigrateAliyunSMSTestRateLimitTables(database); err != nil {
+	if err := database.AutoMigrate(&models.RateLimitScopeLock{}, &models.RateLimitEvent{}); err != nil {
 		t.Fatalf("migrate limiter tables: %v", err)
 	}
 
@@ -238,7 +238,7 @@ func TestAliyunSMSFullRouterSharedLimiterWithMySQLCompatibleMock(t *testing.T) {
 	}
 
 	var events, logs, stats int64
-	if err := database.Model(&models.AliyunSMSTestEvent{}).Count(&events).Error; err != nil {
+	if err := database.Model(&models.RateLimitEvent{}).Where("scope_type = ?", "user").Count(&events).Error; err != nil {
 		t.Fatal(err)
 	}
 	if err := database.Model(&models.SendTasksLogs{}).Count(&logs).Error; err != nil {
@@ -257,7 +257,7 @@ func TestAliyunSMSFullRouterSharedLimiterWithMySQLCompatibleMock(t *testing.T) {
 	if storedConfig.Config != updated.Config {
 		t.Fatal("saved-instance test request modified the persisted Config")
 	}
-	var storedEvents []models.AliyunSMSTestEvent
+	var storedEvents []models.RateLimitEvent
 	if err := database.Find(&storedEvents).Error; err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +271,7 @@ func TestAliyunSMSFullRouterSharedLimiterWithMySQLCompatibleMock(t *testing.T) {
 		t.Fatalf("API audit log leaked sensitive test data: %s", audit.String())
 	}
 
-	if err := database.Migrator().DropTable(&models.AliyunSMSTestEvent{}); err != nil {
+	if err := database.Migrator().DropTable(&models.RateLimitEvent{}); err != nil {
 		t.Fatal(err)
 	}
 	unavailable, unavailableEnvelope := request(pathTest, ownerToken, testBody("15555550888"))

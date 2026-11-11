@@ -85,7 +85,7 @@ func TestAliyunSMSRateLimitSlidingWindowDuplicateAndCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("SQLite runtime version: %s", sqliteVersion)
-	if err := MigrateAliyunSMSTestRateLimitTables(database); err != nil {
+	if err := database.AutoMigrate(&RateLimitScopeLock{}, &RateLimitEvent{}); err != nil {
 		t.Fatal(err)
 	}
 	if err := database.Migrator().CreateTable(&struct {
@@ -93,7 +93,7 @@ func TestAliyunSMSRateLimitSlidingWindowDuplicateAndCleanup(t *testing.T) {
 	}{}); err != nil {
 		t.Fatal(err)
 	}
-	if err := MigrateAliyunSMSTestRateLimitTables(database); err != nil {
+	if err := database.AutoMigrate(&RateLimitScopeLock{}, &RateLimitEvent{}); err != nil {
 		t.Fatalf("dedicated migration must be repeatable: %v", err)
 	}
 	if !database.Migrator().HasTable(&struct {
@@ -112,11 +112,11 @@ func TestAliyunSMSRateLimitSlidingWindowDuplicateAndCleanup(t *testing.T) {
 	if err != nil || decision.Allowed || decision.Reason != "duplicate" || decision.RetryAfterSeconds <= 0 {
 		t.Fatalf("duplicate should be rejected: %+v err=%v", decision, err)
 	}
-	var event AliyunSMSTestEvent
+	var event RateLimitEvent
 	if err := database.Where("request_hash = ?", requestHash).First(&event).Error; err != nil {
 		t.Fatal(err)
 	}
-	if err := database.Model(&AliyunSMSTestEvent{}).Where("id = ?", event.ID).UpdateColumn("created_at_ms", event.CreatedAtMS-AliyunSMSTestRepeat.Milliseconds()-1).Error; err != nil {
+	if err := database.Model(&RateLimitEvent{}).Where("request_hash = ?", requestHash).UpdateColumn("created_at_ms", event.CreatedAtMS-AliyunSMSTestRepeat.Milliseconds()-1).Error; err != nil {
 		t.Fatal(err)
 	}
 	decision, err = ReserveAliyunSMSTestRate(context.Background(), userHash, wayHash, requestHash)
@@ -130,22 +130,23 @@ func TestAliyunSMSRateLimitSlidingWindowDuplicateAndCleanup(t *testing.T) {
 	}
 	oldUser, oldWay := testRateHash('d'), testRateHash('e')
 	for i := 0; i < AliyunSMSTestUserLimit; i++ {
-		if err := database.Create(&AliyunSMSTestEvent{
-			UserHash: oldUser, WayHash: oldWay, RequestHash: fmt.Sprintf("%064x", i+100),
+		if err := database.Create(&RateLimitEvent{
+			BizType: "aliyun_sms_test", ScopeType: "user", ScopeHash: oldUser,
+			RequestHash: fmt.Sprintf("%064x", i+100),
 			CreatedAtMS: limitNow,
 		}).Error; err != nil {
 			t.Fatal(err)
 		}
 	}
 	var seededCount int64
-	if err := database.Model(&AliyunSMSTestEvent{}).Where("user_hash = ? AND created_at_ms > ?", oldUser, limitNow-AliyunSMSTestWindow.Milliseconds()).Count(&seededCount).Error; err != nil || seededCount != AliyunSMSTestUserLimit {
+	if err := database.Model(&RateLimitEvent{}).Where("biz_type = ? AND scope_type = ? AND scope_hash = ? AND created_at_ms > ?", "aliyun_sms_test", "user", oldUser, limitNow-AliyunSMSTestWindow.Milliseconds()).Count(&seededCount).Error; err != nil || seededCount != AliyunSMSTestUserLimit {
 		t.Fatalf("seeded user events=%d, want %d, now=%d err=%v", seededCount, AliyunSMSTestUserLimit, limitNow, err)
 	}
 	decision, err = ReserveAliyunSMSTestRate(context.Background(), oldUser, oldWay, testRateHash('f'))
 	if err != nil || decision.Allowed || decision.Reason != "rate_limited" {
 		t.Fatalf("user window must reject at the limit: %+v err=%v seeded=%d", decision, err, seededCount)
 	}
-	if err := database.Model(&AliyunSMSTestEvent{}).Where("user_hash = ?", oldUser).UpdateColumn("created_at_ms", limitNow-AliyunSMSTestWindow.Milliseconds()-1).Error; err != nil {
+	if err := database.Model(&RateLimitEvent{}).Where("scope_hash = ?", oldUser).UpdateColumn("created_at_ms", limitNow-AliyunSMSTestWindow.Milliseconds()-1).Error; err != nil {
 		t.Fatal(err)
 	}
 	decision, err = ReserveAliyunSMSTestRate(context.Background(), oldUser, oldWay, testRateHash('g'))
@@ -155,8 +156,8 @@ func TestAliyunSMSRateLimitSlidingWindowDuplicateAndCleanup(t *testing.T) {
 
 	wayHashLimit := testRateHash('h')
 	for i := 0; i < AliyunSMSTestWayLimit; i++ {
-		if err := database.Create(&AliyunSMSTestEvent{
-			UserHash: fmt.Sprintf("%064x", i+1000), WayHash: wayHashLimit,
+		if err := database.Create(&RateLimitEvent{
+			BizType: "aliyun_sms_test", ScopeType: "way", ScopeHash: wayHashLimit,
 			RequestHash: fmt.Sprintf("%064x", i+2000), CreatedAtMS: limitNow,
 		}).Error; err != nil {
 			t.Fatal(err)
@@ -167,20 +168,20 @@ func TestAliyunSMSRateLimitSlidingWindowDuplicateAndCleanup(t *testing.T) {
 		t.Fatalf("Way window must reject at the limit: %+v err=%v", decision, err)
 	}
 
-	stale := AliyunSMSTestEvent{UserHash: testRateHash('k'), WayHash: testRateHash('l'), RequestHash: testRateHash('m'), CreatedAtMS: limitNow - 3*time.Minute.Milliseconds()}
-	recent := AliyunSMSTestEvent{UserHash: testRateHash('n'), WayHash: testRateHash('o'), RequestHash: testRateHash('p'), CreatedAtMS: limitNow}
-	if err := database.Create(&[]AliyunSMSTestEvent{stale, recent}).Error; err != nil {
+	stale := RateLimitEvent{BizType: "aliyun_sms_test", ScopeType: "user", ScopeHash: testRateHash('k'), RequestHash: testRateHash('m'), CreatedAtMS: limitNow - 3*time.Minute.Milliseconds()}
+	recent := RateLimitEvent{BizType: "aliyun_sms_test", ScopeType: "user", ScopeHash: testRateHash('n'), RequestHash: testRateHash('p'), CreatedAtMS: limitNow}
+	if err := database.Create(&[]RateLimitEvent{stale, recent}).Error; err != nil {
 		t.Fatal(err)
 	}
-	deleted, err := CleanupAliyunSMSTestEvents(context.Background(), 2*time.Minute, 4)
+	deleted, err := CleanupRateLimitEvents(context.Background(), "", 2*time.Minute, 4)
 	if err != nil || deleted < 1 {
 		t.Fatalf("cleanup should delete stale event rows: deleted=%d err=%v", deleted, err)
 	}
 	var remaining int64
-	if err := database.Model(&AliyunSMSTestEvent{}).Where("request_hash IN ?", []string{stale.RequestHash, recent.RequestHash}).Count(&remaining).Error; err != nil || remaining != 1 {
+	if err := database.Model(&RateLimitEvent{}).Where("request_hash IN ?", []string{stale.RequestHash, recent.RequestHash}).Count(&remaining).Error; err != nil || remaining != 1 {
 		t.Fatalf("cleanup should preserve recent rows; remaining=%d err=%v", remaining, err)
 	}
-	if !database.Migrator().HasTable(&AliyunSMSTestScopeLock{}) {
+	if !database.Migrator().HasTable(&RateLimitScopeLock{}) {
 		t.Fatal("cleanup must not remove scope lock rows")
 	}
 }
@@ -190,7 +191,7 @@ func TestAliyunSMSRateLimitAcrossIndependentProcessesAndRestart(t *testing.T) {
 	database := openAliyunRateDB(dbPath)
 	defer closeAliyunRateDB(t, database)
 	SetDB(database)
-	if err := MigrateAliyunSMSTestRateLimitTables(database); err != nil {
+	if err := database.AutoMigrate(&RateLimitScopeLock{}, &RateLimitEvent{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -206,7 +207,7 @@ func TestAliyunSMSRateLimitAcrossIndependentProcessesAndRestart(t *testing.T) {
 		t.Fatalf("100 concurrent requests across two processes: allowed=%d, want %d", allowed, AliyunSMSTestUserLimit)
 	}
 	var eventCount int64
-	if err := database.Model(&AliyunSMSTestEvent{}).Where("user_hash = ?", userHash).Count(&eventCount).Error; err != nil || eventCount != AliyunSMSTestUserLimit {
+	if err := database.Model(&RateLimitEvent{}).Where("scope_type = ? AND scope_hash = ?", "user", userHash).Count(&eventCount).Error; err != nil || eventCount != AliyunSMSTestUserLimit {
 		t.Fatalf("persisted event count=%d, want %d, err=%v", eventCount, AliyunSMSTestUserLimit, err)
 	}
 
@@ -444,13 +445,13 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 	}
 	t.Logf("database=%s comment=%s session_isolation=%s port=%d", server.Version, server.Comment, server.Isolation, server.Port)
 
-	if err := MigrateAliyunSMSTestRateLimitTables(database); err != nil {
+	if err := database.AutoMigrate(&RateLimitScopeLock{}, &RateLimitEvent{}); err != nil {
 		t.Fatalf("first limiter migration: %v", err)
 	}
-	if err := MigrateAliyunSMSTestRateLimitTables(database); err != nil {
+	if err := database.AutoMigrate(&RateLimitScopeLock{}, &RateLimitEvent{}); err != nil {
 		t.Fatalf("repeat limiter migration: %v", err)
 	}
-	for _, model := range []any{&AliyunSMSTestScopeLock{}, &AliyunSMSTestEvent{}} {
+	for _, model := range []any{&RateLimitScopeLock{}, &RateLimitEvent{}} {
 		statement := &gorm.Statement{DB: database}
 		if err := statement.Parse(model); err != nil {
 			t.Fatal(err)
@@ -463,8 +464,8 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 			t.Fatalf("table %s engine=%q, want InnoDB", statement.Table, engine)
 		}
 	}
-	for _, index := range []string{"idx_alisms_evt_user_time", "idx_alisms_evt_way_time", "idx_alisms_evt_request_time", "idx_alisms_evt_created_id"} {
-		if !database.Migrator().HasIndex(&AliyunSMSTestEvent{}, index) {
+	for _, index := range []string{"idx_rl_evt_scope_time", "idx_rl_evt_req_time", "idx_rl_evt_created_id"} {
+		if !database.Migrator().HasIndex(&RateLimitEvent{}, index) {
 			t.Fatalf("expected event index %s", index)
 		}
 	}
@@ -480,7 +481,7 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 	// Hold one real InnoDB scope row lock in a separate connection and prove a
 	// reservation waits for it, then proceeds after the blocker commits.
 	lockedUser, lockedWay := testRateHash('0'), testRateHash('1')
-	if err := database.Create(&[]AliyunSMSTestScopeLock{
+	if err := database.Create(&[]RateLimitScopeLock{
 		{ScopeHash: lockedUser, ScopeType: "user"},
 		{ScopeHash: lockedWay, ScopeType: "way"},
 	}).Error; err != nil {
@@ -491,7 +492,7 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 	lockStatement := &gorm.Statement{DB: database}
-	if err := lockStatement.Parse(&AliyunSMSTestScopeLock{}); err != nil {
+	if err := lockStatement.Parse(&RateLimitScopeLock{}); err != nil {
 		_ = lockTx.Rollback()
 		t.Fatal(err)
 	}
@@ -500,7 +501,7 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 		t.Fatalf("acquire InnoDB scope row lock: %v", err)
 	}
 	type reserveResult struct {
-		decision AliyunSMSTestLimitDecision
+		decision RateLimitDecision
 		err      error
 	}
 	reserveDone := make(chan reserveResult, 1)
@@ -532,7 +533,7 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 	// Induce a native two-transaction deadlock on disposable scope rows and
 	// verify the database driver's error is recognized by the bounded retry path.
 	deadlockScopeA, deadlockScopeB := testRateHash('3'), testRateHash('4')
-	if err := database.Create(&[]AliyunSMSTestScopeLock{
+	if err := database.Create(&[]RateLimitScopeLock{
 		{ScopeHash: deadlockScopeA, ScopeType: "user"},
 		{ScopeHash: deadlockScopeB, ScopeType: "way"},
 	}).Error; err != nil {
@@ -565,7 +566,7 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 	}()
 	time.Sleep(200 * time.Millisecond)
 	_, deadlockErr := deadlockTx2.Exec(deadlockUpdate, deadlockScopeA)
-	if deadlockErr == nil || !isRetryableAliyunRateLimitError(deadlockErr) {
+	if deadlockErr == nil || !IsRetryableRateLimitError(deadlockErr) {
 		_ = deadlockTx1.Rollback()
 		_ = deadlockTx2.Rollback()
 		t.Fatalf("database deadlock error must be recognized as retryable, err=%v", deadlockErr)
@@ -593,23 +594,22 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 	// an event committed after its first read. @@transaction_isolation reports
 	// the session default, not the one-shot isolation selected by BeginTx.
 	userHashForIsolation := testRateHash('0')
-	wayHashForIsolation := testRateHash('1')
 	requestHashForIsolation := testRateHash('2')
 	directTx, err := sqlDB.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
 		t.Fatalf("direct READ COMMITTED transaction: %v", err)
 	}
 	var beforeEvents int64
-	if err := directTx.QueryRow("SELECT COUNT(*) FROM `" + prefix + "aliyun_sms_test_event`").Scan(&beforeEvents); err != nil {
+	if err := directTx.QueryRow("SELECT COUNT(*) FROM `" + prefix + "rate_limit_event`").Scan(&beforeEvents); err != nil {
 		t.Fatal(err)
 	}
-	isolationEvent := AliyunSMSTestEvent{UserHash: userHashForIsolation, WayHash: wayHashForIsolation, RequestHash: requestHashForIsolation, CreatedAtMS: dbNow}
+	isolationEvent := RateLimitEvent{BizType: "aliyun_sms_test", ScopeType: "user", ScopeHash: userHashForIsolation, RequestHash: requestHashForIsolation, CreatedAtMS: dbNow}
 	if err := database.Create(&isolationEvent).Error; err != nil {
 		_ = directTx.Rollback()
 		t.Fatal(err)
 	}
 	var afterEvents int64
-	if err := directTx.QueryRow("SELECT COUNT(*) FROM `" + prefix + "aliyun_sms_test_event`").Scan(&afterEvents); err != nil {
+	if err := directTx.QueryRow("SELECT COUNT(*) FROM `" + prefix + "rate_limit_event`").Scan(&afterEvents); err != nil {
 		_ = directTx.Rollback()
 		t.Fatal(err)
 	}
@@ -658,7 +658,7 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 
 	// Cover sliding-window expiration without sleeping for a full minute.
 	expiredUser, expiredWay, expiredRequest := testRateHash('g'), testRateHash('h'), testRateHash('i')
-	if err := database.Create(&AliyunSMSTestEvent{UserHash: expiredUser, WayHash: expiredWay, RequestHash: expiredRequest, CreatedAtMS: dbNow - AliyunSMSTestWindow.Milliseconds() - 1}).Error; err != nil {
+	if err := database.Create(&RateLimitEvent{BizType: "aliyun_sms_test", ScopeType: "user", ScopeHash: expiredUser, RequestHash: expiredRequest, CreatedAtMS: dbNow - AliyunSMSTestWindow.Milliseconds() - 1}).Error; err != nil {
 		t.Fatal(err)
 	}
 	expired, err := ReserveAliyunSMSTestRate(context.Background(), expiredUser, expiredWay, testRateHash('j'))
@@ -729,7 +729,7 @@ func TestAliyunSMSRateLimitExternalDatabaseIntegration(t *testing.T) {
 		t.Fatalf("separate process must observe persisted duplicate key: %+v", results)
 	}
 
-	var stored []AliyunSMSTestEvent
+	var stored []RateLimitEvent
 	if err := database.Find(&stored).Error; err != nil {
 		t.Fatal(err)
 	}
@@ -750,12 +750,12 @@ func TestAliyunSMSRateLimitRecognizesBoundedRetryErrors(t *testing.T) {
 		aliyunRateLimitSQLStateTestError{state: "40001", message: "serialization failure"},
 		aliyunRateLimitSQLStateTestError{state: "40P01", message: "deadlock detected"},
 	} {
-		if !isRetryableAliyunRateLimitError(err) {
+		if !IsRetryableRateLimitError(err) {
 			t.Errorf("expected retryable classification for %q", err)
 		}
 	}
 	for _, message := range []string{"permission denied", "unknown column", "connection refused"} {
-		if isRetryableAliyunRateLimitError(fmt.Errorf("%s", message)) {
+		if IsRetryableRateLimitError(fmt.Errorf("%s", message)) {
 			t.Errorf("unexpected retryable classification for %q", message)
 		}
 	}

@@ -354,7 +354,7 @@ func TestAliyunTestSendRateLimitRepeatAndProviderFailures(t *testing.T) {
 
 	t.Run("missing rate-limit table fails closed", func(t *testing.T) {
 		f := newAliyunAPITestFixture(t)
-		if err := models.GetDB().Migrator().DropTable(&models.AliyunSMSTestEvent{}); err != nil {
+		if err := models.GetDB().Migrator().DropTable(&models.RateLimitEvent{}); err != nil {
 			t.Fatal(err)
 		}
 		body := `{"template_id":"TP_TEST_A","way_id":"WY_TEST_A","config":{"template_code":"SMS","template_param_mode":"structured","selected_params":[]},"test_phone":"15555550111"}`
@@ -394,7 +394,7 @@ func TestAliyunTestSendRateLimitRepeatAndProviderFailures(t *testing.T) {
 			t.Fatalf("user limiter allowed %d SDK calls, want %d", f.client.calls, models.AliyunSMSTestUserLimit)
 		}
 		var events int64
-		if err := models.GetDB().Model(&models.AliyunSMSTestEvent{}).Where("user_hash <> ''").Count(&events).Error; err != nil || events != models.AliyunSMSTestUserLimit {
+		if err := models.GetDB().Model(&models.RateLimitEvent{}).Where("scope_type = ?", "user").Count(&events).Error; err != nil || events != models.AliyunSMSTestUserLimit {
 			t.Fatalf("provider calls and granted reservations should both equal the limit: calls=%d events=%d err=%v", f.client.calls, events, err)
 		}
 	})
@@ -423,10 +423,10 @@ func TestAliyunTestSendRateLimitRepeatAndProviderFailures(t *testing.T) {
 			t.Fatalf("transport error leaked credentials: %s", w.Body.String())
 		}
 		var eventCount int64
-		if err := models.GetDB().Model(&models.AliyunSMSTestEvent{}).Count(&eventCount).Error; err != nil || eventCount != 1 {
+		if err := models.GetDB().Model(&models.RateLimitEvent{}).Where("scope_type = ?", "user").Count(&eventCount).Error; err != nil || eventCount != 1 {
 			t.Fatalf("provider transport failure should still consume one reservation: events=%d err=%v", eventCount, err)
 		}
-		var events []models.AliyunSMSTestEvent
+		var events []models.RateLimitEvent
 		if err := models.GetDB().Find(&events).Error; err != nil {
 			t.Fatal(err)
 		}

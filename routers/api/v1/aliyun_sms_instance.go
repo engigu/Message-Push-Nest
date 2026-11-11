@@ -41,7 +41,7 @@ type AliyunSMSChannelSender interface {
 }
 
 type AliyunSMSInstanceAPI struct {
-	limiter       func(context.Context, string, string, string) (models.AliyunSMSTestLimitDecision, error)
+	limiter       func(context.Context, string, string, string) (models.RateLimitDecision, error)
 	channelSender func() AliyunSMSChannelSender
 }
 

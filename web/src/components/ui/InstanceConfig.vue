@@ -231,7 +231,7 @@ const handleSelectedWayChange = (value: unknown) => {
   channelSearch.clear()
 
   if (channelChanged) {
-    const channelConfig = currentChannelConfig.value
+    const channelConfig = waysConfigMap.find(item => item.type === option.type) || null
     const messageFormat = channelConfig?.taskInsRadios?.[0]?.subLabel || 'text'
     formData.value = props.type === 'template'
       ? buildInstanceFormForChannel(option.type, templatePlaceholders.value, messageFormat)
@@ -368,12 +368,13 @@ const handleAddSubmit = async () => {
       toast.success(response.data.msg)
       // 重新加载实例列表
       await queryInsListData()
-      // 清空表单
+      // 清空表单状态
       selectedChannel.value = null
       selectedWayId.value = null
       searchQuery.value = ''
       channelSearch.clear()
       formData.value = { allowMultiRecip: false }
+      addAliyunConfigError.value = ''
     } else {
       toast.error(response.data.msg || '添加实例失败')
     }

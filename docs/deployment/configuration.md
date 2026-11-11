@@ -5,8 +5,8 @@
 ```ini
 [app]
 JwtSecret = message-nest
-; Required for the Aliyun SMS test API; use a stable random value of at least 32 bytes.
-; Keep identical on every replica. Alternatively set ALIYUN_SMS_TEST_FINGERPRINT_SECRET.
+; 阿里云短信测试限流指纹密钥；至少 32 字节高熵随机字符串，多副本部署必须一致
+; 亦可通过环境变量 ALIYUN_SMS_TEST_FINGERPRINT_SECRET 注入
 AliyunSMSTestFingerprintSecret =
 LogLevel = INFO
 
@@ -104,8 +104,8 @@ Ssl = true
 再同时更新密钥并重启所有副本，确认全部使用新密钥后再开放测试 API。不要在请求仍可进入时逐台滚动换钥，
 否则新旧指纹会被视为不同用户/请求并暂时分裂额度。
 
-数据库连接成功后、启动调度器和 HTTP 路由前，应用会独立、同步地创建/校验限流专用表；操作仅触及 `aliyun_sms_test_scope_lock` 和
-`aliyun_sms_test_event`（加上配置的 `TablePrefix`）；迁移错误会阻止服务启动。回滚应用时保留这两张表，
+服务启动引导期会同步执行数据库结构检查与迁移，限流模块包含通用排他锁表 `rate_limit_scope_lock` 与
+滑动窗口事件表 `rate_limit_event`（加上配置的 `TablePrefix`），由系统迁移签名机制统一管理。回滚应用时保留这两张表，
 应用不会自动删除它们。SQLite 多进程场景必须共享同一台机器上的同一个本地数据库文件。
 
 发送测试会同步调用阿里云短信接口，可能产生短信费用；接口返回受理成功只表示供应商已受理，不表示最终送达。
