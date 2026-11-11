@@ -75,6 +75,8 @@ services:
       - MYSQL_PASSWORD=Aa123456
       - MYSQL_DB=test_11
       - MYSQL_TABLE_PREFIX=message_
+      # 阿里云短信测试限流指纹密钥（启用短信测试时必填，至少 32 字节随机串，多副本必须一致）
+      - ALIYUN_SMS_TEST_FINGERPRINT_SECRET=${ALIYUN_SMS_TEST_FINGERPRINT_SECRET:-}
 ```
 
 ### 使用 SQLite

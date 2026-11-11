@@ -105,9 +105,9 @@ func Setup() *gorm.DB {
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
 			SlowThreshold:             500 * time.Millisecond, // 慢 SQL 阈值设为 500ms
-			LogLevel:                  logger.Warn,           // 日志级别
-			IgnoreRecordNotFoundError: true,                  // 忽略未找到记录错误
-			Colorful:                  true,                  // 彩色日志
+			LogLevel:                  logger.Warn,            // 日志级别
+			IgnoreRecordNotFoundError: true,                   // 忽略未找到记录错误
+			Colorful:                  true,                   // 彩色日志
 		},
 	)
 
@@ -144,7 +144,7 @@ func Setup() *gorm.DB {
 		}
 		db, err = gorm.Open(mysql.Open(connStr), config)
 	case "sqlite":
-		db, err = gorm.Open(sqlite.Open("conf/database.db"), config)
+		db, err = gorm.Open(sqlite.Open("conf/database.db?_pragma=busy_timeout(2000)"), config)
 	case "postgres":
 		connStr := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=Asia/Shanghai",
 			setting.DatabaseSetting.Host,

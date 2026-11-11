@@ -41,6 +41,7 @@ func New(webFS, releaseFS embed.FS) *App {
 
 	app.initConfig()
 	app.initDatabase()
+	app.initMigrate()
 	app.initScheduler()
 	app.initRouter()
 
@@ -60,17 +61,19 @@ func (a *App) initDatabase() {
 	models.Setup()
 }
 
+// initMigrate 同步执行数据库迁移与基础数据初始化，确保在开放服务前完成结构就绪
+func (a *App) initMigrate() {
+	migrate.Setup()
+}
+
 // initScheduler 初始化后台异步任务与定时调度器
 func (a *App) initScheduler() {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				logging.Scheduler.Errorf("初始化后台调度与存量迁移异常: %v", r)
+				logging.Scheduler.Errorf("初始化后台调度任务异常: %v", r)
 			}
 		}()
-
-		// 完成 model 的迁移与管理员账号初始化
-		migrate.Setup()
 
 		// 启动系统级清理定时任务 (日志与托管消息)
 		cron_service.StartTasksRunOnStartup()
@@ -90,6 +93,23 @@ func (a *App) initScheduler() {
 				middleware.CleanAllRateLimiters()
 				api.CleanExpiredLoginAttempts()
 				captcha.CleanExpiredCaptchas()
+			},
+		})
+
+		// 通用限流事件定时清理任务 (每10分钟清理一次过期事件记录，避免频繁空跑与锁争抢)
+		cron_service.AddTask(cron_service.ScheduledTask{
+			Schedule: "*/10 * * * *",
+			Job: func() {
+				defer func() {
+					if r := recover(); r != nil {
+						logging.Scheduler.Errorf("通用限流事件清理异常恢复: %v", r)
+					}
+				}()
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
+				if _, err := models.CleanupRateLimitEvents(ctx, "", 10*time.Minute, 4); err != nil {
+					logging.Scheduler.Warnf("通用限流事件清理失败: %v", err)
+				}
 			},
 		})
 	}()
@@ -152,4 +172,3 @@ func (a *App) Run() {
 
 	logging.Server.Info("服务已完全退出")
 }
-

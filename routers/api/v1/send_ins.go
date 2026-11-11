@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"message-nest/models"
@@ -28,11 +29,28 @@ func DeleteMsgTaskIns(c *gin.Context) {
 		return
 	}
 
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+	ownerID := user.GetEffectiveUserID()
+	globalAdmin := user.IsAdmin() && !user.IsImpersonating()
+	if globalAdmin {
+		ownerID = ""
+	}
+
 	InsService := send_ins_service.SendTaskInsService{
-		ID: req.ID,
+		ID:        req.ID,
+		CreatedBy: ownerID,
+		IsAdmin:   globalAdmin,
 	}
 	err := InsService.Delete()
 	if err != nil {
+		if errors.Is(err, models.ErrNoPermissionOrNotFound) {
+			appG.CResponse(http.StatusNotFound, "实例不存在或无权操作！", nil)
+			return
+		}
 		appG.CResponse(http.StatusBadRequest, "删除实例失败！", nil)
 		return
 	}
@@ -197,14 +215,31 @@ func UpdateMsgTaskInsEnable(c *gin.Context) {
 		return
 	}
 
+	user, ok := app.GetUserFromContext(c.Request.Context())
+	if !ok || user.UserID == "" {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+	ownerID := user.GetEffectiveUserID()
+	globalAdmin := user.IsAdmin() && !user.IsImpersonating()
+	if globalAdmin {
+		ownerID = ""
+	}
+
 	InsService := send_ins_service.SendTaskInsService{
-		ID: req.ID,
-		//Enable: req.Enable,
+		ID:        req.ID,
+		CreatedBy: ownerID,
+		IsAdmin:   globalAdmin,
 	}
 	err := InsService.Update(map[string]interface{}{
-		"enable": req.Enable,
+		"enable":      req.Enable,
+		"modified_by": user.GetAuditUserID(),
 	})
 	if err != nil {
+		if errors.Is(err, models.ErrNoPermissionOrNotFound) {
+			appG.CResponse(http.StatusNotFound, "实例不存在或无权操作！", nil)
+			return
+		}
 		appG.CResponse(http.StatusBadRequest, "更新实例失败！", nil)
 		return
 	}

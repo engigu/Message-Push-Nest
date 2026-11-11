@@ -57,10 +57,22 @@ func (st *SendTaskInsService) AddOne(ins models.SendTasksIns) string {
 }
 
 func (st *SendTaskInsService) Delete() error {
+	if !st.IsAdmin && st.CreatedBy != "" {
+		return models.DeleteMsgTaskInsForOwner(st.ID, st.CreatedBy)
+	}
+	if st.IsAdmin {
+		return models.DeleteMsgTaskInsForOwner(st.ID, "")
+	}
 	return models.DeleteMsgTaskIns(st.ID)
 }
 
 func (st *SendTaskInsService) Update(data map[string]interface{}) error {
+	if !st.IsAdmin && st.CreatedBy != "" {
+		return models.UpdateMsgTaskInsForOwner(st.ID, st.CreatedBy, data)
+	}
+	if st.IsAdmin {
+		return models.UpdateMsgTaskInsForOwner(st.ID, "", data)
+	}
 	return models.UpdateMsgTaskIns(st.ID, data)
 }
 

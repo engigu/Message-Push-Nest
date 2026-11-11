@@ -82,17 +82,41 @@ request.interceptors.response.use(
 // 异常处理
 const handleException = (error) => {
     if (!error.response) {
+        if (error.code === ERR_NETWORK) {
+            toast.error('网络连接异常，请检查网络设置');
+        }
+        return;
+    }
 
-        return
-    };
+    const { status, data } = error.response;
+    const msg = data?.msg;
 
-    if (error.code == ERR_NETWORK) {
-        toast(`网络错误！`)
-    } else {
-        let msg = `未知错误：${error.response.status}, ${error.response.data.msg}`;
-        toast(msg)
-    };
-
+    switch (status) {
+        case 400:
+            toast.error(msg || '请求参数错误');
+            break;
+        case 403:
+            toast.error(msg || '无权访问此资源');
+            break;
+        case 404:
+            toast.error(msg || '请求的资源不存在');
+            break;
+        case 429:
+            toast.warning(msg || '操作过于频繁，请稍后重试');
+            break;
+        case 500:
+            toast.error(msg || '服务器内部错误');
+            break;
+        case 502:
+            toast.error(msg || '网关错误');
+            break;
+        case 503:
+            toast.error(msg || '服务暂时不可用，请稍后重试');
+            break;
+        default:
+            toast.error(msg || `请求失败 (${status})`);
+            break;
+    }
 };
 
 // 登出系统

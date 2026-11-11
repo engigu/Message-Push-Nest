@@ -168,6 +168,9 @@ func (v *InsAliyunSMSValidator) Validate(configJson string) (string, interface{}
 	if err != nil {
 		return "阿里云短信配置反序列化失败！", empty
 	}
+	if err := Config.ValidateTemplateParamConfig(); err != nil {
+		return err.Error(), empty
+	}
 
 	// checkAllowMultiRecip 为真代表动态模式，phone_number 可以为空，但 template_code 仍需验证
 	if checkAllowMultiRecip(configJson) && Config.PhoneNumber == "" {

@@ -257,6 +257,8 @@ func Setup() {
 		&models.Template{},
 		&models.SendStats{},
 		&models.UserSSOIdentity{},
+		&models.RateLimitScopeLock{},
+		&models.RateLimitEvent{},
 	}
 
 	checkAndMigrateTables(db, tables)

@@ -12,10 +12,11 @@ import (
 )
 
 type App struct {
-	JwtSecret string
-	LogLevel  string
-	RunMode   string
-	DemoMode  bool
+	JwtSecret                      string
+	AliyunSMSTestFingerprintSecret string
+	LogLevel                       string
+	RunMode                        string
+	DemoMode                       bool
 }
 
 var AppSetting = &App{}
@@ -101,6 +102,11 @@ func Setup() {
 	} else {
 		logging.Config.Infof("配置文件 %s 不存在，从环境变量加载配置...", intPath)
 		loadConfigFromEnv()
+	}
+	// This key must be explicit and stable across processes/restarts. Never
+	// generate a fallback and never include it in environment option logging.
+	if secret := os.Getenv("ALIYUN_SMS_TEST_FINGERPRINT_SECRET"); secret != "" {
+		AppSetting.AliyunSMSTestFingerprintSecret = secret
 	}
 
 	// 保证数据库连接池有高可用默认值
