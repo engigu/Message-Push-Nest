@@ -16,13 +16,19 @@ func GetHostMessageList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	text := c.Query("text")
 
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	offset, limit := util.GetPageSize(c)
 	messageService := hosted_message_service.HostMessageService{
 		Text:      text,
 		PageNum:   offset,
 		PageSize:  limit,
-		CreatedBy: app.GetCurrentUserId(c),
-		IsAdmin:   app.IsAdmin(c),
+		CreatedBy: ownerID,
+		IsAdmin:   user.IsAdmin() && !user.IsImpersonating(),
 	}
 	ways, err := messageService.GetAll()
 	if err != nil {

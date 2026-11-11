@@ -112,11 +112,19 @@ func AddMessageTemplate(c *gin.Context) {
 		req.Status = "enabled"
 	}
 
-	user, ok := app.GetUserFromContext(c.Request.Context())
-	if !ok || user.UserID == "" {
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
 		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
 		return
 	}
+
+	if req.SourceTemplateID != "" {
+		if _, err := models.GetTemplateByIDForOwner(req.SourceTemplateID, ownerID); err != nil {
+			appG.CResponse(http.StatusNotFound, "源模板不存在或无权访问！", nil)
+			return
+		}
+	}
+
 	currentUserID := user.GetEffectiveUserID()
 	templateService := message_template_service.TemplateService{
 		Name:             req.Name,
@@ -133,6 +141,8 @@ func AddMessageTemplate(c *gin.Context) {
 		CopyInstances:    req.CopyInstances,
 		CreatedBy:        currentUserID,
 		ModifiedBy:       user.GetAuditUserID(),
+		OwnerID:          ownerID,
+		IsAdmin:          user.IsAdmin() && !user.IsImpersonating(),
 	}
 
 	if err := templateService.Add(); err != nil {

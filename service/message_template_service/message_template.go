@@ -73,7 +73,7 @@ func (s *TemplateService) Add() error {
 	s.ID = newUUID
 
 	if s.CopyInstances && s.SourceTemplateID != "" {
-		insList, err := models.GetRawTemplateInsList(s.SourceTemplateID)
+		insList, err := models.GetRawTemplateInsListForOwner(s.SourceTemplateID, s.OwnerID)
 		if err == nil && len(insList) > 0 {
 			for i := range insList {
 				insList[i].ID = fmt.Sprintf("IN%s", util.GenerateUniqueID())

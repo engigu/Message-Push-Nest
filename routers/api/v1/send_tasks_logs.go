@@ -8,12 +8,18 @@ import (
 	"net/http"
 )
 
-// GetMsgSendWayList 获取消息渠道列表
+// GetTaskSendLogsList 获取发送日志列表
 func GetTaskSendLogsList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	name := c.Query("name")
 	taskId := c.Query("taskid")
 	query := c.Query("query")
+
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
 
 	offset, limit := util.GetPageSize(c)
 	logsService := send_logs_service.SendTaskLogsService{
@@ -22,8 +28,8 @@ func GetTaskSendLogsList(c *gin.Context) {
 		PageNum:   offset,
 		PageSize:  limit,
 		Query:     query,
-		CreatedBy: app.GetCurrentUserId(c),
-		IsAdmin:   app.IsAdmin(c),
+		CreatedBy: ownerID,
+		IsAdmin:   user.IsAdmin() && !user.IsImpersonating(),
 	}
 	ways, err := logsService.GetAll()
 	if err != nil {

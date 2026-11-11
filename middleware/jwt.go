@@ -3,6 +3,8 @@ package middleware
 import (
 	"errors"
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 
@@ -10,6 +12,7 @@ import (
 
 	"message-nest/pkg/app"
 	"message-nest/pkg/e"
+	"message-nest/pkg/setting"
 	"message-nest/pkg/util"
 )
 
@@ -22,17 +25,12 @@ var ExcludedRoutes = []string{
 // JWT is jwt middleware
 func JWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		path := c.FullPath()
-		for _, route := range ExcludedRoutes {
-			if path == route {
-				c.Next()
-				return
-			}
+		cleanPath := c.FullPath()
+		if prefix := setting.ServerSetting.UrlPrefix; prefix != "" {
+			cleanPath = strings.TrimPrefix(cleanPath, prefix)
 		}
+		isExcluded := slices.Contains(ExcludedRoutes, cleanPath)
 
-		var code int
-		var data interface{}
-		code = e.SUCCESS
 		token := c.Request.Header.Get("M-Token")
 		if token == "" {
 			authHeader := c.Request.Header.Get("Authorization")
@@ -53,57 +51,66 @@ func JWT() gin.HandlerFunc {
 		}
 
 		if token == "" {
-			code = e.ERROR_AUTH_NO_TOKEN
-		} else {
-			claims, err := util.ParseToken(token)
-			if err != nil {
-				switch {
-				case errors.Is(err, jwt.ErrTokenMalformed):
-					code = e.ERROR_AUTH
-				case errors.Is(err, jwt.ErrTokenSignatureInvalid):
-					code = e.ERROR_AUTH_CHECK_TOKEN_FAIL
-				case errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet):
-					code = e.ERROR_AUTH_CHECK_TOKEN_TIMEOUT
-				default:
-					code = e.ERROR_AUTH_CHECK_TOKEN_FAIL
-				}
-			} else {
-				c.Set("currentUserId", claims.UserID)
-				c.Set("currentUserName", claims.Username)
-				c.Set("currentUserRole", claims.Role)
-
-				// 管理员穿越 Context（Impersonation）：仅当具备管理员权限时才允许透传目标租户 ID
-				var impersonateUserID string
-				if claims.Role == "admin" || claims.Username == "admin" {
-					impersonateUserID = c.Request.Header.Get("X-Tenant-User-Id")
-					if impersonateUserID == "" {
-						impersonateUserID = c.Request.Header.Get("X-Impersonate-User-Id")
-					}
-					if impersonateUserID != "" {
-						c.Set("impersonateUserId", impersonateUserID)
-					}
-				}
-
-				// 同步注入标准 context.Context，供 GORM 钩子与 Scope 自动读取
-				ctx := app.WithUserContext(c.Request.Context(), app.UserContextInfo{
-					UserID:            claims.UserID,
-					Username:          claims.Username,
-					Role:              claims.Role,
-					ImpersonateUserID: impersonateUserID,
-				})
-				c.Request = c.Request.WithContext(ctx)
+			if isExcluded {
+				c.Next()
+				return
 			}
-		}
-
-		if code != e.SUCCESS {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"code": code,
-				"msg":  e.GetMsg(code),
-				"data": data,
+				"code": e.ERROR_AUTH_NO_TOKEN,
+				"msg":  e.GetMsg(e.ERROR_AUTH_NO_TOKEN),
+				"data": nil,
 			})
 			c.Abort()
 			return
 		}
+
+		claims, err := util.ParseToken(token)
+		if err != nil {
+			if isExcluded {
+				// 对于可选免登录路由，若传入的并非有效用户 JWT（例如外部发信 token），不予阻断
+				c.Next()
+				return
+			}
+			code := e.ERROR_AUTH_CHECK_TOKEN_FAIL
+			switch {
+			case errors.Is(err, jwt.ErrTokenMalformed):
+				code = e.ERROR_AUTH
+			case errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet):
+				code = e.ERROR_AUTH_CHECK_TOKEN_TIMEOUT
+			}
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"code": code,
+				"msg":  e.GetMsg(code),
+				"data": nil,
+			})
+			c.Abort()
+			return
+		}
+
+		c.Set("currentUserId", claims.UserID)
+		c.Set("currentUserName", claims.Username)
+		c.Set("currentUserRole", claims.Role)
+
+		// 管理员穿越 Context（Impersonation）：仅当具备管理员权限时才允许透传目标租户 ID
+		var impersonateUserID string
+		if claims.IsAdmin() {
+			impersonateUserID = c.Request.Header.Get("X-Tenant-User-Id")
+			if impersonateUserID == "" {
+				impersonateUserID = c.Request.Header.Get("X-Impersonate-User-Id")
+			}
+			if impersonateUserID != "" {
+				c.Set("impersonateUserId", impersonateUserID)
+			}
+		}
+
+		// 同步注入标准 context.Context，供 GORM 钩子与 Scope 自动读取
+		ctx := app.WithUserContext(c.Request.Context(), app.UserContextInfo{
+			UserID:            claims.UserID,
+			Username:          claims.Username,
+			Role:              claims.Role,
+			ImpersonateUserID: impersonateUserID,
+		})
+		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
 	}
@@ -112,9 +119,7 @@ func JWT() gin.HandlerFunc {
 // AdminRequired 检查用户是否具备管理员权限
 func AdminRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		role, _ := c.Get("currentUserRole")
-		username, _ := c.Get("currentUserName")
-		if role != "admin" && username != "admin" {
+		if !app.IsAdmin(c) {
 			c.JSON(http.StatusForbidden, gin.H{
 				"code": http.StatusForbidden,
 				"msg":  "无权访问：该操作仅限管理员执行！",

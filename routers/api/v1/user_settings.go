@@ -16,7 +16,7 @@ type GetSettingReq struct {
 	Section string `json:"section" validate:"required,max=50" label:"节点"`
 }
 
-// GetUserSetting 用户重设密码
+// GetUserSetting 获取设置（防垂直越权）
 func GetUserSetting(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -24,6 +24,20 @@ func GetUserSetting(c *gin.Context) {
 	section := c.Query("section")
 	currentUserId := app.GetCurrentUserId(c)
 	isAdmin := app.IsAdmin(c)
+
+	// 非管理员用户禁止访问系统安全配置等敏感节点
+	if !isAdmin {
+		allowedSections := map[string]bool{
+			constant.SiteSettingSectionName:      true,
+			constant.LogsCleanSectionName:         true,
+			constant.HostedMsgCleanSectionName:    true,
+			constant.AboutSectionName:             true,
+		}
+		if !allowedSections[section] {
+			appG.CResponse(http.StatusForbidden, "普通用户无权访问该系统配置！", nil)
+			return
+		}
+	}
 
 	settingService := settings_service.UserSettings{
 		UserID:  currentUserId,
@@ -36,7 +50,6 @@ func GetUserSetting(c *gin.Context) {
 	}
 
 	appG.CResponse(http.StatusOK, "获取成功！", settings)
-
 }
 
 // EditUserPasswdReq 编辑设置请求

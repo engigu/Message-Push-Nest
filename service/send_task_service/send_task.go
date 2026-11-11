@@ -26,8 +26,11 @@ func (st *SendTaskService) AddWithID() error {
 
 func (st *SendTaskService) Delete() error {
 	tenantID := ""
-	if !st.IsAdmin && st.ModifiedBy != "" {
-		tenantID = st.ModifiedBy
+	if !st.IsAdmin {
+		tenantID = st.CreatedBy
+		if tenantID == "" && st.ModifiedBy != "" {
+			tenantID = st.ModifiedBy
+		}
 	}
 	return models.DeleteMsgTask(st.ID, tenantID)
 }
@@ -35,14 +38,17 @@ func (st *SendTaskService) Delete() error {
 func (st *SendTaskService) Edit(data map[string]interface{}) error {
 	data["modified_by"] = st.ModifiedBy
 	tenantID := ""
-	if !st.IsAdmin && st.ModifiedBy != "" {
-		tenantID = st.ModifiedBy
+	if !st.IsAdmin {
+		tenantID = st.CreatedBy
+		if tenantID == "" && st.ModifiedBy != "" {
+			tenantID = st.ModifiedBy
+		}
 	}
 	return models.EditSendTask(st.ID, data, tenantID)
 }
 
 func (st *SendTaskService) GetTaskWithIns() (models.TaskIns, error) {
-	return models.GetTasksIns(st.ID)
+	return models.GetTasksInsForOwner(st.ID, st.CreatedBy)
 }
 
 func (st *SendTaskService) Count() (int64, error) {
@@ -58,5 +64,5 @@ func (st *SendTaskService) GetAll() ([]models.SendTasks, error) {
 }
 
 func (st *SendTaskService) GetByID() (interface{}, error) {
-	return models.GetTaskByID(st.ID)
+	return models.GetTaskByIDForOwner(st.ID, st.CreatedBy)
 }

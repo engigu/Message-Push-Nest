@@ -383,8 +383,8 @@ func CheckUsernameAvailability(c *gin.Context) {
 			excludeID = ""
 		} else if customClaims, ok := claims.(*util.UserClaims); ok {
 			// 非管理员只能排除其自身 ID
-			if customClaims.Role != "admin" {
-				excludeID = customClaims.ID
+			if !customClaims.IsAdmin() {
+				excludeID = customClaims.UserID
 			}
 		}
 	}

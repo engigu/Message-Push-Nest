@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/e"
 	"message-nest/pkg/util"
@@ -28,11 +29,22 @@ func DeleteMsgSendWay(c *gin.Context) {
 		return
 	}
 
-	currentUserID := app.GetCurrentUserId(c)
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
+	if _, err := models.GetWayByIDForOwner(req.ID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "发信渠道不存在或无权访问", nil)
+		return
+	}
+
 	sendWayService := send_way_service.SendWay{
 		ID:         req.ID,
-		ModifiedBy: currentUserID,
-		IsAdmin:    app.IsAdmin(c),
+		CreatedBy:  ownerID,
+		ModifiedBy: user.GetAuditUserID(),
+		IsAdmin:    user.IsAdmin() && !user.IsImpersonating(),
 	}
 	err := sendWayService.Delete()
 	if err != nil {
@@ -53,13 +65,15 @@ func GetMsgSendWay(c *gin.Context) {
 		return
 	}
 
-	sendWayService := send_way_service.SendWay{
-		ID: id,
+	_, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
 	}
 
-	way, err := sendWayService.GetByID()
+	way, err := models.GetWayByIDForOwner(id, ownerID)
 	if err != nil {
-		appG.CResponse(http.StatusBadRequest, "获取到的渠道信息为空！", nil)
+		appG.CResponse(http.StatusNotFound, "发信渠道不存在或无权访问", nil)
 		return
 	}
 
@@ -72,13 +86,18 @@ func GetMsgSendWayList(c *gin.Context) {
 	name := c.Query("name")
 	type_ := c.Query("type")
 
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	offset, limit := util.GetPageSize(c)
-	currentUserID := app.GetCurrentUserId(c)
 	sendWayService := send_way_service.SendWay{
 		Name:      name,
 		Type:      type_,
-		CreatedBy: currentUserID,
-		IsAdmin:   app.IsAdmin(c),
+		CreatedBy: ownerID,
+		IsAdmin:   user.IsAdmin() && !user.IsImpersonating(),
 		PageNum:   offset,
 		PageSize:  limit,
 	}
@@ -112,19 +131,25 @@ func AddMsgSendWay(c *gin.Context) {
 		appG = app.Gin{C: c}
 		req  AddMsgSendWayReq
 	)
-	currentUserID := app.GetCurrentUserId(c)
+	user, _, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
 		return
 	}
 
+	targetOwner := user.GetEffectiveUserID()
 	sendWayService := send_way_service.SendWay{
 		Name:       req.Name,
 		Type:       req.Type,
 		Auth:       req.Auth,
-		CreatedBy:  currentUserID,
-		ModifiedBy: currentUserID,
+		CreatedBy:  targetOwner,
+		ModifiedBy: user.GetAuditUserID(),
+		IsAdmin:    user.IsAdmin() && !user.IsImpersonating(),
 	}
 
 	diffMsg, _ := sendWayService.ValidateDiffWay()
@@ -140,7 +165,6 @@ func AddMsgSendWay(c *gin.Context) {
 	}
 
 	appG.CResponse(http.StatusOK, "添加渠道成功！", nil)
-
 }
 
 type EditSendWayReq struct {
@@ -157,10 +181,20 @@ func EditSendWay(c *gin.Context) {
 		req  = EditSendWayReq{}
 	)
 
-	currentUserID := app.GetCurrentUserId(c)
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errMsg, nil)
+		return
+	}
+
+	if _, err := models.GetWayByIDForOwner(req.ID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "发信渠道不存在或无权访问", nil)
 		return
 	}
 
@@ -169,8 +203,9 @@ func EditSendWay(c *gin.Context) {
 		Name:       req.Name,
 		Type:       req.Type,
 		Auth:       req.Auth,
-		ModifiedBy: currentUserID,
-		IsAdmin:    app.IsAdmin(c),
+		CreatedBy:  ownerID,
+		ModifiedBy: user.GetAuditUserID(),
+		IsAdmin:    user.IsAdmin() && !user.IsImpersonating(),
 	}
 
 	diffMsg, _ := sendWayService.ValidateDiffWay()
@@ -200,6 +235,12 @@ func TestSendWay(c *gin.Context) {
 		appG = app.Gin{C: c}
 		req  = TestSendWayReq{}
 	)
+
+	_, _, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
 
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {

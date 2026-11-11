@@ -1,12 +1,14 @@
 package v1
 
 import (
-	"message-nest/pkg/e"
-	"message-nest/pkg/util"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"message-nest/models"
 	"message-nest/pkg/app"
+	"message-nest/pkg/e"
+	"message-nest/pkg/util"
 	"message-nest/service/cron_msg_service"
 )
 
@@ -27,17 +29,26 @@ func DeleteCronMsgTask(c *gin.Context) {
 		return
 	}
 
-	currentUserId := app.GetCurrentUserId(c)
-	isAdmin := app.IsAdmin(c)
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
+	msg, err := models.GetCronMsgByIDForOwner(req.ID, ownerID)
+	if err != nil {
+		appG.CResponse(http.StatusNotFound, "定时消息不存在或无权访问！", nil)
+		return
+	}
 
 	CronMsgService := cron_msg_service.CronMsgService{
-		ID:        req.ID,
-		CreatedBy: currentUserId,
-		IsAdmin:   isAdmin,
+		ID:         req.ID,
+		CreatedBy:  ownerID,
+		ModifiedBy: user.GetAuditUserID(),
+		IsAdmin:    user.IsAdmin() && !user.IsImpersonating(),
 	}
-	msg, _ := CronMsgService.GetByID()
 
-	err := CronMsgService.Delete()
+	err = CronMsgService.Delete()
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, "删除定时消息失败！", nil)
 		return
@@ -51,13 +62,19 @@ func GetCronMsgList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	name := c.Query("name")
 
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	offset, limit := util.GetPageSize(c)
 	CronMsgService := cron_msg_service.CronMsgService{
 		Name:      name,
 		PageNum:   offset,
 		PageSize:  limit,
-		CreatedBy: app.GetCurrentUserId(c),
-		IsAdmin:   app.IsAdmin(c),
+		CreatedBy: ownerID,
+		IsAdmin:   user.IsAdmin() && !user.IsImpersonating(),
 	}
 	tasks, err := CronMsgService.GetAll()
 	if err != nil {
@@ -93,12 +110,26 @@ func AddCronMsgTask(c *gin.Context) {
 		req  AddCronMsgTaskReq
 	)
 
-	currentUserId := app.GetCurrentUserId(c)
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
 		return
 	}
+
+	// 校验关联任务是否归属当前租户
+	if _, err := models.GetTaskByIDForOwner(req.TaskID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "关联的发信任务不存在或无权访问！", nil)
+		return
+	}
+
+	targetOwner := user.GetEffectiveUserID()
+	auditUserID := user.GetAuditUserID()
 
 	CronMsgService := cron_msg_service.CronMsgService{
 		Name:       req.Name,
@@ -107,8 +138,8 @@ func AddCronMsgTask(c *gin.Context) {
 		Title:      req.Title,
 		Content:    req.Content,
 		Url:        req.Url,
-		CreatedBy:  currentUserId,
-		ModifiedBy: currentUserId,
+		CreatedBy:  targetOwner,
+		ModifiedBy: auditUserID,
 	}
 
 	uuidstr, err := CronMsgService.Add()
@@ -117,10 +148,9 @@ func AddCronMsgTask(c *gin.Context) {
 		return
 	}
 	CronMsgService.ID = uuidstr
-	msg, _ := CronMsgService.GetByID()
+	msg, _ := models.GetCronMsgByIDForOwner(uuidstr, ownerID)
 	cron_msg_service.UpdateCronMsgToCronServer(msg)
 	appG.CResponse(http.StatusOK, "添加定时消息成功！", nil)
-
 }
 
 type EditCronMsgTaskReq struct {
@@ -141,19 +171,35 @@ func EditCronMsgTask(c *gin.Context) {
 		req  EditCronMsgTaskReq
 	)
 
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errMsg, nil)
 		return
 	}
 
-	currentUserId := app.GetCurrentUserId(c)
-	isAdmin := app.IsAdmin(c)
+	// 校验定时消息自身所有权
+	if _, err := models.GetCronMsgByIDForOwner(req.ID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "定时消息不存在或无权访问！", nil)
+		return
+	}
+
+	// 校验修改后的关联任务所有权
+	if _, err := models.GetTaskByIDForOwner(req.TaskID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "关联的发信任务不存在或无权访问！", nil)
+		return
+	}
 
 	CronMsgService := cron_msg_service.CronMsgService{
-		ID:        req.ID,
-		CreatedBy: currentUserId,
-		IsAdmin:   isAdmin,
+		ID:         req.ID,
+		CreatedBy:  ownerID,
+		ModifiedBy: user.GetAuditUserID(),
+		IsAdmin:    user.IsAdmin() && !user.IsImpersonating(),
 	}
 
 	data := make(map[string]interface{})
@@ -164,13 +210,13 @@ func EditCronMsgTask(c *gin.Context) {
 	data["content"] = req.Content
 	data["url"] = req.Url
 	data["enable"] = req.Enable
-	data["modified_by"] = currentUserId
+	data["modified_by"] = user.GetAuditUserID()
 	err := CronMsgService.Edit(data)
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, "编辑定时消息失败！", nil)
 		return
 	}
-	msg, _ := CronMsgService.GetByID()
+	msg, _ := models.GetCronMsgByIDForOwner(req.ID, ownerID)
 	cron_msg_service.UpdateCronMsgToCronServer(msg)
 	appG.CResponse(http.StatusOK, "编辑定时消息成功！", nil)
 }
@@ -189,23 +235,38 @@ func SendNowCronMsg(c *gin.Context) {
 		req  SendNowCronMsgReq
 	)
 
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errMsg, nil)
 		return
 	}
 
-	CronMsgService := cron_msg_service.CronMsgService{
-		TaskID:  req.TaskID,
-		Title:   req.Title,
-		Content: req.Content,
-		Url:     req.Url,
+	// 强校验关联任务归属，杜绝跨租户发信越权
+	task, err := models.GetTaskByIDForOwner(req.TaskID, ownerID)
+	if err != nil || task.ID == "" {
+		appG.CResponse(http.StatusNotFound, "关联的发信任务不存在或无权访问！", nil)
+		return
 	}
 
-	// 调用立即发送服务
-	err := CronMsgService.SendNowByParams(c.ClientIP())
+	// 确认属于当前租户后，构造消息并发送
+	CronMsgService := cron_msg_service.CronMsgService{
+		TaskID:     req.TaskID,
+		Title:      req.Title,
+		Content:    req.Content,
+		Url:        req.Url,
+		CreatedBy:  task.CreatedBy,
+		ModifiedBy: user.GetAuditUserID(),
+	}
+
+	err = CronMsgService.SendNowByParams(c.ClientIP())
 	if err != nil {
-		appG.CResponse(http.StatusBadRequest, err.Error(), nil)
+		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("发送失败：%s", err.Error()), nil)
 		return
 	}
 

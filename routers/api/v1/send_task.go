@@ -2,11 +2,12 @@ package v1
 
 import (
 	"fmt"
-	"message-nest/pkg/e"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"message-nest/models"
 	"message-nest/pkg/app"
+	"message-nest/pkg/e"
 	"message-nest/pkg/util"
 	"message-nest/service/send_task_service"
 )
@@ -28,11 +29,22 @@ func DeleteMsgSendTask(c *gin.Context) {
 		return
 	}
 
-	currentUserID := app.GetCurrentUserId(c)
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
+	if _, err := models.GetTaskByIDForOwner(req.ID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "发信任务不存在或无权访问", nil)
+		return
+	}
+
 	MsgSendTaskService := send_task_service.SendTaskService{
 		ID:         req.ID,
-		ModifiedBy: currentUserID,
-		IsAdmin:    app.IsAdmin(c),
+		CreatedBy:  ownerID,
+		ModifiedBy: user.GetAuditUserID(),
+		IsAdmin:    user.IsAdmin() && !user.IsImpersonating(),
 	}
 	err := MsgSendTaskService.Delete()
 	if err != nil {
@@ -48,12 +60,17 @@ func GetMsgSendTaskList(c *gin.Context) {
 	appG := app.Gin{C: c}
 	name := c.Query("name")
 
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	offset, limit := util.GetPageSize(c)
-	currentUserID := app.GetCurrentUserId(c)
 	MsgSendTaskService := send_task_service.SendTaskService{
 		Name:      name,
-		CreatedBy: currentUserID,
-		IsAdmin:   app.IsAdmin(c),
+		CreatedBy: ownerID,
+		IsAdmin:   user.IsAdmin() && !user.IsImpersonating(),
 		PageNum:   offset,
 		PageSize:  limit,
 	}
@@ -86,17 +103,23 @@ func AddMsgSendTask(c *gin.Context) {
 		req  AddMsgSendTaskReq
 	)
 
-	currentUserID := app.GetCurrentUserId(c)
+	user, _, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	errCode, errStr := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errStr, nil)
 		return
 	}
 
+	targetOwner := user.GetEffectiveUserID()
 	MsgSendTaskService := send_task_service.SendTaskService{
 		Name:       req.Name,
-		CreatedBy:  currentUserID,
-		ModifiedBy: currentUserID,
+		CreatedBy:  targetOwner,
+		ModifiedBy: user.GetAuditUserID(),
 	}
 
 	err := MsgSendTaskService.Add()
@@ -106,7 +129,6 @@ func AddMsgSendTask(c *gin.Context) {
 	}
 
 	appG.CResponse(http.StatusOK, "添加任务任务成功！", nil)
-
 }
 
 type EditMsgSendTaskReq struct {
@@ -121,17 +143,28 @@ func EditMsgSendTask(c *gin.Context) {
 		req  EditMsgSendTaskReq
 	)
 
-	currentUserID := app.GetCurrentUserId(c)
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	errCode, errMsg := app.BindJsonAndPlayValid(c, &req)
 	if errCode != e.SUCCESS {
 		appG.CResponse(errCode, errMsg, nil)
 		return
 	}
 
+	if _, err := models.GetTaskByIDForOwner(req.ID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "发信任务不存在或无权访问", nil)
+		return
+	}
+
 	MsgSendTaskService := send_task_service.SendTaskService{
 		ID:         req.ID,
-		ModifiedBy: currentUserID,
-		IsAdmin:    app.IsAdmin(c),
+		CreatedBy:  ownerID,
+		ModifiedBy: user.GetAuditUserID(),
+		IsAdmin:    user.IsAdmin() && !user.IsImpersonating(),
 	}
 
 	var data = map[string]interface{}{
@@ -157,13 +190,20 @@ func GetMsgSendTask(c *gin.Context) {
 		return
 	}
 
+	_, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	sendTaskService := send_task_service.SendTaskService{
-		ID: id,
+		ID:        id,
+		CreatedBy: ownerID,
 	}
 
 	task, err := sendTaskService.GetByID()
 	if err != nil {
-		appG.CResponse(http.StatusBadRequest, "获取到的任务信息为空！", nil)
+		appG.CResponse(http.StatusNotFound, "任务不存在或无权访问！", nil)
 		return
 	}
 

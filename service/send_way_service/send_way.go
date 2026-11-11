@@ -28,7 +28,7 @@ func (sw *SendWay) NameIsExist(method string) error {
 	tenantID := ""
 	if !sw.IsAdmin {
 		tenantID = sw.CreatedBy
-		if method == "edit" && sw.ModifiedBy != "" {
+		if tenantID == "" && sw.ModifiedBy != "" {
 			tenantID = sw.ModifiedBy
 		}
 	}
@@ -59,8 +59,11 @@ func (sw *SendWay) Add() error {
 
 func (sw *SendWay) Edit() error {
 	tenantID := ""
-	if !sw.IsAdmin && sw.ModifiedBy != "" {
-		tenantID = sw.ModifiedBy
+	if !sw.IsAdmin {
+		tenantID = sw.CreatedBy
+		if tenantID == "" && sw.ModifiedBy != "" {
+			tenantID = sw.ModifiedBy
+		}
 	}
 	err := sw.NameIsExist("edit")
 	if err != nil {
@@ -75,8 +78,11 @@ func (sw *SendWay) Edit() error {
 
 func (sw *SendWay) Delete() error {
 	tenantID := ""
-	if !sw.IsAdmin && sw.ModifiedBy != "" {
-		tenantID = sw.ModifiedBy
+	if !sw.IsAdmin {
+		tenantID = sw.CreatedBy
+		if tenantID == "" && sw.ModifiedBy != "" {
+			tenantID = sw.ModifiedBy
+		}
 	}
 	tasks := models.FindTaskByWayId(sw.ID)
 	if len(tasks) > 0 {

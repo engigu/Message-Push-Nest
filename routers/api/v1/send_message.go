@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/pkg/e"
 	"message-nest/pkg/logging"
@@ -63,9 +64,33 @@ func DoSendMassage(c *gin.Context) {
 		return
 	}
 
+	var effectiveOwner string
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		// 未登录调用者：必须提供有效的加密 token，禁止使用明文 task_id 匿名发信
+		if req.Token == "" {
+			appG.CResponse(http.StatusUnauthorized, "使用明文 task_id 发信必须登录验证身份", nil)
+			return
+		}
+		existingTask, err := models.GetTaskByID(taskID)
+		if err != nil || existingTask.ID == "" {
+			appG.CResponse(http.StatusNotFound, "发信任务不存在", nil)
+			return
+		}
+		effectiveOwner = existingTask.CreatedBy
+	} else {
+		// 已登录用户（包含租户与管理员）：强校验发信任务归属，杜绝跨租户越权发信
+		if _, err := models.GetTaskByIDForOwner(taskID, ownerID); err != nil {
+			appG.CResponse(http.StatusNotFound, "发信任务不存在或无权访问！", nil)
+			return
+		}
+		effectiveOwner = user.GetEffectiveUserID()
+	}
+
 	msgService := send_message_service.SendMessageService{
 		SendMode:   send_message_service.SendModeTask, // 明确标记为任务模式
 		TaskID:     taskID,
+		CreatedBy:  effectiveOwner,
 		Title:      req.Title,
 		Text:       req.Text,
 		HTML:       req.HTML,

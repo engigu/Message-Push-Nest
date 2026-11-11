@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"message-nest/pkg/util"
 )
 
 // GetCurrentUserId 从请求中获取当前用户ID
@@ -34,5 +35,5 @@ func GetCurrentUserRole(c *gin.Context) string {
 
 // IsAdmin 检查当前请求用户是否为管理员
 func IsAdmin(c *gin.Context) bool {
-	return GetCurrentUserRole(c) == "admin" || GetCurrentUserName(c) == "admin"
+	return util.IsAdminRole(GetCurrentUserRole(c))
 }

@@ -17,6 +17,19 @@ type UserClaims struct {
 	jwt.RegisteredClaims
 }
 
+// IsAdminRole 判断角色是否具备管理员权限
+func IsAdminRole(role string) bool {
+	return role == "admin"
+}
+
+// IsAdmin 检查当前 Claims 是否具备管理员权限
+func (c *UserClaims) IsAdmin() bool {
+	if c == nil {
+		return false
+	}
+	return IsAdminRole(c.Role)
+}
+
 func GenerateToken(userID, username, password, role string, expDays int) (string, error) {
 	// 如果传入的天数小于等于0，使用默认值1天
 	if expDays <= 0 {

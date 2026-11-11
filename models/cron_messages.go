@@ -134,3 +134,14 @@ func GetCronMsgByID(id string) (CronMessages, error) {
 	}
 	return msg, nil
 }
+
+// GetCronMsgByIDForOwner 获取租户权限范围内的定时消息（ownerID 为空表示放行全部数据）
+func GetCronMsgByIDForOwner(id, ownerID string) (CronMessages, error) {
+	var msg CronMessages
+	query := db.Where("id = ?", id)
+	if ownerID != "" {
+		query = query.Where("created_by = ?", ownerID)
+	}
+	err := query.First(&msg).Error
+	return msg, err
+}

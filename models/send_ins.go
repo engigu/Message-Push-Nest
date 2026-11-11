@@ -291,6 +291,26 @@ func GetRawTemplateInsList(templateID string) ([]SendTasksIns, error) {
 	return insList, nil
 }
 
+// GetRawTemplateInsListForOwner 获取租户权限范围内模板关联的原始实例列表（校验实例及渠道所有权）
+func GetRawTemplateInsListForOwner(templateID, ownerID string) ([]SendTasksIns, error) {
+	insTable := GetSchema(SendTasksIns{})
+	waysTable := GetSchema(SendWays{})
+	var insList []SendTasksIns
+	query := db.Table(insTable).
+		Select(fmt.Sprintf("%s.*", insTable)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
+		Where(fmt.Sprintf("%s.template_id = ?", insTable), templateID)
+	if ownerID != "" {
+		query = query.Where(fmt.Sprintf("(%s.created_by = ? OR %s.created_by = '')", insTable, insTable), ownerID).
+			Where(fmt.Sprintf("%s.created_by = ?", waysTable), ownerID)
+	}
+	err := query.Order(fmt.Sprintf("%s.created_on DESC", insTable)).Scan(&insList).Error
+	if err != nil {
+		return nil, err
+	}
+	return insList, nil
+}
+
 // GetTemplateInstanceByIDForOwner loads only a template-bound instance in the
 // caller's effective owner scope. An empty owner is reserved for global admins.
 func GetTemplateInstanceByIDForOwner(id, ownerID string) (SendTasksIns, error) {

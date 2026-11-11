@@ -60,11 +60,30 @@ func DoSendMessageByTemplate(c *gin.Context) {
 		return
 	}
 
-	// 获取模板
-	template, err := models.GetTemplateByID(templateID)
-	if err != nil {
-		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("模板不存在：%s", err), nil)
-		return
+	var (
+		template       *models.TemplateResult
+		effectiveOwner string
+	)
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		// 外部系统免登录发信（必须持有正确的加密 token）
+		var errTmpl error
+		template, errTmpl = models.GetTemplateByID(templateID)
+		if errTmpl != nil || template == nil {
+			appG.CResponse(http.StatusNotFound, "模板不存在", nil)
+			return
+		}
+		ownerID = template.CreatedBy
+		effectiveOwner = template.CreatedBy
+	} else {
+		// 已登录用户（包含租户与管理员）：强校验模板归属，杜绝跨租户越权发信
+		var errTmpl error
+		template, errTmpl = models.GetTemplateByIDForOwner(templateID, ownerID)
+		if errTmpl != nil || template == nil {
+			appG.CResponse(http.StatusNotFound, "模板不存在或无权访问", nil)
+			return
+		}
+		effectiveOwner = user.GetEffectiveUserID()
 	}
 
 	// 检查模板状态
@@ -118,8 +137,8 @@ func DoSendMessageByTemplate(c *gin.Context) {
 		}
 	}
 
-	// 获取模板关联的实例列表
-	insList, err := models.GetTemplateInsList(templateID)
+	// 获取模板关联的实例列表（租户安全范围）
+	insList, err := models.GetTemplateInsListForOwner(templateID, ownerID)
 	if err != nil || len(insList) == 0 {
 		appG.CResponse(http.StatusBadRequest, "模板没有配置发送实例", nil)
 		return
@@ -144,6 +163,7 @@ func DoSendMessageByTemplate(c *gin.Context) {
 		SendMode:       send_message_service.SendModeTemplate, // 明确标记为模板模式
 		TaskID:         templateID,                            // 使用模板ID作为TaskID（用于日志记录）
 		TemplateID:     templateID,                            // 模板ID
+		CreatedBy:      effectiveOwner,
 		Name:           template.Name,                         // 模板名称
 		Title:          req.Title,
 		Text:           textContent,

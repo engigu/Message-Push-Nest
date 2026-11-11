@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"message-nest/pkg/util"
 )
 
 type userContextKey struct{}
@@ -16,7 +17,7 @@ type UserContextInfo struct {
 
 // IsAdmin 判断当前用户是否具备管理员权限
 func (u UserContextInfo) IsAdmin() bool {
-	return u.Role == "admin" || u.Username == "admin"
+	return util.IsAdminRole(u.Role)
 }
 
 // IsImpersonating 判断当前是否处于管理员穿越状态
@@ -73,4 +74,18 @@ func IsAdminContext(ctx context.Context) bool {
 		return info.IsAdmin()
 	}
 	return false
+}
+
+// GetRequestOwnerID 从 Context 提取用户信息与生效租户 ID。
+// 未穿越的管理员返回 ownerID = ""（表示放行全部数据）；普通用户或穿越中的管理员返回生效租户 ID。
+func GetRequestOwnerID(ctx context.Context) (UserContextInfo, string, bool) {
+	user, ok := GetUserFromContext(ctx)
+	if !ok || user.UserID == "" {
+		return UserContextInfo{}, "", false
+	}
+	ownerID := user.GetEffectiveUserID()
+	if user.IsAdmin() && !user.IsImpersonating() {
+		ownerID = ""
+	}
+	return user, ownerID, true
 }

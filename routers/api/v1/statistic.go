@@ -3,6 +3,7 @@ package v1
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"message-nest/models"
 	"message-nest/pkg/app"
 	"message-nest/service/statistic_service"
 	"net/http"
@@ -15,12 +16,18 @@ func GetStatisticData(c *gin.Context) {
 		appG = app.Gin{C: c}
 	)
 
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	// 获取类型参数
 	statisticType := c.Query("type")
 	
 	msgService := statistic_service.StatisticService{
-		CreatedBy: app.GetCurrentUserId(c),
-		IsAdmin:   app.IsAdmin(c),
+		CreatedBy: ownerID,
+		IsAdmin:   user.IsAdmin() && !user.IsImpersonating(),
 	}
 	
 	switch statisticType {
@@ -79,16 +86,28 @@ func GetSendStatsByTask(c *gin.Context) {
 		appG = app.Gin{C: c}
 	)
 
+	user, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
+	if !ok {
+		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
+		return
+	}
+
 	taskID := c.Query("task_id")
 	if taskID == "" {
 		appG.CResponse(http.StatusBadRequest, "任务ID不能为空", nil)
 		return
 	}
 
+	// 校验任务归属
+	if _, err := models.GetTaskByIDForOwner(taskID, ownerID); err != nil {
+		appG.CResponse(http.StatusNotFound, "发信任务不存在或无权访问", nil)
+		return
+	}
+
 	msgService := statistic_service.StatisticService{
 		TaskID:    taskID,
-		CreatedBy: app.GetCurrentUserId(c),
-		IsAdmin:   app.IsAdmin(c),
+		CreatedBy: ownerID,
+		IsAdmin:   user.IsAdmin() && !user.IsImpersonating(),
 	}
 
 	data, err := msgService.GetSendStatsByTask()

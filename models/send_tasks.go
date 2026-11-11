@@ -201,3 +201,47 @@ func GetTaskByID(id string) (SendTasks, error) {
 	}
 	return task, nil
 }
+
+// GetTaskByIDForOwner 获取租户权限范围内的发信任务（ownerID 为空表示放行全部数据）
+func GetTaskByIDForOwner(id, ownerID string) (SendTasks, error) {
+	var task SendTasks
+	query := db.Where("id = ?", id)
+	if ownerID != "" {
+		query = query.Where("created_by = ?", ownerID)
+	}
+	err := query.First(&task).Error
+	return task, err
+}
+
+// GetTasksInsForOwner 获取租户权限范围内指定任务及其关联的实例
+func GetTasksInsForOwner(id, ownerID string) (TaskIns, error) {
+	task, err := GetTaskByIDForOwner(id, ownerID)
+	if err != nil {
+		return TaskIns{}, err
+	}
+
+	insTable := GetSchema(SendTasksIns{})
+	waysTable := GetSchema(SendWays{})
+	var taskIns []SendTasksInsRes
+
+	query := db.
+		Table(insTable).
+		Select(fmt.Sprintf("%s.*, %s.name as way_name", insTable, waysTable)).
+		Joins(fmt.Sprintf("JOIN %s ON %s.way_id = %s.id", waysTable, insTable, waysTable)).
+		Where(fmt.Sprintf("%s.task_id = ?", insTable), id)
+	if ownerID != "" {
+		query = query.Where(fmt.Sprintf("%s.created_by = ?", insTable), ownerID)
+	}
+
+	err = query.Order(fmt.Sprintf("%s.created_on DESC", insTable)).Scan(&taskIns).Error
+	if err != nil {
+		return TaskIns{}, err
+	}
+
+	return TaskIns{
+		ID:        task.ID,
+		Name:      task.Name,
+		CreatedBy: task.CreatedBy,
+		InsData:   taskIns,
+	}, nil
+}
