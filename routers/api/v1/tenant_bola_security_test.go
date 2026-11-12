@@ -255,6 +255,28 @@ func TestSendWaysTenantIsolationAndCredentialDefense(t *testing.T) {
 		t.Fatalf("Tenant isolation breach: User B saw User A's channel in list: %s", wList.Body.String())
 	}
 
+	// 列表脱敏：User A 读取自己的渠道列表，其中的敏感密码必须被脱敏为 ******
+	wListA, _ := f.exec(http.MethodGet, "/api/v1/sendways/list", f.userAToken, "", "")
+	if strings.Contains(wListA.Body.String(), "SUPER_SECRET_A_PASSWORD") {
+		t.Fatal("CRITICAL: Sensitive channel password leaked in cleartext in sendways/list response!")
+	}
+	if !strings.Contains(wListA.Body.String(), "******") {
+		t.Fatal("Expected masked secret placeholder in sendways/list response")
+	}
+
+	// 编辑保留：User A 提交带有 ****** 的更新，原密码不能被破坏
+	_, respEditKeep := f.exec(http.MethodPost, "/api/v1/sendways/edit", f.userAToken, "",
+		`{"id":"`+f.wayAID+`","name":"User A Renamed SMTP","type":"Email","auth":"{\"server\":\"smtp.privateserver.com\",\"port\":465,\"account\":\"userA@private.com\",\"passwd\":\"******\"}"}`)
+	if respEditKeep.Code != http.StatusOK {
+		t.Fatalf("Failed to edit channel keeping masked password: %+v", respEditKeep)
+	}
+
+	// 再次通过详情接口获取，原密码仍然完好无损
+	wReload, _ := f.exec(http.MethodGet, "/api/v1/sendways/get?id="+f.wayAID, f.userAToken, "", "")
+	if !strings.Contains(wReload.Body.String(), "SUPER_SECRET_A_PASSWORD") {
+		t.Fatal("Original password was destroyed when editing with masked placeholder!")
+	}
+
 	// 管理员正常能看
 	_, respAdmin := f.exec(http.MethodGet, "/api/v1/sendways/get?id="+f.wayAID, f.adminToken, "", "")
 	if respAdmin.Code != http.StatusOK {

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Fingerprint, Zap, KeyRound, ShieldCheck, Unlink, RefreshCw, Plus } from 'lucide-vue-next'
+import { Fingerprint, Zap, KeyRound, ShieldCheck, Unlink, RefreshCw, Plus, Mail } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { request } from '@/api/api'
 import { checkIsDemoMode } from '@/util/demo'
@@ -328,8 +328,9 @@ export default {
                     <span class="text-muted-foreground/70">Sub:</span>
                     <span class="truncate max-w-[160px] sm:max-w-[220px] select-all">{{ getBindingForProvider(p.type)?.subject }}</span>
                   </span>
-                  <span v-if="getBindingForProvider(p.type)?.email" class="text-[10px] sm:text-[11px] text-muted-foreground/80 truncate max-w-[150px] sm:max-w-[200px]">
-                    ✉️ {{ getBindingForProvider(p.type)?.email }}
+                  <span v-if="getBindingForProvider(p.type)?.email" class="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-muted-foreground/80 truncate max-w-[160px] sm:max-w-[220px]">
+                    <Mail class="w-3.5 h-3.5 text-muted-foreground/70 shrink-0" />
+                    <span class="truncate">{{ getBindingForProvider(p.type)?.email }}</span>
                   </span>
                   <span v-if="getBindingForProvider(p.type)?.created_on" class="text-[10px] sm:text-[11px] text-muted-foreground/60 hidden sm:inline">
                     绑定于 {{ getBindingForProvider(p.type)?.created_on }}

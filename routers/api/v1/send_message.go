@@ -51,7 +51,7 @@ func DoSendMassage(c *gin.Context) {
 	taskID := req.TaskID
 	// 如果使用了token就使用token解析出task_id
 	if req.Token != "" {
-		dec, err := utilpkg.DecryptTokenHex(req.Token, 71) // 71 为简单对称密钥
+		dec, err := utilpkg.DecryptToken(req.Token)
 		if err != nil {
 			appG.CResponse(http.StatusBadRequest, fmt.Sprintf("token解析失败：%v", err), nil)
 			return

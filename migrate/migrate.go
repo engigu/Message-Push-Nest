@@ -167,6 +167,54 @@ func BackfillInitialDataToAdmin() {
 	logging.Init.Infof("初始存量数据已全部归属于管理员 (ID: %s)", adminID)
 }
 
+// MigrateUserPasswordsToBcrypt 检查并批量将存量用户的明文密码平滑升级为 bcrypt 哈希
+func MigrateUserPasswordsToBcrypt() {
+	migrationSetting, _ := models.GetSettingByKey("init", "user_password_bcrypt_migration")
+	if migrationSetting.Value == "1" {
+		return
+	}
+
+	db := models.GetDB()
+	var users []models.Auth
+	err := db.Select("id, username, password").Where("password != '' AND password IS NOT NULL").Find(&users).Error
+	if err != nil {
+		logging.Init.Errorf("查询待升级密码用户列表失败: %v", err)
+		return
+	}
+
+	upgradedCount := 0
+	for _, user := range users {
+		// 跳过已经是 bcrypt 哈希的密码
+		if models.IsBcryptHash(user.Password) {
+			continue
+		}
+
+		hashedPassword, err := models.HashPassword(user.Password)
+		if err != nil {
+			logging.Init.Errorf("为用户 [%s] 生成 bcrypt 密码哈希失败: %v", user.Username, err)
+			continue
+		}
+
+		if err := db.Model(&models.Auth{}).Where("id = ?", user.ID).Update("password", hashedPassword).Error; err != nil {
+			logging.Init.Errorf("更新用户 [%s] 密码哈希失败: %v", user.Username, err)
+			continue
+		}
+		upgradedCount++
+	}
+
+	_ = models.AddOneSetting(models.Settings{
+		Section: "init",
+		Key:     "user_password_bcrypt_migration",
+		Value:   "1",
+	})
+
+	if upgradedCount > 0 {
+		logging.Init.Infof("存量用户密码已全部成功迁移为 bcrypt 哈希，共升级 %d 位用户", upgradedCount)
+	} else {
+		logging.Init.Infof("所有存量用户密码均已符合 bcrypt 安全哈希规范，已记录迁移标记")
+	}
+}
+
 // calculateModelsSignature 计算所有数据模型结构特征的 MD5 签名
 func calculateModelsSignature(tables []interface{}) string {
 	var sigData string
@@ -268,6 +316,9 @@ func Setup() {
 
 	logging.Init.Infof("正在检查初始存量数据归属标记...")
 	BackfillInitialDataToAdmin()
+
+	logging.Init.Infof("正在检查并执行存量用户密码 bcrypt 哈希升级...")
+	MigrateUserPasswordsToBcrypt()
 
 	adminUser, _ := models.GetUserByUsername("admin")
 	adminID := ""

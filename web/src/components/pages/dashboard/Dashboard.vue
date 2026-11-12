@@ -1,16 +1,38 @@
 <script setup lang="ts">
 import StatCard from '@/components/pages/dashboard/CardNum.vue'
-import { InboxIcon, FileTextIcon, SendIcon, CheckCircleIcon, XCircleIcon, RadioIcon } from 'lucide-vue-next'
-// import { LineChart } from "@/components/ui/chart-line"
+import {
+  InboxIcon,
+  FileTextIcon,
+  SendIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  RadioIcon
+} from 'lucide-vue-next'
 import { onMounted, onUnmounted, reactive } from 'vue';
 import { request } from '@/api/api';
 import { toast } from 'vue-sonner';
-// import VueApexCharts from 'vue3-apexcharts'
 import ApexCharts from 'apexcharts'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 let lineChartInstance: ApexCharts | null = null;
 let pieChartInstance: ApexCharts | null = null;
+
+// 图表延时动画定时器管理（防止路由快速切换时引发内存泄漏或操作已卸载 DOM）
+let chartTimeouts: ReturnType<typeof setTimeout>[] = [];
+const registerChartTimeout = (fn: () => void, delay: number) => {
+  const id = setTimeout(() => {
+    chartTimeouts = chartTimeouts.filter(t => t !== id);
+    fn();
+  }, delay);
+  chartTimeouts.push(id);
+  return id;
+};
+const clearAllChartTimeouts = () => {
+  chartTimeouts.forEach(t => clearTimeout(t));
+  chartTimeouts = [];
+};
+
+const isDarkMode = () => document.documentElement.classList.contains('dark');
 
 interface SendData {
   day: string
@@ -39,17 +61,11 @@ let state = reactive({
   },
   channelData: {
     way_cate_data: [] as CateData[] | null,
-  },
-  loading: {
-    basic: false,
-    trend: false,
-    channels: false,
   }
 });
 
 // 获取基础统计数据
 const getBasicStatisticData = async () => {
-  state.loading.basic = true;
   try {
     const rsp = await request.get('/statistic?type=basic');
     if (rsp && rsp.data && rsp.data.code == 200) {
@@ -66,14 +82,11 @@ const getBasicStatisticData = async () => {
     }
   } catch (error) {
     toast.error('获取基础统计数据时发生错误');
-  } finally {
-    state.loading.basic = false;
   }
 }
 
 // 获取趋势统计数据
 const getTrendStatisticData = async () => {
-  state.loading.trend = true;
   try {
     // 根据屏幕大小决定请求的天数
     const isSmallScreen = window.innerWidth < 768;
@@ -83,38 +96,27 @@ const getTrendStatisticData = async () => {
     const rsp = await request.get(`/statistic?type=trend&days=${days}`);
     if (rsp && rsp.data && rsp.data.code == 200) {
       state.trendData = rsp.data.data;
-      // 数据加载完成后重新渲染折线图
-      setTimeout(() => {
-        renderLineChart();
-      }, 100);
+      renderLineChart();
     } else {
       toast.error(rsp?.data?.msg || '获取趋势统计数据失败');
     }
   } catch (error) {
     toast.error('获取趋势统计数据时发生错误');
-  } finally {
-    state.loading.trend = false;
   }
 }
 
 // 获取渠道统计数据
 const getChannelStatisticData = async () => {
-  state.loading.channels = true;
   try {
     const rsp = await request.get('/statistic?type=channels');
     if (rsp && rsp.data && rsp.data.code == 200) {
       state.channelData = rsp.data.data;
-      // 数据加载完成后重新渲染饼图
-      setTimeout(() => {
-        renderPieChart();
-      }, 100);
+      renderPieChart();
     } else {
       toast.error(rsp?.data?.msg || '获取渠道统计数据失败');
     }
   } catch (error) {
     toast.error('获取渠道统计数据时发生错误');
-  } finally {
-    state.loading.channels = false;
   }
 }
 
@@ -127,7 +129,208 @@ const loadAllStatisticData = async () => {
   ]);
 }
 
-const renderLineChart = () => {
+// 基于 requestAnimationFrame 逐帧插值驱动折线从左至右连线，折线上的数据点随线条前进慢慢浮现
+let lineAnimRafId: number | null = null;
+const animateLineChartDraw = (duration = 1600) => {
+  const chartElement = document.querySelector("#sales-chart") as HTMLElement;
+  if (!chartElement) return;
+
+  if (lineAnimRafId !== null) {
+    cancelAnimationFrame(lineAnimRafId);
+    lineAnimRafId = null;
+  }
+
+  // 1. 查找折线真实 SVG Path（仅匹配折线路径，坚决排除任何 marker 数据点与图例）
+  let linePaths = Array.from(
+    chartElement.querySelectorAll<SVGPathElement>("path.apexcharts-line")
+  ).filter(path => {
+    const cls = path.getAttribute("class") || "";
+    return !cls.includes("apexcharts-marker") && !path.closest('.apexcharts-legend');
+  });
+
+  if (!linePaths.length) {
+    linePaths = Array.from(
+      chartElement.querySelectorAll<SVGPathElement>(".apexcharts-series > path")
+    ).filter(path => {
+      const cls = path.getAttribute("class") || "";
+      return !cls.includes("apexcharts-marker") && !cls.includes("apexcharts-grid") && !path.closest('.apexcharts-legend');
+    });
+  }
+
+  if (!linePaths.length) return;
+
+  // 记录各条折线精确周长
+  const pathLengths = linePaths.map(path => {
+    let len = 0;
+    try {
+      len = path.getTotalLength();
+    } catch {
+      len = 3000;
+    }
+    return len > 0 ? len : 3000;
+  });
+
+  // 初始将折线隐藏在起始位置
+  linePaths.forEach((path, i) => {
+    const len = pathLengths[i];
+    path.setAttribute('stroke-dasharray', `${len}`);
+    path.setAttribute('stroke-dashoffset', `${len}`);
+  });
+
+  // 2. 严格按系列获取折线数据点（排序保证从左到右点位严格对齐连线进度，彻底排除图例 marker）
+  const seriesWraps = Array.from(
+    chartElement.querySelectorAll<SVGGElement>(".apexcharts-series-markers-wrap")
+  ).sort((a, b) => {
+    const idxA = parseInt(a.getAttribute("data:realIndex") || "0", 10);
+    const idxB = parseInt(b.getAttribute("data:realIndex") || "0", 10);
+    return idxA - idxB;
+  });
+
+  let seriesMarkerList: SVGElement[][] = [];
+  if (seriesWraps.length > 0) {
+    seriesMarkerList = seriesWraps.map(wrap =>
+      Array.from(wrap.querySelectorAll<SVGElement>(".apexcharts-marker"))
+        .filter(m => !m.closest('.apexcharts-legend') && !m.classList.contains('apexcharts-legend-marker'))
+        .sort((a, b) => {
+          const jA = parseInt(a.getAttribute("j") || a.getAttribute("rel") || "0", 10);
+          const jB = parseInt(b.getAttribute("j") || b.getAttribute("rel") || "0", 10);
+          return jA - jB;
+        })
+    );
+  } else {
+    const allLineMarkers = Array.from(
+      chartElement.querySelectorAll<SVGElement>(".apexcharts-series .apexcharts-marker")
+    ).filter(m => !m.closest('.apexcharts-legend') && !m.classList.contains('apexcharts-legend-marker'));
+    const seriesCount = linePaths.length || 3;
+    const perCount = Math.max(1, Math.floor(allLineMarkers.length / seriesCount));
+    for (let s = 0; s < seriesCount; s++) {
+      seriesMarkerList.push(allLineMarkers.slice(s * perCount, (s + 1) * perCount));
+    }
+  }
+
+  // 初始仅设置透明隐藏，不修改 transform / translate，确保圆点形状绝对完整
+  seriesMarkerList.forEach(list => {
+    list.forEach(marker => {
+      marker.style.opacity = '0';
+      marker.style.transition = 'none';
+    });
+  });
+
+  const shownSets = seriesMarkerList.map(() => new Set<number>());
+  const startTime = performance.now();
+
+  const step = (now: number) => {
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / duration);
+    // easeOutCubic 曲线：平滑向右连线
+    const progress = 1 - Math.pow(1 - t, 3);
+
+    // 逐帧更新折线 stroke-dashoffset
+    linePaths.forEach((path, i) => {
+      const len = pathLengths[i];
+      path.setAttribute('stroke-dashoffset', `${len * (1 - progress)}`);
+    });
+
+    // 各系列对应数据点在线条到达时，以从容速度淡入（慢慢出现且形状保持饱满正圆）
+    seriesMarkerList.forEach((markers, sIdx) => {
+      const total = markers.length;
+      const set = shownSets[sIdx];
+      markers.forEach((marker, pIdx) => {
+        if (set.has(pIdx)) return;
+        const threshold = total > 1 ? pIdx / (total - 1) : 0;
+        if (progress >= threshold * 0.95) {
+          set.add(pIdx);
+          marker.style.transition = 'opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1)';
+          marker.style.opacity = '1';
+        }
+      });
+    });
+
+    if (t < 1) {
+      lineAnimRafId = requestAnimationFrame(step);
+    } else {
+      lineAnimRafId = null;
+      // 动画完成：确保所有折线与所有数据点 100% 完整显示
+      linePaths.forEach(path => {
+        path.removeAttribute('stroke-dasharray');
+        path.removeAttribute('stroke-dashoffset');
+      });
+      seriesMarkerList.forEach(list => {
+        list.forEach(marker => {
+          marker.style.opacity = '1';
+          marker.style.transition = '';
+        });
+      });
+    }
+  };
+
+  lineAnimRafId = requestAnimationFrame(step);
+}
+
+// 饼图轻快顺时针一个接一个拼满整张饼图（间隔缩短至75ms，爽快利索）
+const animatePieChartDraw = () => {
+  const chartElement = document.querySelector("#pie-chart") as HTMLElement;
+  if (!chartElement) return;
+
+  const slices = chartElement.querySelectorAll<SVGElement>(
+    '.apexcharts-pie-series, .apexcharts-series.apexcharts-pie-series'
+  );
+  if (!slices.length) return;
+
+  // 数据标签先隐藏，待全部切片拼满后淡入
+  const dataLabels = chartElement.querySelectorAll<SVGElement>(
+    '.apexcharts-datalabels, .apexcharts-pie-label, text.apexcharts-text'
+  );
+  dataLabels.forEach((label) => {
+    label.style.opacity = '0';
+    label.style.transition = 'none';
+  });
+
+  const sliceDelay = 75; // 每个切片间隔75ms，整体600ms左右拼满
+  const total = slices.length;
+
+  slices.forEach((slice, idx) => {
+    const delay = idx * sliceDelay;
+
+    slice.style.opacity = '0';
+    slice.style.transform = 'scale(0.3)';
+    slice.style.transformOrigin = 'center';
+    slice.style.transformBox = 'fill-box';
+    slice.style.transition = 'none';
+
+    registerChartTimeout(() => {
+      slice.style.transition = 'opacity 0.16s ease-out, transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      slice.style.opacity = '1';
+      slice.style.transform = 'scale(1)';
+    }, delay);
+  });
+
+  // 全部切片拼接完成后，迅速淡入百分比标签
+  const allSlicesFinished = total * sliceDelay + 120;
+  registerChartTimeout(() => {
+    dataLabels.forEach((label) => {
+      label.style.transition = 'opacity 0.25s ease-in-out';
+      label.style.opacity = '1';
+    });
+  }, allSlicesFinished);
+
+  // 动画结束清理内联样式，交还 ApexCharts 处理 Hover 凸起与交互
+  registerChartTimeout(() => {
+    slices.forEach((slice) => {
+      slice.style.opacity = '';
+      slice.style.transform = '';
+      slice.style.transformOrigin = '';
+      slice.style.transformBox = '';
+      slice.style.transition = '';
+    });
+    dataLabels.forEach((label) => {
+      label.style.opacity = '';
+      label.style.transition = '';
+    });
+  }, allSlicesFinished + 250);
+}
+
+const renderLineChart = async () => {
   const latestSendData = state.trendData.latest_send_data || [];
 
   const options: any = {
@@ -157,17 +360,8 @@ const renderLineChart = () => {
       toolbar: { show: false },
       background: 'transparent',
       animations: {
-        enabled: true,
-        easing: 'easeinout',
-        speed: 800,
-        animateGradually: {
-          enabled: true,
-          delay: 150
-        },
-        dynamicAnimation: {
-          enabled: true,
-          speed: 350
-        }
+        // 禁用底层 baseline 变形，由 animateLineChartDraw 精确驱动从首点到尾点的连续连线动效
+        enabled: false
       },
       dropShadow: {
         enabled: true,
@@ -176,6 +370,16 @@ const renderLineChart = () => {
         left: 7,
         blur: 10,
         opacity: 0.2
+      }
+    },
+    noData: {
+      text: '暂无消息发送趋势数据',
+      align: 'center',
+      verticalAlign: 'middle',
+      style: {
+        color: '#64748b',
+        fontSize: '13px',
+        fontFamily: 'Inter, sans-serif'
       }
     },
     stroke: {
@@ -241,7 +445,7 @@ const renderLineChart = () => {
       }
     },
     grid: {
-      borderColor: '#e2e8f0',
+      borderColor: isDarkMode() ? '#334155' : '#e2e8f0',
       strokeDashArray: 3,
       xaxis: {
         lines: {
@@ -270,16 +474,16 @@ const renderLineChart = () => {
       fontFamily: 'Inter, sans-serif',
       markers: {
         shape: 'circle',
-        width: 8,
-        height: 8,
-        radius: 4
+        size: 5,
+        strokeWidth: 0,
+        radius: 12
       }
     },
     tooltip: {
       enabled: true,
       shared: true,
       intersect: false,
-      theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+      theme: isDarkMode() ? 'dark' : 'light',
       style: {
         fontSize: '12px',
         fontFamily: 'Inter, sans-serif'
@@ -351,9 +555,9 @@ const renderLineChart = () => {
           fontSize: '10px',
           markers: {
             shape: 'circle',
-            width: 6,
-            height: 6,
-            radius: 3
+            size: 4,
+            strokeWidth: 0,
+            radius: 12
           },
           itemMargin: {
             horizontal: 5,
@@ -371,11 +575,13 @@ const renderLineChart = () => {
   }
   chartElement.innerHTML = '';
   lineChartInstance = new ApexCharts(chartElement, options);
-  lineChartInstance.render();
-
+  await lineChartInstance.render();
+  registerChartTimeout(() => {
+    animateLineChartDraw(1600);
+  }, 40);
 }
 
-const renderPieChart = () => {
+const renderPieChart = async () => {
   const wayCateData = state.channelData.way_cate_data || [];
   const options: any = {
     series: wayCateData.length > 0
@@ -387,16 +593,18 @@ const renderPieChart = () => {
       toolbar: { show: false },
       background: 'transparent',
       animations: {
-        enabled: true,
-        easing: 'easeinout',
-        speed: 800,
-        animateGradually: {
-          enabled: false
-        },
-        dynamicAnimation: {
-          enabled: true,
-          speed: 350
-        }
+        // 关闭 ApexCharts 原生瞬时重绘，由 animatePieChartDraw 接管顺时针一个接一个拼满圆盘的动效
+        enabled: false
+      }
+    },
+    noData: {
+      text: '暂无发送渠道数据',
+      align: 'center',
+      verticalAlign: 'middle',
+      style: {
+        color: '#64748b',
+        fontSize: '13px',
+        fontFamily: 'Inter, sans-serif'
       }
     },
     labels: wayCateData.length > 0
@@ -411,9 +619,10 @@ const renderPieChart = () => {
       fontSize: '10px',
       fontFamily: 'Inter, sans-serif',
       markers: {
-        width: 8,
-        height: 8,
-        radius: 4
+        shape: 'circle',
+        size: 5,
+        strokeWidth: 0,
+        radius: 12
       }
     },
     plotOptions: {
@@ -437,7 +646,7 @@ const renderPieChart = () => {
     },
     tooltip: {
       enabled: true,
-      theme: 'light',
+      theme: isDarkMode() ? 'dark' : 'light',
       style: {
         fontSize: '12px',
         fontFamily: 'Inter, sans-serif'
@@ -468,7 +677,10 @@ const renderPieChart = () => {
   }
   pieChartElement.innerHTML = '';
   pieChartInstance = new ApexCharts(pieChartElement, options);
-  pieChartInstance.render();
+  await pieChartInstance.render();
+  registerChartTimeout(() => {
+    animatePieChartDraw();
+  }, 40);
 }
 
 // 获取今日日期
@@ -482,6 +694,11 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  clearAllChartTimeouts();
+  if (lineAnimRafId !== null) {
+    cancelAnimationFrame(lineAnimRafId);
+    lineAnimRafId = null;
+  }
   if (lineChartInstance) {
     lineChartInstance.destroy();
     lineChartInstance = null;
@@ -513,18 +730,6 @@ onUnmounted(() => {
       :route-path="`/sendlogs?query=${encodeURIComponent(JSON.stringify({ status: '0', day_created_on: getTodayDate() }))}`" />
   </div>
 
-  <!-- 折线图 -->
-  <!-- <LineChart
-    :data="data"
-    index="year"
-    :categories="['Export Growth Rate', 'Import Growth Rate']"
-    :y-formatter="(tick, i) => {
-      return typeof tick === 'number'
-        ? `$ ${new Intl.NumberFormat('us').format(tick).toString()}`
-        : ''
-    }"
-  /> -->
-
   <!-- 图表区域 -->
   <div class="w-[90%] mx-auto mt-8 grid grid-cols-1 lg:grid-cols-10 gap-6">
     <!-- 折线图 -->
@@ -552,31 +757,31 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* 折线图数据节点（Markers）：从小放大并自然浮动到位，仅作用于数据线节点（排除图例） */
-:deep(#sales-chart .apexcharts-series-markers .apexcharts-marker) {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: markerFloatUp 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+/* 确保图例小圆点 100% 完整饱满正圆居中，彻底防止 SVG 边缘裁切成四分之一残缺扇形 */
+:deep(.apexcharts-legend-marker) {
+  overflow: visible !important;
+}
+:deep(.apexcharts-legend-marker svg) {
+  overflow: visible !important;
+}
+:deep(.apexcharts-legend-marker svg path:not(.apexcharts-marker-triangle)) {
+  transform: translate(50%, 50%) !important;
 }
 
-@keyframes markerFloatUp {
-  0% {
-    transform: scale(0) translateY(12px);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.18) translateY(-2px);
-    opacity: 0.95;
-  }
-  100% {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
+/* 折线图数据点悬停交互高亮 */
 :deep(#sales-chart .apexcharts-series-markers .apexcharts-marker:hover) {
-  transform: scale(1.3);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(1.35) !important;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* 饼图各切片顺时针渐进展开展开时的圆心基准与柔和渲染 */
+:deep(#pie-chart .apexcharts-pie-series path) {
+  transform-origin: center;
+  transition: opacity 0.3s ease, filter 0.2s ease;
+}
+
+:deep(#pie-chart .apexcharts-pie-series path:hover) {
+  filter: brightness(1.08);
 }
 </style>
 

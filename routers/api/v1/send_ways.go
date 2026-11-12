@@ -107,6 +107,11 @@ func GetMsgSendWayList(c *gin.Context) {
 		return
 	}
 
+	// 敏感凭据脱敏（密码、Secret、Token等）
+	for i := range ways {
+		ways[i].Auth = send_way_service.MaskWayAuth(ways[i].Auth)
+	}
+
 	count, err := sendWayService.Count()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, "获取渠道信息总数失败！", nil)
@@ -193,16 +198,20 @@ func EditSendWay(c *gin.Context) {
 		return
 	}
 
-	if _, err := models.GetWayByIDForOwner(req.ID, ownerID); err != nil {
+	existingWay, err := models.GetWayByIDForOwner(req.ID, ownerID)
+	if err != nil {
 		appG.CResponse(http.StatusNotFound, "发信渠道不存在或无权访问", nil)
 		return
 	}
+
+	// 合并脱敏字段：若提交的字段值为掩码 ******，自动还原保留数据库原有凭据
+	mergedAuth := send_way_service.MergeWayAuth(req.Auth, existingWay.Auth)
 
 	sendWayService := send_way_service.SendWay{
 		ID:         req.ID,
 		Name:       req.Name,
 		Type:       req.Type,
-		Auth:       req.Auth,
+		Auth:       mergedAuth,
 		CreatedBy:  ownerID,
 		ModifiedBy: user.GetAuditUserID(),
 		IsAdmin:    user.IsAdmin() && !user.IsImpersonating(),
@@ -214,7 +223,7 @@ func EditSendWay(c *gin.Context) {
 		return
 	}
 
-	err := sendWayService.Edit()
+	err = sendWayService.Edit()
 	if err != nil {
 		appG.CResponse(http.StatusInternalServerError, fmt.Sprintf("编辑渠道信息失败！原因：%s", err), nil)
 		return
@@ -224,6 +233,7 @@ func EditSendWay(c *gin.Context) {
 }
 
 type TestSendWayReq struct {
+	ID   string `json:"id" validate:"omitempty,len=12" label:"渠道id"`
 	Name string `json:"name" validate:"required,max=100,min=1" label:"渠道名"`
 	Type string `json:"type" validate:"required,max=100,min=1" label:"渠道类型"`
 	Auth string `json:"auth" validate:"required" label:"渠道认证信息"`
@@ -236,7 +246,7 @@ func TestSendWay(c *gin.Context) {
 		req  = TestSendWayReq{}
 	)
 
-	_, _, ok := app.GetRequestOwnerID(c.Request.Context())
+	_, ownerID, ok := app.GetRequestOwnerID(c.Request.Context())
 	if !ok {
 		appG.CResponse(http.StatusUnauthorized, "用户身份无效", nil)
 		return
@@ -248,10 +258,17 @@ func TestSendWay(c *gin.Context) {
 		return
 	}
 
+	authPayload := req.Auth
+	if req.ID != "" {
+		if existingWay, err := models.GetWayByIDForOwner(req.ID, ownerID); err == nil {
+			authPayload = send_way_service.MergeWayAuth(req.Auth, existingWay.Auth)
+		}
+	}
+
 	sendWayService := send_way_service.SendWay{
 		Name: req.Name,
 		Type: req.Type,
-		Auth: req.Auth,
+		Auth: authPayload,
 	}
 
 	diffMsg, msgObj := sendWayService.ValidateDiffWay()

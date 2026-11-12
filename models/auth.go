@@ -7,6 +7,7 @@ import (
 
 	"message-nest/pkg/util"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -25,22 +26,50 @@ type Auth struct {
 	UpdatedAt    util.Time `json:"modified_on" gorm:"column:modified_on;autoUpdateTime"`
 }
 
+// IsBcryptHash 检查字符串是否为 bcrypt 哈希
+func IsBcryptHash(s string) bool {
+	return strings.HasPrefix(s, "$2a$") || strings.HasPrefix(s, "$2b$") || strings.HasPrefix(s, "$2y$")
+}
+
+// HashPassword 使用 bcrypt 加密密码
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+// CheckPassword 校验密码（支持 bcrypt 哈希与存量明文平滑比对）
+func CheckPassword(password, hashOrPlain string) bool {
+	if IsBcryptHash(hashOrPlain) {
+		return bcrypt.CompareHashAndPassword([]byte(hashOrPlain), []byte(password)) == nil
+	}
+	return hashOrPlain == password
+}
+
 // GenerateUserUniqueID 生成用户唯一随机字符串ID (如 UR + 10位随机字符)
 func GenerateUserUniqueID() string {
 	newUUID := util.GenerateUniqueID()
 	return fmt.Sprintf("UR%s", newUUID)
 }
 
-// CheckAuth 检查用户信息
+// CheckAuth 检查用户信息（支持旧明文密码平滑升级）
 func CheckAuth(username, password string) (bool, error) {
 	var auth Auth
-	err := db.Select("id, status").Where("username = ? AND password = ?", username, password).Limit(1).Find(&auth).Error
+	name := strings.TrimSpace(username)
+	err := db.Select("id, password, status").Where("LOWER(username) = LOWER(?)", name).Limit(1).Find(&auth).Error
 	if err != nil {
 		return false, err
 	}
 
 	if auth.ID != "" && auth.Status == 1 {
-		return true, nil
+		if CheckPassword(password, auth.Password) {
+			// 平滑升级：若存量数据仍为明文密码，校验通过后自动更新为 bcrypt 哈希
+			if !IsBcryptHash(auth.Password) {
+				if hashed, err := HashPassword(password); err == nil {
+					_ = db.Model(&Auth{}).Where("id = ?", auth.ID).Update("password", hashed).Error
+				}
+			}
+			return true, nil
+		}
 	}
 
 	return false, nil
@@ -105,6 +134,11 @@ func GetUserByID(id string) (*Auth, error) {
 
 // EditUser 编辑用户信息
 func EditUser(username string, data map[string]interface{}) error {
+	if pwd, ok := data["password"].(string); ok && pwd != "" && !IsBcryptHash(pwd) {
+		if hashed, err := HashPassword(pwd); err == nil {
+			data["password"] = hashed
+		}
+	}
 	if err := db.Model(&Auth{}).Where("username = ?", username).Updates(data).Error; err != nil {
 		return err
 	}
@@ -113,6 +147,11 @@ func EditUser(username string, data map[string]interface{}) error {
 
 // EditUserByID 根据ID编辑用户
 func EditUserByID(id string, data map[string]interface{}) error {
+	if pwd, ok := data["password"].(string); ok && pwd != "" && !IsBcryptHash(pwd) {
+		if hashed, err := HashPassword(pwd); err == nil {
+			data["password"] = hashed
+		}
+	}
 	if err := db.Model(&Auth{}).Where("id = ?", id).Updates(data).Error; err != nil {
 		return err
 	}
@@ -125,10 +164,16 @@ func AddUser(account string, password string, role string, createdBy string) (*A
 		role = "user"
 	}
 	cleanAccount := strings.TrimSpace(account)
+	finalPassword := password
+	if finalPassword != "" && !IsBcryptHash(finalPassword) {
+		if hashed, err := HashPassword(finalPassword); err == nil {
+			finalPassword = hashed
+		}
+	}
 	auth := Auth{
 		ID:         GenerateUserUniqueID(),
 		Username:   cleanAccount,
-		Password:   password,
+		Password:   finalPassword,
 		Role:       role,
 		Status:     1,
 		CreatedBy:  createdBy,
@@ -201,10 +246,16 @@ func AddSSOUser(username, password, email, oidcSubject, authProvider string) (*A
 	if authProvider == "" {
 		authProvider = "oidc"
 	}
+	finalPassword := password
+	if finalPassword != "" && !IsBcryptHash(finalPassword) {
+		if hashed, err := HashPassword(finalPassword); err == nil {
+			finalPassword = hashed
+		}
+	}
 	auth := Auth{
 		ID:           GenerateUserUniqueID(),
 		Username:     username,
-		Password:     password,
+		Password:     finalPassword,
 		Email:        email,
 		Role:         "user",
 		Status:       1,

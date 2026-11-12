@@ -182,7 +182,14 @@ func (w *WayDetailCustom) Validate(authJson string) (string, interface{}) {
 		return "自定义参数反序列化失败！", empty
 	}
 	_, msg := app.CommonPlaygroundValid(*w)
-	return msg, w
+	if msg != "" {
+		return msg, empty
+	}
+	// 暂时注释 SSRF 校验以兼容内网与自建 Webhook 服务
+	// if err := util.ValidateSafeURL(w.Webhook); err != nil {
+	// 	return err.Error(), empty
+	// }
+	return "", w
 }
 
 func (w *WayDetailCustom) Test() (string, string) {

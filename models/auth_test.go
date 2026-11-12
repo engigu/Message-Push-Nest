@@ -53,9 +53,12 @@ func TestAuthModelCRUD(t *testing.T) {
 		t.Fatalf("unexpected user ID format: %s", user.ID)
 	}
 
-	// 验证密码字段已设置
-	if user.Password != password {
-		t.Fatalf("expected password to match %s, got %s", password, user.Password)
+	// 验证密码字段为安全 bcrypt 哈希，且校验正确
+	if !IsBcryptHash(user.Password) {
+		t.Fatalf("expected password to be stored as bcrypt hash, got %s", user.Password)
+	}
+	if !CheckPassword(password, user.Password) {
+		t.Fatalf("expected password to match via CheckPassword")
 	}
 
 	// 2. 密码校验
@@ -194,4 +197,56 @@ func TestCheckUsernameAvailable(t *testing.T) {
 		t.Fatalf("expected friendly duplicate error from AddUser, got %v", err)
 	}
 }
+
+func TestPasswordBcryptAndSmoothUpgrade(t *testing.T) {
+	setupTestDB()
+
+	// 1. 模拟存量历史数据：直接向数据库插入明文密码的用户
+	plainUser := Auth{
+		ID:       "UR_LEGACY_01",
+		Username: "legacy_user",
+		Password: "PlainOldPassword123",
+		Role:     "user",
+		Status:   1,
+	}
+	if err := db.Create(&plainUser).Error; err != nil {
+		t.Fatalf("failed to insert legacy user: %v", err)
+	}
+
+	// 验证初始状态确实为非 bcrypt 格式的明文
+	if IsBcryptHash(plainUser.Password) {
+		t.Fatalf("expected initial password to not be bcrypt hash")
+	}
+
+	// 2. 第一次登录校验：应当成功
+	ok, err := CheckAuth("legacy_user", "PlainOldPassword123")
+	if err != nil || !ok {
+		t.Fatalf("CheckAuth should succeed for legacy plaintext password, ok=%v, err=%v", ok, err)
+	}
+
+	// 3. 验证数据库中该用户的密码已被平滑自动升级为 bcrypt 哈希
+	upgradedUser, err := GetUserByID("UR_LEGACY_01")
+	if err != nil {
+		t.Fatalf("failed to reload user: %v", err)
+	}
+	if !IsBcryptHash(upgradedUser.Password) {
+		t.Fatalf("expected password to be automatically upgraded to bcrypt hash, got: %s", upgradedUser.Password)
+	}
+	if !CheckPassword("PlainOldPassword123", upgradedUser.Password) {
+		t.Fatalf("upgraded bcrypt hash failed CheckPassword verification")
+	}
+
+	// 4. 第二次登录校验：使用升级后的 bcrypt 进行比对，应当依然成功
+	ok, err = CheckAuth("legacy_user", "PlainOldPassword123")
+	if err != nil || !ok {
+		t.Fatalf("second CheckAuth failed against upgraded bcrypt password, ok=%v, err=%v", ok, err)
+	}
+
+	// 5. 错误密码必须被拒绝
+	ok, err = CheckAuth("legacy_user", "WrongPassword")
+	if err != nil || ok {
+		t.Fatalf("CheckAuth must reject incorrect password")
+	}
+}
+
 

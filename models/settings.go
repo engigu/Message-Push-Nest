@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"message-nest/pkg/util"
 )
 
@@ -105,7 +106,10 @@ func GetSettingBySection(section string, createdBy ...string) ([]Settings, error
 			"(%s.created_by = ? OR %s.created_by = '' OR %s.created_by IS NULL OR %s.created_by IN (SELECT id FROM %s WHERE role = 'admin'))",
 			settingsTable, settingsTable, settingsTable, settingsTable, authTable,
 		), currentUserID).
-			Order(fmt.Sprintf("CASE WHEN %s.created_by = '%s' THEN 1 ELSE 0 END ASC", settingsTable, currentUserID))
+			Order(clause.Expr{
+				SQL:  fmt.Sprintf("CASE WHEN %s.created_by = ? THEN 1 ELSE 0 END ASC", settingsTable),
+				Vars: []interface{}{currentUserID},
+			})
 	}
 	err := query.Scan(&settings).Error
 	if err != nil {

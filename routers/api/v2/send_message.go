@@ -54,7 +54,7 @@ func DoSendMessageByTemplate(c *gin.Context) {
 	}
 
 	// 解析 token 为模板 ID
-	templateID, err := utilpkg.DecryptTokenHex(req.Token, 71) // 71 为简单对称密钥
+	templateID, err := utilpkg.DecryptToken(req.Token)
 	if err != nil {
 		appG.CResponse(http.StatusBadRequest, fmt.Sprintf("token解析失败：%v", err), nil)
 		return

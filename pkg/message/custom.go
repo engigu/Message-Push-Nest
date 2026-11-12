@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	// "message-nest/pkg/util"
 )
 
 type CustomWebhook struct {
@@ -33,11 +34,18 @@ func (cw *CustomWebhook) ParseHeaders(headerStr string) map[string]string {
 	return headers
 }
 
+// 暂时注释 SSRF 限制以支持内网/局域网 Webhook
+// var Client = util.NewSafeHTTPClient(5 * time.Second)
 var Client = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
 func (cw *CustomWebhook) Request(url string, msg string, headers map[string]string) ([]byte, error) {
+	// 暂时注释 SSRF URL 校验
+	// if err := util.ValidateSafeURL(url); err != nil {
+	// 	return nil, err
+	// }
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(msg)))
 	if err != nil {
 		return nil, err
