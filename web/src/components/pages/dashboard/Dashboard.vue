@@ -157,7 +157,10 @@ const animateLineChartDraw = (duration = 1600) => {
     });
   }
 
-  if (!linePaths.length) return;
+  if (!linePaths.length) {
+    chartElement.classList.remove('chart-animating');
+    return;
+  }
 
   // 记录各条折线精确周长
   const pathLengths = linePaths.map(path => {
@@ -170,11 +173,12 @@ const animateLineChartDraw = (duration = 1600) => {
     return len > 0 ? len : 3000;
   });
 
-  // 初始将折线隐藏在起始位置
+  // 初始将折线隐藏在起始位置，设置 opacity: 1 准备展开
   linePaths.forEach((path, i) => {
     const len = pathLengths[i];
     path.setAttribute('stroke-dasharray', `${len}`);
     path.setAttribute('stroke-dashoffset', `${len}`);
+    path.style.opacity = '1';
   });
 
   // 2. 严格按系列获取折线数据点（排序保证从左到右点位严格对齐连线进度，彻底排除图例 marker）
@@ -250,24 +254,26 @@ const animateLineChartDraw = (duration = 1600) => {
       lineAnimRafId = requestAnimationFrame(step);
     } else {
       lineAnimRafId = null;
-      // 动画完成：确保所有折线与所有数据点 100% 完整显示
+      // 动画完成：确保所有折线与所有数据点 100% 完整显示并恢复原生状态
       linePaths.forEach(path => {
         path.removeAttribute('stroke-dasharray');
         path.removeAttribute('stroke-dashoffset');
+        path.style.opacity = '';
       });
       seriesMarkerList.forEach(list => {
         list.forEach(marker => {
-          marker.style.opacity = '1';
+          marker.style.opacity = '';
           marker.style.transition = '';
         });
       });
+      chartElement.classList.remove('chart-animating');
     }
   };
 
   lineAnimRafId = requestAnimationFrame(step);
 }
 
-// 饼图轻快顺时针一个接一个拼满整张饼图（间隔缩短至75ms，爽快利索）
+// 饼图轻快顺时针一个接一个拼满整张饼图（间隔70ms）
 const animatePieChartDraw = () => {
   const chartElement = document.querySelector("#pie-chart") as HTMLElement;
   if (!chartElement) return;
@@ -275,18 +281,21 @@ const animatePieChartDraw = () => {
   const slices = chartElement.querySelectorAll<SVGElement>(
     '.apexcharts-pie-series, .apexcharts-series.apexcharts-pie-series'
   );
-  if (!slices.length) return;
+  if (!slices.length) {
+    chartElement.classList.remove('chart-animating');
+    return;
+  }
 
   // 数据标签先隐藏，待全部切片拼满后淡入
   const dataLabels = chartElement.querySelectorAll<SVGElement>(
-    '.apexcharts-datalabels, .apexcharts-pie-label, text.apexcharts-text'
+    '.apexcharts-datalabels, .apexcharts-pie-label, .apexcharts-datalabel, .apexcharts-data-labels'
   );
   dataLabels.forEach((label) => {
     label.style.opacity = '0';
     label.style.transition = 'none';
   });
 
-  const sliceDelay = 75; // 每个切片间隔75ms，整体600ms左右拼满
+  const sliceDelay = 70; // 每个切片间隔70ms，整体500~600ms左右拼满
   const total = slices.length;
 
   slices.forEach((slice, idx) => {
@@ -327,6 +336,7 @@ const animatePieChartDraw = () => {
       label.style.opacity = '';
       label.style.transition = '';
     });
+    chartElement.classList.remove('chart-animating');
   }, allSlicesFinished + 250);
 }
 
@@ -569,16 +579,27 @@ const renderLineChart = async () => {
   }
   const chartElement = document.querySelector("#sales-chart") as HTMLElement;
   if (!chartElement) return;
+  if (lineAnimRafId !== null) {
+    cancelAnimationFrame(lineAnimRafId);
+    lineAnimRafId = null;
+  }
   if (lineChartInstance) {
     lineChartInstance.destroy();
     lineChartInstance = null;
   }
   chartElement.innerHTML = '';
+  if (latestSendData.length > 0) {
+    chartElement.classList.add('chart-animating');
+  } else {
+    chartElement.classList.remove('chart-animating');
+  }
   lineChartInstance = new ApexCharts(chartElement, options);
   await lineChartInstance.render();
-  registerChartTimeout(() => {
-    animateLineChartDraw(1600);
-  }, 40);
+  if (latestSendData.length > 0) {
+    requestAnimationFrame(() => {
+      animateLineChartDraw(1600);
+    });
+  }
 }
 
 const renderPieChart = async () => {
@@ -671,16 +692,24 @@ const renderPieChart = async () => {
   }
   const pieChartElement = document.querySelector("#pie-chart") as HTMLElement;
   if (!pieChartElement) return;
+  clearAllChartTimeouts();
   if (pieChartInstance) {
     pieChartInstance.destroy();
     pieChartInstance = null;
   }
   pieChartElement.innerHTML = '';
+  if (wayCateData.length > 0) {
+    pieChartElement.classList.add('chart-animating');
+  } else {
+    pieChartElement.classList.remove('chart-animating');
+  }
   pieChartInstance = new ApexCharts(pieChartElement, options);
   await pieChartInstance.render();
-  registerChartTimeout(() => {
-    animatePieChartDraw();
-  }, 40);
+  if (wayCateData.length > 0) {
+    requestAnimationFrame(() => {
+      animatePieChartDraw();
+    });
+  }
 }
 
 // 获取今日日期
@@ -757,6 +786,32 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* 动画中折线初始隐藏，防止渲染瞬间显示完整折线导致的闪烁 */
+:deep(#sales-chart.chart-animating path.apexcharts-line) {
+  opacity: 0;
+}
+
+/* 动画中折线数据点初始隐藏，通过 JS 沿线时序逐步淡入 */
+:deep(#sales-chart.chart-animating .apexcharts-series-markers .apexcharts-marker),
+:deep(#sales-chart.chart-animating .apexcharts-series-markers-wrap .apexcharts-marker) {
+  opacity: 0;
+}
+
+/* 饼图动画中初始隐藏切片与数据标签，防止渲染瞬间闪现完整饼图 */
+:deep(#pie-chart.chart-animating .apexcharts-pie-series) {
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+:deep(#pie-chart.chart-animating .apexcharts-datalabels),
+:deep(#pie-chart.chart-animating .apexcharts-pie-label),
+:deep(#pie-chart.chart-animating .apexcharts-datalabel),
+:deep(#pie-chart.chart-animating .apexcharts-data-labels) {
+  opacity: 0;
+}
+
 /* 确保图例小圆点 100% 完整饱满正圆居中，彻底防止 SVG 边缘裁切成四分之一残缺扇形 */
 :deep(.apexcharts-legend-marker) {
   overflow: visible !important;
