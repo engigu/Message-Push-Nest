@@ -17,7 +17,7 @@ env:
 jobs:
   build-artifacts:
     if: github.event.repository.fork == false
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,10 +56,14 @@ jobs:
   build:
     if: github.event.repository.fork == false
     needs: build-artifacts
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        arch: [amd64, arm64]
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
 
     permissions:
       contents: read
@@ -148,7 +152,7 @@ jobs:
           retention-days: 1
 
   merge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     needs: build
     permissions:
       contents: read
