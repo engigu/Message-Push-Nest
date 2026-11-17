@@ -332,7 +332,7 @@ watch(
 </script>
 
 <template>
-  <div class="w-full flex flex-col h-full select-none">
+  <div class="w-full flex flex-col h-full">
     <!-- 弹窗 Header 区域 -->
     <div class="px-6 pt-6 pb-4 border-b border-border/40 shrink-0 pr-12">
       <DialogHeader>
