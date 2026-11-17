@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -38,6 +39,12 @@ var testPhonePattern = regexp.MustCompile(`^\+?[0-9]{5,20}$`)
 // controlled adapter when composing an isolated router.
 type AliyunSMSChannelSender interface {
 	SendTemplate(*send_way_service.WayDetailAliyunSMS, models.InsAliyunSMSConfig, string, map[string]interface{}, map[string]interface{}) (channels.AliyunSMSSendResult, error)
+}
+
+type aliyunProviderResponseError interface {
+	ErrorCode() string
+	Message() string
+	RequestId() string
 }
 
 type AliyunSMSInstanceAPI struct {
@@ -90,14 +97,16 @@ type testAliyunSMSRequest struct {
 }
 
 type testAliyunSMSResponse struct {
-	Provider       string `json:"provider"`
-	Code           string `json:"code"`
-	Message        string `json:"message"`
-	RequestID      string `json:"request_id,omitempty"`
-	BizID          string `json:"biz_id,omitempty"`
-	Accepted       bool   `json:"accepted"`
-	DeliveryStatus string `json:"delivery_status"`
-	DeliveryNotice string `json:"delivery_notice"`
+	Provider        string                           `json:"provider"`
+	Code            string                           `json:"code"`
+	Message         string                           `json:"message"`
+	Troubleshooting string                           `json:"troubleshooting,omitempty"`
+	RequestParams   *channels.AliyunSMSRequestParams `json:"request_params,omitempty"`
+	RequestID       string                           `json:"request_id,omitempty"`
+	BizID           string                           `json:"biz_id,omitempty"`
+	Accepted        bool                             `json:"accepted"`
+	DeliveryStatus  string                           `json:"delivery_status"`
+	DeliveryNotice  string                           `json:"delivery_notice"`
 }
 
 // EditConfig updates only the supported fields of a template-bound Aliyun SMS
@@ -234,7 +243,8 @@ func (h *AliyunSMSInstanceAPI) TestSend(c *gin.Context) {
 	fingerprintSecret := setting.AppSetting.AliyunSMSTestFingerprintSecret
 	if len([]byte(fingerprintSecret)) < aliyunSMSFingerprintMinSize {
 		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "fingerprint_secret_missing", maskAliyunPhone(req.TestPhone), "")
-		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: "发送测试服务暂不可用，请联系管理员"})
+		msg := fmt.Sprintf("阿里云短信测试未启用：当前服务实例未加载有效的 ALIYUN_SMS_TEST_FINGERPRINT_SECRET（当前 %d 字节，至少需要 %d 字节）。请核对实际处理请求的实例配置并重启服务。", len([]byte(fingerprintSecret)), aliyunSMSFingerprintMinSize)
+		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: msg})
 		return
 	}
 
@@ -254,7 +264,8 @@ func (h *AliyunSMSInstanceAPI) TestSend(c *gin.Context) {
 	}
 	if h.limiter == nil {
 		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "limiter_unavailable", maskAliyunPhone(req.TestPhone), "")
-		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: "发送测试服务暂不可用，请联系管理员"})
+		logging.Security.Errorf("aliyun_sms_test_limiter_unavailable instance_id=%s", instance.ID)
+		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: "阿里云短信测试不可用：当前服务实例未初始化限流器，请检查部署版本和服务启动日志。"})
 		return
 	}
 	userHash := aliyunSMSFingerprint(fingerprintSecret, "scope:user", user.GetEffectiveUserID())
@@ -265,7 +276,8 @@ func (h *AliyunSMSInstanceAPI) TestSend(c *gin.Context) {
 	cancel()
 	if limitErr != nil {
 		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "limiter_database_error", maskAliyunPhone(req.TestPhone), "")
-		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: "发送测试服务暂不可用，请稍后重试"})
+		logging.Security.Errorf("aliyun_sms_test_limiter_database_error instance_id=%s way_id=%s err=%v", instance.ID, way.ID, limitErr)
+		c.JSON(http.StatusServiceUnavailable, app.Response{Code: http.StatusServiceUnavailable, Msg: "阿里云短信测试限流存储不可用：数据库限流表操作失败。请检查数据库连通性、迁移权限，以及 rate_limit_scope_lock 和 rate_limit_event 表是否已完成迁移；详细错误已写入服务端 Security 日志。"})
 		return
 	}
 	if !decision.Allowed {
@@ -276,11 +288,34 @@ func (h *AliyunSMSInstanceAPI) TestSend(c *gin.Context) {
 	}
 
 	result, err := h.channelSender().SendTemplate(auth, config, content, structuredValues, nil)
+	recordAliyunSMSTestLog(c, user, ownerID, instance, template, way, req.TestPhone, result, err, auth, config, content, structuredValues)
 	if err != nil {
+		var providerErr aliyunProviderResponseError
+		if errors.As(err, &providerErr) {
+			providerCode := providerErr.ErrorCode()
+			providerMessage := redactAliyunTestError(providerErr.Message(), auth, config, content, structuredValues)
+			requestID := providerErr.RequestId()
+			if providerMessage == "" {
+				providerMessage = "阿里云已返回错误响应"
+			}
+			logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, providerCode, maskAliyunPhone(req.TestPhone), requestID)
+			logging.Security.Errorf("aliyun_sms_test_provider_error instance_id=%s way_id=%s code=%s request_id=%s message=%s", instance.ID, way.ID, providerCode, requestID, providerMessage)
+			appG.CResponse(http.StatusOK, "阿里云已返回业务响应", testAliyunSMSResponse{
+				Provider: "aliyun", Code: providerCode, Message: providerMessage,
+				Troubleshooting: aliyunProviderTroubleshooting(providerCode), RequestParams: &result.RequestParams,
+				RequestID: requestID, Accepted: false, DeliveryStatus: "not_accepted",
+				DeliveryNotice: "阿里云已返回错误响应，接口未受理；该结果不代表短信送达状态",
+			})
+			return
+		}
 		logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, "transport_error", maskAliyunPhone(req.TestPhone), "")
+		logging.Security.Errorf("aliyun_sms_test_transport_error instance_id=%s way_id=%s cause=%s", instance.ID, way.ID, redactAliyunTestError(err.Error(), auth, config, content, structuredValues))
 		appG.CResponse(http.StatusBadGateway, "阿里云接口调用失败", testAliyunSMSResponse{
-			Provider: "aliyun", Code: "TRANSPORT_ERROR", Message: "阿里云接口调用失败", Accepted: false,
-			DeliveryStatus: "not_accepted", DeliveryNotice: "接口未受理；该结果不代表短信送达状态",
+			Provider: "aliyun", Code: "TRANSPORT_ERROR", Message: "服务端未收到阿里云的有效响应",
+			Troubleshooting: "请检查服务端 Security 日志中的 aliyun_sms_test_transport_error；重点核对服务进程的出网、DNS、HTTPS/TLS、代理/防火墙及 RegionId。该错误发生在收到阿里云业务响应之前，因此没有阿里云 RequestId。",
+			RequestParams:   &result.RequestParams,
+			Accepted:        false,
+			DeliveryStatus:  "not_accepted", DeliveryNotice: "接口未受理；该结果不代表短信送达状态",
 		})
 		return
 	}
@@ -295,10 +330,55 @@ func (h *AliyunSMSInstanceAPI) TestSend(c *gin.Context) {
 	}
 	logAliyunSMSAudit("test", user, ownerID, instance.ID, template.ID, way.ID, result.Code, maskAliyunPhone(req.TestPhone), result.RequestID)
 	appG.CResponse(http.StatusOK, "同步测试调用完成", testAliyunSMSResponse{
-		Provider: "aliyun", Code: result.Code, Message: message, RequestID: result.RequestID,
+		Provider: "aliyun", Code: result.Code, Message: message, RequestParams: &result.RequestParams, RequestID: result.RequestID,
 		BizID: result.BizID, Accepted: accepted, DeliveryStatus: status,
 		DeliveryNotice: "阿里云接口受理结果不代表短信最终送达",
 	})
+}
+
+func recordAliyunSMSTestLog(c *gin.Context, user app.UserContextInfo, ownerID string, instance models.SendTasksIns, template *models.TemplateResult, way models.SendWays, testPhone string, result channels.AliyunSMSSendResult, sendErr error, auth *send_way_service.WayDetailAliyunSMS, config models.InsAliyunSMSConfig, content string, values map[string]interface{}) {
+	createdBy := ownerID
+	if createdBy == "" {
+		createdBy = user.GetEffectiveUserID()
+	}
+
+	code := result.Code
+	message := result.Message
+	requestID := result.RequestID
+	bizID := result.BizID
+	accepted := sendErr == nil && result.Code == "OK"
+	if sendErr != nil {
+		var providerErr aliyunProviderResponseError
+		if errors.As(sendErr, &providerErr) {
+			code = providerErr.ErrorCode()
+			message = providerErr.Message()
+			requestID = providerErr.RequestId()
+		} else {
+			code = "TRANSPORT_ERROR"
+			message = sendErr.Error()
+		}
+	}
+	message = redactAliyunTestError(message, auth, config, content, values)
+
+	status := 0
+	resultText := "未受理"
+	if accepted {
+		status = 1
+		resultText = "阿里云已受理"
+	}
+	logText := fmt.Sprintf("阿里云短信发送测试\n结果：%s\nCode：%s\nMessage：%s\n测试手机号：%s\nTemplateCode：%s\nRegionId：%s\nRequestId：%s\nBizId：%s",
+		resultText, code, message, maskAliyunPhone(testPhone), config.TemplateCode, result.RequestParams.RegionID, requestID, bizID)
+	name := "阿里云短信测试"
+	if template != nil && template.Name != "" {
+		name += " - " + template.Name
+	}
+	logEntry := models.SendTasksLogs{
+		Type: models.SendTasksLogTypeAliyunSMSTest, Name: name, Log: logText, Status: &status,
+		CallerIp: c.ClientIP(), CreatedBy: createdBy, ModifiedBy: user.GetEffectiveUserID(),
+	}
+	if err := logEntry.Add(); err != nil {
+		logging.Security.Errorf("aliyun_sms_test_log_write_failed instance_id=%s way_id=%s err=%v", instance.ID, way.ID, err)
+	}
 }
 
 func (h *AliyunSMSInstanceAPI) resolveTestResources(ownerID string, req testAliyunSMSRequest) (models.SendTasksIns, *models.TemplateResult, models.SendWays, json.RawMessage, error) {
@@ -643,6 +723,35 @@ func maskAliyunPhone(phone string) string {
 		return strings.Repeat("*", len(digits))
 	}
 	return "***" + digits[len(digits)-4:]
+}
+
+func redactAliyunTestError(detail string, auth *send_way_service.WayDetailAliyunSMS, config models.InsAliyunSMSConfig, content string, values map[string]interface{}) string {
+	redact := func(value string) {
+		if len([]byte(value)) >= 4 {
+			detail = strings.ReplaceAll(detail, value, "[REDACTED]")
+		}
+	}
+	if auth != nil {
+		redact(auth.AccessKeySecret)
+		redact(auth.AccessKeyId)
+	}
+	redact(config.PhoneNumber)
+	redact(content)
+	for _, value := range values {
+		if text, ok := value.(string); ok {
+			redact(text)
+		}
+	}
+	return detail
+}
+
+func aliyunProviderTroubleshooting(code string) string {
+	switch code {
+	case "NoPermission", "isp.RAM_PERMISSION_DENY", "Forbidden.RAM":
+		return "阿里云拒绝了 dysms:SendSms 权限：请在 RAM 中为 AccessKey 所属子用户或角色授予短信发送权限，并检查显式拒绝、权限边界和账号级授权策略。可用 RequestId 打开阿里云诊断。"
+	default:
+		return "阿里云已返回业务错误。请按 Code 和 Message 检查短信服务配置，并使用 RequestId 在阿里云诊断页面查询；该错误不是服务端网络连接失败。"
+	}
 }
 
 func aliyunSMSFingerprint(secret, domain, value string) string {

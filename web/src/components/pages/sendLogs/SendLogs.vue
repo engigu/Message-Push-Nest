@@ -19,7 +19,7 @@ import { getPageSize } from '@/util/pageUtils';
 interface LogItem {
   id: number
   task_id: number
-  type: string  // 类型：task 或 template
+  type: string  // 类型：task、template 或短信测试
   name: string  // 任务或模板名称
   log: string
   created_on: string
@@ -53,11 +53,14 @@ const getStatusText = (status: number) => {
 
 // 获取类型文本
 const getTypeText = (type: string) => {
-  return type === 'template' ? '模板' : '任务'
+  if (type === 'template') return '模板'
+  if (type === 'aliyun_sms_test') return '短信测试'
+  return '任务'
 }
 
 // 获取类型徽章样式
 const getTypeBadgeVariant = (type: string) => {
+  if (type === 'aliyun_sms_test') return 'outline'
   return type === 'template' ? 'secondary' : 'default'
 }
 
@@ -178,7 +181,7 @@ onMounted(async () => {
   <div class="p-4 w-full max-w-6xl mx-auto space-y-2">
     <div class="flex flex-row sm:flex-row sm:items-center gap-2 sm:gap-4 -mx-4 px-4 sm:mx-0 sm:px-0">
       <div class="flex-[3] sm:flex-initial min-w-0">
-        <Input v-model="state.search" placeholder="搜索任务..." class="w-full sm:w-64" @keyup.enter="filterFunc"
+        <Input v-model="state.search" placeholder="搜索任务或测试记录..." class="w-full sm:w-64" @keyup.enter="filterFunc"
           @blur="filterFunc" />
       </div>
     

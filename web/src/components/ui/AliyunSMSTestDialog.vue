@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'vue-sonner'
+import { Copy } from 'lucide-vue-next'
 import { buildAliyunTestPayload, getAliyunTestValues, parseTemplatePlaceholders } from '@/lib/aliyunSmsConfig.mjs'
 
 interface Props {
@@ -26,6 +27,19 @@ const testValues = ref<Record<string, string>>({})
 const isSending = ref(false)
 const errorMessage = ref('')
 const providerResult = ref<any>(null)
+const providerRequestJson = computed(() => {
+  const params = providerResult.value?.request_params
+  return params ? JSON.stringify(params, null, 2) : ''
+})
+const providerTemplateParamJson = computed(() => {
+  const raw = providerResult.value?.request_params?.TemplateParam
+  if (typeof raw !== 'string') return ''
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2)
+  } catch {
+    return raw
+  }
+})
 
 const selectedPlaceholders = computed(() => {
   const all = parseTemplatePlaceholders(props.placeholders)
@@ -49,6 +63,15 @@ watch(() => [props.open, props.scenario, props.config, props.placeholders], () =
   providerResult.value = null
 }, { immediate: true, deep: true })
 
+const copyProviderParams = async () => {
+  try {
+    await navigator.clipboard.writeText(providerRequestJson.value)
+    toast.success('已复制阿里云 SDK 参数')
+  } catch {
+    toast.error('复制失败，请手动选择 JSON 内容复制')
+  }
+}
+
 const sendTest = async () => {
   if (!/^\+?[0-9]{5,20}$/.test(testPhone.value.trim())) {
     errorMessage.value = '请输入有效的测试手机号'
@@ -71,13 +94,16 @@ const sendTest = async () => {
     testPhone: testPhone.value.trim(),
     placeholders: testValues.value,
   })
-
   try {
     const response = await request.post('/templates/ins/aliyun/test', payload)
     const body = response.data || {}
     if (response.status === 200 && body.code === 200) {
       providerResult.value = body.data || {}
-      toast.success(body.msg || '测试请求已返回')
+      if (providerResult.value.accepted) {
+        toast.success(body.msg || '阿里云已受理测试请求')
+      } else {
+        toast.error(providerResult.value.message || body.msg || '阿里云未受理测试请求')
+      }
     } else {
       errorMessage.value = body.msg || '发送测试失败'
       providerResult.value = body.data || null
@@ -137,8 +163,35 @@ const sendTest = async () => {
           <div>RequestId：{{ providerResult.request_id || '-' }}</div>
           <div>BizId：{{ providerResult.biz_id || '-' }}</div>
           <div>状态：{{ providerResult.accepted ? '阿里云已受理' : '阿里云未确认受理' }}</div>
+          <div v-if="providerResult.troubleshooting" class="mt-2 rounded bg-muted p-2 text-xs leading-relaxed">
+            排查建议：{{ providerResult.troubleshooting }}
+            <a
+              v-if="providerResult.request_id"
+              class="ml-1 underline underline-offset-2"
+              :href="`https://api.aliyun.com/troubleshoot?q=${encodeURIComponent(providerResult.code || '')}&product=Dysmsapi&requestId=${encodeURIComponent(providerResult.request_id)}`"
+              target="_blank"
+              rel="noopener noreferrer"
+            >打开阿里云诊断</a>
+          </div>
           <div class="text-xs text-muted-foreground">{{ providerResult.delivery_notice || '接口受理不代表短信最终送达。' }}</div>
         </div>
+        <details v-if="providerRequestJson" class="rounded-md border p-3">
+          <summary class="cursor-pointer text-sm font-medium">查看本系统传给阿里云 SDK 的参数</summary>
+          <p class="mt-2 text-xs text-muted-foreground">
+            这是后端实际传入 SendSmsRequest 的参数，不含 AccessKey。阿里云 Go SDK 会据此生成签名 RPC 请求，线上请求不是 JSON body。
+            PhoneNumbers 是本次测试手机号；正式任务发送时使用任务收件人。
+          </p>
+          <div class="mt-2 flex justify-end">
+            <Button size="sm" variant="outline" @click.prevent="copyProviderParams">
+              <Copy class="mr-1 h-3.5 w-3.5" />复制 SDK 参数 JSON
+            </Button>
+          </div>
+          <pre class="mt-2 max-h-64 overflow-auto rounded bg-muted p-3 text-xs leading-relaxed">{{ providerRequestJson }}</pre>
+          <div v-if="providerTemplateParamJson" class="mt-3">
+            <div class="text-xs font-medium">TemplateParam 解码预览</div>
+            <pre class="mt-1 max-h-40 overflow-auto rounded bg-muted p-3 text-xs leading-relaxed">{{ providerTemplateParamJson }}</pre>
+          </div>
+        </details>
       </div>
 
       <DialogFooter>

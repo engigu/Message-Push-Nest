@@ -108,6 +108,12 @@ func Setup() {
 	if secret := os.Getenv("ALIYUN_SMS_TEST_FINGERPRINT_SECRET"); secret != "" {
 		AppSetting.AliyunSMSTestFingerprintSecret = secret
 	}
+	secretBytes := len([]byte(AppSetting.AliyunSMSTestFingerprintSecret))
+	if secretBytes < 32 {
+		logging.Config.Warnf("阿里云短信测试限流密钥未加载或长度不足：当前 %d 字节，要求至少 32 字节；短信发送测试接口将返回 503。", secretBytes)
+	} else {
+		logging.Config.Infof("阿里云短信测试限流密钥已加载（%d 字节；密钥内容不记录）。", secretBytes)
+	}
 
 	// 保证数据库连接池有高可用默认值
 	ensureDatabasePoolSettings()

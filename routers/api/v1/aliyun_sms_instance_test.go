@@ -200,7 +200,7 @@ func TestEditAliyunInstanceEnforcesOwnershipAndChannelType(t *testing.T) {
 	}
 }
 
-func TestAliyunTestSendNewDraftUsesMockAndDoesNotPersistOrCreateBusinessLogs(t *testing.T) {
+func TestAliyunTestSendNewDraftUsesMockAndRecordsTestLogWithoutUpdatingStats(t *testing.T) {
 	f := newAliyunAPITestFixture(t)
 	var output bytes.Buffer
 	originalOutput := logrus.StandardLogger().Out
@@ -236,8 +236,15 @@ func TestAliyunTestSendNewDraftUsesMockAndDoesNotPersistOrCreateBusinessLogs(t *
 	var logs, stats int64
 	models.GetDB().Model(&models.SendTasksLogs{}).Count(&logs)
 	models.GetDB().Model(&models.SendStats{}).Count(&stats)
-	if logs != 0 || stats != 0 {
-		t.Fatalf("test send entered business logs/statistics: logs=%d stats=%d", logs, stats)
+	if logs != 1 || stats != 0 {
+		t.Fatalf("test send should create one send log without updating statistics: logs=%d stats=%d", logs, stats)
+	}
+	var testLog models.SendTasksLogs
+	if err := models.GetDB().First(&testLog).Error; err != nil {
+		t.Fatal(err)
+	}
+	if testLog.Type != models.SendTasksLogTypeAliyunSMSTest || testLog.Status == nil || *testLog.Status != 1 || !strings.Contains(testLog.Log, "***0123") {
+		t.Fatalf("test send log has incorrect type, status, or masked phone: %+v", testLog)
 	}
 
 	var payload testAliyunSMSResponse
