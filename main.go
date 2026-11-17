@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	//go:embed web/dist/*
+	// Include underscore-prefixed Vite helper chunks in the embedded frontend.
+	//go:embed all:web/dist
 	f embed.FS
 
 	//go:embed .release*
