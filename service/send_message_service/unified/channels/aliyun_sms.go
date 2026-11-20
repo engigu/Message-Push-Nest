@@ -17,10 +17,22 @@ type AliyunSMSClient interface {
 type AliyunSMSClientFactory func(accessKeyID, accessKeySecret, regionID string) (AliyunSMSClient, error)
 
 type AliyunSMSSendResult struct {
-	Code      string
-	Message   string
-	RequestID string
-	BizID     string
+	Code          string
+	Message       string
+	RequestID     string
+	BizID         string
+	RequestParams AliyunSMSRequestParams
+}
+
+// AliyunSMSRequestParams is the exact non-secret parameter set passed to the
+// Alibaba Cloud SDK. The SDK serializes and signs the RPC request itself.
+type AliyunSMSRequestParams struct {
+	RegionID      string `json:"RegionId"`
+	Scheme        string `json:"Scheme"`
+	PhoneNumbers  string `json:"PhoneNumbers"`
+	SignName      string `json:"SignName"`
+	TemplateCode  string `json:"TemplateCode"`
+	TemplateParam string `json:"TemplateParam"`
 }
 
 type AliyunSMSChannel struct {
@@ -88,32 +100,39 @@ func (c *AliyunSMSChannel) SendTemplate(auth *send_way_service.WayDetailAliyunSM
 		return AliyunSMSSendResult{}, fmt.Errorf("序列化阿里云短信模板参数失败: %w", err)
 	}
 
-	// Invalid configuration is rejected before constructing an SDK client.
-	client, err := c.createClient(auth.AccessKeyId, auth.AccessKeySecret, auth.RegionId)
-	if err != nil {
-		return AliyunSMSSendResult{}, fmt.Errorf("创建阿里云短信客户端失败: %w", err)
-	}
-
 	request := dysmsapi.CreateSendSmsRequest()
 	request.Scheme = "https"
 	request.PhoneNumbers = config.PhoneNumber
 	request.SignName = auth.SignName
 	request.TemplateCode = config.TemplateCode
 	request.TemplateParam = string(templateParamJSON)
+	regionID := auth.RegionId
+	if regionID == "" {
+		regionID = "cn-hangzhou"
+	}
+	result := AliyunSMSSendResult{RequestParams: AliyunSMSRequestParams{
+		RegionID: regionID, Scheme: request.Scheme, PhoneNumbers: request.PhoneNumbers,
+		SignName: request.SignName, TemplateCode: request.TemplateCode, TemplateParam: request.TemplateParam,
+	}}
+
+	// Invalid configuration is rejected before constructing an SDK client.
+	client, err := c.createClient(auth.AccessKeyId, auth.AccessKeySecret, auth.RegionId)
+	if err != nil {
+		return result, fmt.Errorf("创建阿里云短信客户端失败: %w", err)
+	}
 
 	response, err := client.SendSms(request)
 	if err != nil {
-		return AliyunSMSSendResult{}, err
+		return result, err
 	}
 	if response == nil {
-		return AliyunSMSSendResult{}, fmt.Errorf("阿里云短信响应为空")
+		return result, fmt.Errorf("阿里云短信响应为空")
 	}
-	return AliyunSMSSendResult{
-		Code:      response.Code,
-		Message:   response.Message,
-		RequestID: response.RequestId,
-		BizID:     response.BizId,
-	}, nil
+	result.Code = response.Code
+	result.Message = response.Message
+	result.RequestID = response.RequestId
+	result.BizID = response.BizId
+	return result, nil
 }
 
 func (c *AliyunSMSChannel) createClient(accessKeyId, accessKeySecret, regionId string) (AliyunSMSClient, error) {

@@ -6,10 +6,12 @@ import (
 	//"time"
 )
 
+const SendTasksLogTypeAliyunSMSTest = "aliyun_sms_test"
+
 type SendTasksLogs struct {
 	ID       int    `gorm:"primaryKey" json:"id" `
 	TaskID   string `json:"task_id" gorm:"type:varchar(12);default:'';index:task_id;index:idx_logs_task_time,priority:1"`
-	Type     string `json:"type" gorm:"type:varchar(20);default:'task';comment:'类型：task-任务，template-模板'"`
+	Type     string `json:"type" gorm:"type:varchar(20);default:'task';comment:'类型：task-任务，template-模板，aliyun_sms_test-阿里云短信测试'"`
 	Name     string `json:"name" gorm:"type:varchar(256);default:'';comment:'任务或模板名称'"`
 	Log      string `json:"log" gorm:"type:text;"`
 	Status   *int   `json:"status" gorm:"type:int;default:0;"`
@@ -310,7 +312,8 @@ func GetStatisticData(createdBy ...string) (StatisticData, error) {
 	COUNT(*) AS today_total_num,
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
-		Where("created_on >= ? AND created_on <= ?", startOfToday, endOfToday)
+		Where("created_on >= ? AND created_on <= ?", startOfToday, endOfToday).
+		Where("(type IS NULL OR type <> ?)", SendTasksLogTypeAliyunSMSTest)
 	if userFilter != "" {
 		query = query.Where("created_by = ?", userFilter)
 	}
@@ -323,7 +326,7 @@ func GetStatisticData(createdBy ...string) (StatisticData, error) {
 
 	// 	全部消息统计数据
 	var messageTotalNum int
-	msgQuery := db.Table(logt).Select(`COUNT(*)`)
+	msgQuery := db.Table(logt).Select(`COUNT(*)`).Where("(type IS NULL OR type <> ?)", SendTasksLogTypeAliyunSMSTest)
 	if userFilter != "" {
 		msgQuery = msgQuery.Where("created_by = ?", userFilter)
 	}
@@ -371,7 +374,8 @@ func GetStatisticData(createdBy ...string) (StatisticData, error) {
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS day_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS day_failed_num,
 	COUNT(*) AS num`, dayExpr)).
-		Where(fmt.Sprintf(" created_on >= '%s' and created_on <= '%s' ", pastDate, nextDate))
+		Where(fmt.Sprintf(" created_on >= '%s' and created_on <= '%s' ", pastDate, nextDate)).
+		Where("(type IS NULL OR type <> ?)", SendTasksLogTypeAliyunSMSTest)
 	if userFilter != "" {
 		queryData = queryData.Where("created_by = ?", userFilter)
 	}
@@ -421,7 +425,8 @@ func GetBasicStatisticData(createdBy ...string) (BasicStatisticData, error) {
 	COUNT(*) AS today_total_num,
 	SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS today_succ_num,
 	SUM(CASE WHEN status != 1 or status is null THEN 1 ELSE 0 END) AS today_failed_num`).
-		Where("created_on >= ? AND created_on <= ?", startOfToday, endOfToday)
+		Where("created_on >= ? AND created_on <= ?", startOfToday, endOfToday).
+		Where("(type IS NULL OR type <> ?)", SendTasksLogTypeAliyunSMSTest)
 	if userFilter != "" {
 		query = query.Where("created_by = ?", userFilter)
 	}
@@ -434,7 +439,7 @@ func GetBasicStatisticData(createdBy ...string) (BasicStatisticData, error) {
 
 	// 全部消息统计数据
 	var messageTotalNum int
-	msgQuery := db.Table(logt).Select(`COUNT(*)`)
+	msgQuery := db.Table(logt).Select(`COUNT(*)`).Where("(type IS NULL OR type <> ?)", SendTasksLogTypeAliyunSMSTest)
 	if userFilter != "" {
 		msgQuery = msgQuery.Where("created_by = ?", userFilter)
 	}

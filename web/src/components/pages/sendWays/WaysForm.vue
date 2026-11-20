@@ -277,7 +277,7 @@ const handleTest = async () => {
       toast.error(rsp.data?.msg || '渠道测试失败')
     }
   } catch (error: any) {
-    toast.error(error.message || '测试请求出错')
+    toast.error(error.response?.data?.msg || error.message || '测试请求出错')
   } finally {
     isTesting.value = false
   }
@@ -308,7 +308,7 @@ const handleSave = async () => {
       toast.error(rsp.data?.msg || '保存失败，请检查参数')
     }
   } catch (error: any) {
-    toast.error(error.message || '提交保存异常')
+    toast.error(error.response?.data?.msg || error.message || '提交保存异常')
   } finally {
     isSaving.value = false
   }
@@ -332,7 +332,7 @@ watch(
 </script>
 
 <template>
-  <div class="w-full flex flex-col h-full select-none">
+  <div class="w-full flex flex-col h-full">
     <!-- 弹窗 Header 区域 -->
     <div class="px-6 pt-6 pb-4 border-b border-border/40 shrink-0 pr-12">
       <DialogHeader>
@@ -539,6 +539,9 @@ watch(
               />
               <p v-if="validationErrors[input.col]" class="text-xs text-red-500 pl-0.5">
                 {{ validationErrors[input.col] }}
+              </p>
+              <p v-if="input.help" class="text-xs text-muted-foreground pl-0.5 leading-relaxed">
+                {{ input.help }}
               </p>
             </div>
           </div>

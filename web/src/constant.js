@@ -335,12 +335,27 @@ const CONSTANT = {
             inputs: [
                 { subLabel: 'AccessKeyId', value: '', col: 'access_key_id', desc: "阿里云AccessKeyId", placeholder: "阿里云AccessKeyId", required: true },
                 { subLabel: 'AccessKeySecret', value: '', col: 'access_key_secret', desc: "阿里云AccessKeySecret", placeholder: "阿里云AccessKeySecret", required: true },
-                { subLabel: 'RegionId', value: 'cn-hangzhou', col: 'region_id', desc: "阿里云区域ID，如cn-hangzhou", placeholder: "阿里云区域ID，如cn-hangzhou", required: true },
+                { subLabel: 'RegionId', value: 'cn-hangzhou', col: 'region_id', desc: "阿里云区域ID，如cn-hangzhou", placeholder: "如 cn-hangzhou", help: "短信 API 的地域参数。国内短信可使用 cn-hangzhou；阿里云说明该值不影响国内短信的实际发送效果。", required: true },
                 { subLabel: '短信签名', value: '', col: 'sign_name', desc: "短信签名名称", placeholder: "短信签名名称", required: true },
                 { subLabel: '渠道名', value: '', col: 'name', desc: "想要设置的渠道名字" },
             ],
             tips: {
-                text: "阿里云短信说明", desc: "使用阿里云短信服务发送短信，需要在阿里云控制台申请短信签名和模板。<br />AccessKey请在阿里云控制台获取。"
+                text: "阿里云短信说明",
+                desc: `使用阿里云短信服务前，请先在阿里云控制台申请短信签名和模板。<br />AccessKey 请在 <a href="https://ram.console.aliyun.com/" target="_blank" rel="noopener noreferrer" class="text-primary underline underline-offset-2">阿里云 RAM 控制台</a> 创建和管理。建议使用 RAM 子用户，并按最小权限授权。
+<div class="mt-3 rounded-lg border border-amber-300/70 bg-amber-50/70 p-3 text-amber-950 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-100">
+  <div class="font-semibold">RAM 子用户授权说明</div>
+  <p class="mt-1">阿里云账号可能没有内置短信发送权限。若要独立授予短信发送能力，请在“权限管理 → 权限策略”中新建自定义策略，添加 <code class="rounded bg-background/80 px-1 py-0.5">dysms:SendSms</code> 权限，再将该策略授权给 AccessKey 对应的 RAM 子用户。</p>
+  <pre class="mt-2 overflow-x-auto rounded-md border border-amber-300/60 bg-background/80 p-3 font-mono text-[11px] leading-relaxed text-foreground select-text"><code>{
+  "Version": "1",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "dysms:SendSms",
+      "Resource": "*"
+    }
+  ]
+}</code></pre>
+</div>`
             },
             taskInsRadios: [
                 { subLabel: 'text', content: 'text' },

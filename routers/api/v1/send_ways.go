@@ -76,6 +76,7 @@ func GetMsgSendWay(c *gin.Context) {
 		appG.CResponse(http.StatusNotFound, "发信渠道不存在或无权访问", nil)
 		return
 	}
+	way.Auth = send_way_service.MaskWayAuth(way.Auth)
 
 	appG.CResponse(http.StatusOK, "获取渠道信息成功", way)
 }
